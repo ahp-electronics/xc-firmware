@@ -18,20 +18,21 @@
 ###### There is a set of commands to start integrations:
 + 0x1d: Start integration by enabling UART transmission
 + 0x0d: Stop integration by disabling UART transmission
-+ 0x01: select active line in the upper nibble
-+ 0x02: activate leds or power lines using 4th and 5th bits
-+ 0x03: multiply rate with the upper nibble'th power of two
-+ 0x04: set the delay amount in clock cycles of the active sequentially (32bit word)
-+ 0x0c: commit changes in delay value
++ 0x01: select active line in bits [7:4]
++ 0x02: activate leds or power lines using bits [5:4]
++ 0x03: baudrate 57600 << bits [7:4]
++ 0x04: bits [1:0] => indexer, bits [7:5] => delay value. If bit 4 is 0, then delay for cross-correlations is set, if bit 4 is 1, then delay for autocorrelations is set.
++ 0x08: sampling rate = Clock_Frequency / bits [7:4]
 
 ###### The count of pulses and correlation comes with an ASCII packet string ended with a 0x0d character
 ###### Each packet starts with a header with payload length indication, it is possible to change some parameters from the code
-+ byte 0-1: '00' ASCII characters (header start)
-+ byte 2-3: hexadecimal sample size value
-+ byte 4-5: hexadecimal inputs quantity
-+ byte 6-7: hexadecimal delay lines quantity
-+ byte 8-15: hexadecimal value of the clock speed
-+ byte 16-lines#: pulses from every input in descending order in big-endian hexadecimal ASCII text
-+ byte lines#-baselines#: correlations between each input with others in big-endian hexadecimal ASCII text
++ bytes 0-1: hexadecimal sample size value
++ byte 2-3: hexadecimal inputs quantity
++ bytes 4: flags
++ bytes 5-7: hexadecimal delay lines quantity
++ bytes 8-15: hexadecimal value of the clock speed
++ bytes +lines#: pulses count within the packet time of every input in descending order in big-endian hexadecimal ASCII text
++ bytes +lines#: autocorrelations count of pulses of each line by the selected autocorrelation line
++ bytes +baselines#: cross-correlations count of pulses of each line with others by the selected delay amount
 
 ###### The sampling rate is the same as the packet rate, the bandwidth is the same as the FPGA oscillator frequency
