@@ -21,7 +21,7 @@
 + 0x01: select active line in bits [7:4]
 + 0x02: activate leds or power lines using bits [5:4]
 + 0x03: baudrate 57600 << bits [7:4]
-+ 0x04: bits [1:0] => indexer, bits [7:5] => delay value. If bit 4 is 0, then delay for cross-correlations is set, if bit 4 is 1, then delay for autocorrelations is set.
++ 0x04: bits [1:0] => indexer, bits [6:4] => delay value. If bit 7 is 0, then delay for cross-correlations is set, if bit 4 is 1, then delay for autocorrelations is set.
 + 0x08: sampling rate = Clock_Frequency / bits [7:4]
 
 ###### The count of pulses and correlation comes with an ASCII packet string ended with a 0x0d character
