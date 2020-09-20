@@ -26,8 +26,7 @@ module correlator (
 	pulse_out,
 	leds,
 	integration_clk_pulse,
-	active_line,
-	clki
+	active_line
 	);
 
 parameter SECOND = 1000000000;
@@ -37,7 +36,7 @@ parameter PLL_FREQUENCY = 400000000;
 parameter BAUD_RATE = 57600;
 parameter SHIFT = 1;
 
-parameter DELAY_SIZE = 200;
+parameter DELAY_SIZE = 100;
 parameter RESOLUTION = 16;
 parameter NUM_INPUTS = 12;
 parameter NUM_CORRELATORS = NUM_INPUTS*(NUM_INPUTS-1)/2;
@@ -49,8 +48,9 @@ output wire[NUM_INPUTS-1:0] pulse_out;
 output reg[7:0] leds;
 output wire integration_clk_pulse;
 output wire[31:0] active_line;
-input wire clki;
+wire clki;
 wire clk;
+wire integrating;
 wire pll_clk;
 wire[NUM_INPUTS-1:0] in;
 wire[NUM_INPUTS-1:0] out;
@@ -62,6 +62,7 @@ wire[NUM_INPUTS-1:0] pwm_out;
 reg[6:0] pwm_idx;
 reg[3:0] x;
 pll pll_block (clki, pll_clk);
+OSCH #(.NOM_FREQ("14.00")) intosc(0, clki, );
 
 delay1 #(.RESOLUTION(NUM_INPUTS)) delay(clk, ~pulse_in, in);
 assign out = ~in&~pulse_in;
@@ -75,6 +76,7 @@ main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_FREQUENCY(PLL_FREQUENCY), .SHIFT(SHIF
 	clk,
 	clki,
 	integration_clk_pulse,
+	integrating,
 	active_line
 );
 
@@ -87,11 +89,11 @@ CLK_GEN #(.CLK_FREQUENCY(PLL_FREQUENCY)) pwm_clock(
 );
 
 CLK_GEN #(.CLK_FREQUENCY(100000)) sin_clock(
-	50000000,
+	10000000,
 	sin_clk,
 	pwm_clk,
 	,
-	1'b1
+	integrating
 );
 
 always @(posedge sin_clk) begin
