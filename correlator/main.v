@@ -83,7 +83,7 @@ wire uart_clk_pulse;
 
 reg[3:0] index = 0;
 reg[3:0] baud_rate = 0;
-reg[3:0] clock_divider = 0;
+reg[5:0] clock_divider = 0;
 
 CLK_GEN #(.CLK_FREQUENCY(PLL_FREQUENCY)) divider_block(
 	UNIT<<clock_divider,
