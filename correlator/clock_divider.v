@@ -28,7 +28,7 @@ module CLK_GEN
 		enable
 	);
 	parameter[63:0] CLK_FREQUENCY = 64'd420000000;
-	parameter[63:0] SECOND = 64'd1000000000;
+	parameter[63:0] SECOND = 64'd2000000000;
 	parameter[63:0] UNIT = SECOND/CLK_FREQUENCY;
 	parameter[63:0] RESOLUTION = 64;
 	

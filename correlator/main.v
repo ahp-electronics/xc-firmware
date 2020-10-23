@@ -33,9 +33,9 @@ module main (
 );
 
 parameter SECOND = 1000000000;
-parameter CLK_FREQUENCY = 15200000;
-parameter PLL_FREQUENCY = 448000000;
-parameter TICK_FREQUENCY = PLL_FREQUENCY;
+parameter CLK_FREQUENCY = 50000000;
+parameter PLL_FREQUENCY = 400000000;
+parameter TICK_FREQUENCY = 200000000;
 
 parameter BAUD_RATE = 57600;
 parameter SHIFT = 1;
@@ -43,7 +43,7 @@ parameter DELAY_SIZE = 200;
 parameter RESOLUTION = 24;
 parameter NUM_INPUTS = 8;
 parameter NUM_BASELINES = NUM_INPUTS*(NUM_INPUTS-1)/2;
-parameter[63:0] UNIT = SECOND/TICK_FREQUENCY;
+parameter[127:0] UNIT = (SECOND<<63)/TICK_FREQUENCY;
 
 parameter CORRELATIONS_SIZE = NUM_BASELINES;
 parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+NUM_INPUTS+NUM_INPUTS)*RESOLUTION;
@@ -67,17 +67,16 @@ output reg[31:0] leds;
 wire [NUM_INPUTS-1:0] overflow;
 output reg integrating = 0;
 
-wire clk;
 wire clk_pulse;
 wire [7:0] RXREG;
 wire RXIF;
 wire[PAYLOAD_SIZE-1:0] pulse_t;
 reg[PACKET_SIZE-1:0] tx_data;
 wire[NUM_INPUTS-1:0] delay_lines [0:DELAY_SIZE-1];
-reg [7:0] cross [0:NUM_INPUTS-1];
-reg [7:0] auto [0:NUM_INPUTS-1];
-reg [7:0] cross_tmp [0:NUM_INPUTS-1];
-reg [7:0] auto_tmp [0:NUM_INPUTS-1];
+reg [11:0] cross [0:NUM_INPUTS-1];
+reg [11:0] auto [0:NUM_INPUTS-1];
+reg [11:0] cross_tmp [0:NUM_INPUTS-1];
+reg [11:0] auto_tmp [0:NUM_INPUTS-1];
 wire uart_clk;
 wire uart_clk_pulse;
 
@@ -85,15 +84,15 @@ reg[3:0] index = 0;
 reg[3:0] baud_rate = 0;
 reg[5:0] clock_divider = 0;
 
-CLK_GEN #(.CLK_FREQUENCY(PLL_FREQUENCY)) divider_block(
-	UNIT<<clock_divider,
+CLK_GEN #(.CLK_FREQUENCY(PLL_FREQUENCY), .RESOLUTION(128)) divider_block(
+	(UNIT>>(63-clock_divider)),
 	clk,
 	pll_clk,
 	clk_pulse,
 	1'b1
 );
 
-CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) data_clock_block(
+CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) uart_clock_block(
 	BAUD_TIME>>baud_rate,
 	uart_clk,
 	clki,
@@ -105,6 +104,7 @@ TX_WORD #(.SHIFT(SHIFT), .RESOLUTION(PACKET_SIZE)) tx_block(
 	TX,
 	tx_data,
 	uart_clk_pulse,
+	clk_pulse,
 	integration_clk,
 	integrating
 );
@@ -190,7 +190,7 @@ generate
 		for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
 			COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
 				(1<<RESOLUTION)-1,
-				pulse_t[(a*(NUM_INPUTS+NUM_INPUTS-a-1)/2+b-a-1)*RESOLUTION+:RESOLUTION],
+				pulse_t[(((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*RESOLUTION+:RESOLUTION],
 				,
 				delay_lines[cross[a]][a]&delay_lines[cross[b]][b],
 				reset_delayed

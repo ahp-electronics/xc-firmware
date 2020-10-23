@@ -23,6 +23,7 @@ module TX_WORD(
 	TX,
 	tx_data,
 	clk,
+	stb,
 	done,
 	enable
 	);
@@ -34,23 +35,38 @@ parameter TOTAL_NIBBLES=RESOLUTION/4;
 output wire TX;
 input wire [RESOLUTION-1:0] tx_data;
 input wire enable;
+input wire stb;
 output reg done;
 input wire clk;
 
 reg signed [31:0] tidx;
 wire TXIF;
 reg [7:0] TXREG;
+	
+reg[1:0] status;
+wire transmit;
+assign transmit = (status == 1) ? 0 : enable;
 
 uart_tx #(.SHIFT(SHIFT)) tx_block(
 	TX,
 	TXREG,
 	TXIF,
-	enable,
+	transmit,
 	clk
 );
 
-always@(posedge TXIF) begin
-	if(tidx>=0) begin
+always@(posedge done or posedge stb) begin
+	if(status == 3)
+		status <= 0;
+	status <= status | (done | (stb << 1));
+end
+	
+always@(posedge TXIF or negedge enable) begin
+	if(!enable) begin
+		TXREG <= 8'h0d;
+		tidx <= TOTAL_NIBBLES-1;
+		done <= 0;
+	end else if(tidx>=0) begin
 		if(tx_data[tidx*4+:4] > 4'h9)
 			TXREG <= 8'h3f + tx_data[tidx*4+:3];
 		else
