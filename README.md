@@ -1,4 +1,4 @@
-# Intensity correlator for Cyclone2 FPGAs
+# XC8 Intensity correlator firmware
 
 #### This repository contains code of the XC8 series correlators
 
