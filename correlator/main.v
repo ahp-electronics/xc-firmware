@@ -22,8 +22,8 @@
 module main (
 	TX,
 	RX,
-	pulse_in,
-	pulse_out,
+	signal_in,
+	overflow_out,
 	pll_clk,
 	clk,
 	clki,
@@ -50,29 +50,31 @@ parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+NUM_INPUTS+NUM_INPUTS)*RESOLUTION;
 parameter HEADER_SIZE = 64;
 parameter PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE;
 
-parameter BAUD_TIME = (SECOND>>SHIFT)/BAUD_RATE;
+parameter BAUD_TIME = SECOND/BAUD_RATE;
 
 parameter MAX_COUNT=(1<<RESOLUTION);
 parameter TOTAL_NIBBLES=NUM_BASELINES*RESOLUTION/4;
 
 output wire TX;
 input wire RX;
-input wire[NUM_INPUTS-1:0] pulse_in;
-output reg[NUM_INPUTS-1:0] pulse_out;
+input wire[NUM_INPUTS-1:0] signal_in;
+output reg[NUM_INPUTS-1:0] overflow_out;
 input wire pll_clk;
 input wire clki;
 output wire clk;
 output wire integration_clk;
-output reg[31:0] leds;
+output reg[NUM_INPUTS*4-1:0] leds;
 wire [NUM_INPUTS-1:0] overflow;
 output reg integrating = 0;
 
+wire[NUM_INPUTS-1:0] pulse_in;
+wire[NUM_INPUTS-1:0] in;
 wire clk_pulse;
 wire [7:0] RXREG;
 wire RXIF;
-wire[PAYLOAD_SIZE-1:0] pulse_t;
-reg[PACKET_SIZE-1:0] tx_data;
-wire[NUM_INPUTS-1:0] delay_lines [0:DELAY_SIZE-1];
+wire [PAYLOAD_SIZE-1:0] pulse_t;
+reg [PACKET_SIZE-1:0] tx_data;
+wire [NUM_INPUTS-1:0] delay_lines [0:DELAY_SIZE-1];
 reg [11:0] cross [0:NUM_INPUTS-1];
 reg [11:0] auto [0:NUM_INPUTS-1];
 reg [11:0] cross_tmp [0:NUM_INPUTS-1];
@@ -80,9 +82,12 @@ reg [11:0] auto_tmp [0:NUM_INPUTS-1];
 wire uart_clk;
 wire uart_clk_pulse;
 
-reg[3:0] index = 0;
-reg[3:0] baud_rate = 0;
-reg[5:0] clock_divider = 0;
+reg [7:0] index = 0;
+reg [3:0] baud_rate = 0;
+reg [5:0] clock_divider = 0;
+
+delay1 #(.RESOLUTION(NUM_INPUTS)) delay(clk, signal_in, in);
+assign pulse_in = ~in&signal_in;
 
 CLK_GEN #(.CLK_FREQUENCY(PLL_FREQUENCY), .RESOLUTION(128)) divider_block(
 	(UNIT>>(63-clock_divider)),
@@ -114,13 +119,12 @@ delay1 reset_delay(clk, integration_clk, reset_delayed);
 integer k;
 
 always@(posedge integration_clk) begin
-	pulse_out <= overflow;
+	overflow_out <= overflow;
 	tx_data[0+:PAYLOAD_SIZE] <= pulse_t;
 	tx_data[PAYLOAD_SIZE+:32] <= TICK_FREQUENCY;
 	tx_data[PAYLOAD_SIZE+32+:12] <= DELAY_SIZE;
-	tx_data[PAYLOAD_SIZE+32+12+:8] <= 1;
-	tx_data[PAYLOAD_SIZE+32+12+8+:4] <= NUM_INPUTS-1;
-	tx_data[PAYLOAD_SIZE+32+12+8+4+:8] <= RESOLUTION;
+	tx_data[PAYLOAD_SIZE+32+12+:12] <= NUM_INPUTS-1;
+	tx_data[PAYLOAD_SIZE+32+12+12+:8] <= RESOLUTION;
 end
 
 uart_rx #(.SHIFT(SHIFT)) rx_block(
@@ -146,9 +150,9 @@ always@(posedge RXIF) begin
 	end else if (RXREG[3:0] == ENABLE_CAPTURE) begin
 		integrating <= RXREG[4];
 	end else if (RXREG[3:0] == SET_INDEX) begin
-		index <= RXREG[7:4];
+		index[RXREG[7:6]*2+:2] <= RXREG[5:4];
 	end else if (RXREG[3:0] == SET_LEDS) begin
-		leds[index*2+:2] <= RXREG[5:4];
+		leds[index*4+:4] <= RXREG[7:4];
 	end else if (RXREG[3:0] == SET_BAUD_RATE) begin
 		baud_rate <= RXREG[7:4];
 	end else if (RXREG[2]) begin

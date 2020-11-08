@@ -24,7 +24,6 @@ module correlator (
 	RX,
 	pulse_in,
 	pulse_out,
-	leds,
 	integration_clk_pulse,
 	active_line,
 	clki
@@ -35,46 +34,51 @@ parameter CLK_FREQUENCY = 50000000;
 parameter PLL_FREQUENCY = 400000000;
 
 parameter BAUD_RATE = 57600;
-parameter SHIFT = 1;
 
-parameter DELAY_SIZE = 120;
-parameter RESOLUTION = 16;
-parameter NUM_INPUTS = 12;
+parameter DELAY_SIZE = 128;
+parameter RESOLUTION = 24;
+parameter NUM_INPUTS = 8;
 parameter NUM_CORRELATORS = NUM_INPUTS*(NUM_INPUTS-1)/2;
 
+input wire clki;
 output wire TX;
 input wire RX;
 input wire[NUM_INPUTS-1:0] pulse_in;
 output wire[NUM_INPUTS-1:0] pulse_out;
-output wire[7:0] leds;
+output wire[NUM_INPUTS-1:0] leds;
 output wire integration_clk_pulse;
-output wire[31:0] active_line;
-input wire clki;
+output wire[NUM_INPUTS*2-1:0] active_line;
+wire[NUM_INPUTS*4-1:0] active_leds;
 wire clk;
 wire integrating;
 wire pll_clk;
-wire[NUM_INPUTS-1:0] in;
-wire[NUM_INPUTS-1:0] out;
 wire[NUM_INPUTS-1:0] overflow;
+wire[NUM_INPUTS-1:0] in_line;
 
-delay1 #(.RESOLUTION(NUM_INPUTS)) delay(clk, ~pulse_in, in);
-assign out = ~in&~pulse_in;
-main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_FREQUENCY(PLL_FREQUENCY), .SHIFT(SHIFT), .RESOLUTION(RESOLUTION), .NUM_INPUTS(NUM_INPUTS), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE)) main_block(
+generate
+	genvar a;
+	for(a=0; a<NUM_INPUTS; a=a+1) begin
+		assign active_line[a*2+:2] = active_leds[a*4+:2];
+		assign in_line[a] = active_leds[a*4+2]^~pulse_in[a];
+	end
+endgenerate
+
+main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_FREQUENCY(PLL_FREQUENCY), .BAUD_RATE(BAUD_RATE), .RESOLUTION(RESOLUTION), .NUM_INPUTS(NUM_INPUTS), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE)) main_block(
 	TX,
 	RX,
-	out,
+	in_line,
 	overflow,
 	pll_clk,
 	clk,
 	clki,
 	integration_clk_pulse,
 	integrating,
-	active_line
+	active_leds
 );
 
 pll pll_block (clki, pll_clk);
 
-pwm_osc #(.RESOLUTION(8), .DIVIDER(75), .CHANNELS(8)) osc (
+pwm_osc #(.RESOLUTION(8), .DIVIDER(75), .CHANNELS(NUM_INPUTS)) osc (
 	pwm_out,
 	clki,
 	integrating
@@ -82,6 +86,5 @@ pwm_osc #(.RESOLUTION(8), .DIVIDER(75), .CHANNELS(8)) osc (
 
 wire [NUM_INPUTS-1:0] pwm_out;
 assign pulse_out = pwm_out&~overflow;
-assign leds = 8'hff;
 
 endmodule
