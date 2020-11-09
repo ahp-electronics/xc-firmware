@@ -40,13 +40,16 @@ parameter TICK_FREQUENCY = 200000000;
 parameter BAUD_RATE = 57600;
 parameter SHIFT = 1;
 parameter DELAY_SIZE = 200;
+parameter JITTER_SIZE = 1;
 parameter RESOLUTION = 24;
 parameter NUM_INPUTS = 8;
 parameter NUM_BASELINES = NUM_INPUTS*(NUM_INPUTS-1)/2;
 parameter[127:0] UNIT = (SECOND<<63)/TICK_FREQUENCY;
+parameter TICK = (SECOND*1000)/TICK_FREQUENCY;
 
-parameter CORRELATIONS_SIZE = NUM_BASELINES;
-parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+NUM_INPUTS+NUM_INPUTS)*RESOLUTION;
+parameter CORRELATIONS_SIZE = NUM_BASELINES*(JITTER_SIZE*2-1);
+parameter SPECTRA_SIZE = NUM_INPUTS*JITTER_SIZE;
+parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+SPECTRA_SIZE+NUM_INPUTS)*RESOLUTION;
 parameter HEADER_SIZE = 64;
 parameter PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE;
 
@@ -74,7 +77,7 @@ wire [7:0] RXREG;
 wire RXIF;
 wire [PAYLOAD_SIZE-1:0] pulse_t;
 reg [PACKET_SIZE-1:0] tx_data;
-wire [NUM_INPUTS-1:0] delay_lines [0:DELAY_SIZE-1];
+wire [NUM_INPUTS-1:0] delay_lines [0:DELAY_SIZE+JITTER_SIZE-1];
 reg [11:0] cross [0:NUM_INPUTS-1];
 reg [11:0] auto [0:NUM_INPUTS-1];
 reg [11:0] cross_tmp [0:NUM_INPUTS-1];
@@ -86,8 +89,14 @@ reg [7:0] index = 0;
 reg [3:0] baud_rate = 0;
 reg [5:0] clock_divider = 0;
 
-delay1 #(.RESOLUTION(NUM_INPUTS)) delay(clk, signal_in, in);
-assign pulse_in = ~in&signal_in;
+delay1 #(.RESOLUTION(NUM_INPUTS)) delay(pll_clk, signal_in, in);
+
+generate
+	genvar x;
+	for (x = 0; x < NUM_INPUTS; x=x+1) begin
+		assign pulse_in[x] = (leds[x*4+3] ? 1 : ~in[x]) & signal_in[x];
+	end
+endgenerate
 
 CLK_GEN #(.CLK_FREQUENCY(PLL_FREQUENCY), .RESOLUTION(128)) divider_block(
 	(UNIT>>(63-clock_divider)),
@@ -121,10 +130,11 @@ integer k;
 always@(posedge integration_clk) begin
 	overflow_out <= overflow;
 	tx_data[0+:PAYLOAD_SIZE] <= pulse_t;
-	tx_data[PAYLOAD_SIZE+:32] <= TICK_FREQUENCY;
-	tx_data[PAYLOAD_SIZE+32+:12] <= DELAY_SIZE;
-	tx_data[PAYLOAD_SIZE+32+12+:12] <= NUM_INPUTS-1;
-	tx_data[PAYLOAD_SIZE+32+12+12+:8] <= RESOLUTION;
+	tx_data[PAYLOAD_SIZE+:16] <= TICK;
+	tx_data[PAYLOAD_SIZE+16+:16] <= JITTER_SIZE;
+	tx_data[PAYLOAD_SIZE+16+16+:16] <= DELAY_SIZE;
+	tx_data[PAYLOAD_SIZE+16+16+16+:8] <= NUM_INPUTS-1;
+	tx_data[PAYLOAD_SIZE+16+16+16+8+:8] <= RESOLUTION;
 end
 
 uart_rx #(.SHIFT(SHIFT)) rx_block(
@@ -160,8 +170,8 @@ always@(posedge RXIF) begin
 			auto_tmp [index][(RXREG[1:0]*3)+:3] <= RXREG[6:4];
 		else
 			cross_tmp [index][(RXREG[1:0]*3)+:3] <= RXREG[6:4];
-		auto[index] <= (auto_tmp [index] < DELAY_SIZE ? auto_tmp [index] : DELAY_SIZE-1);
-		cross[index] <= (cross_tmp [index] < DELAY_SIZE ? cross_tmp [index] : DELAY_SIZE-1);
+		auto[index] <= (auto_tmp [index] < DELAY_SIZE+JITTER_SIZE-1 ? auto_tmp [index] : DELAY_SIZE+JITTER_SIZE-2);
+		cross[index] <= (cross_tmp [index] < DELAY_SIZE+JITTER_SIZE-1 ? cross_tmp [index] : DELAY_SIZE+JITTER_SIZE-2);
 	end else if (RXREG[3])  begin
 		clock_divider <= (RXREG[1:0]<<4)|RXREG[7:4];
 	end
@@ -172,33 +182,43 @@ generate
 	genvar a;
 	genvar b;
 	genvar c;
+	genvar d;
+	genvar y;
 
-	for(c=1; c<DELAY_SIZE; c=c+1) begin : delay_iteration_block
-		delay1 #(.RESOLUTION(NUM_INPUTS)) delay_line(clk, delay_lines[c-1], delay_lines[c]);
+	for(d=1; d<DELAY_SIZE+JITTER_SIZE-1; d=d+2000) begin : delay_iteration_block
+		for(c=d; c < d+2000 && c < DELAY_SIZE+JITTER_SIZE-1; c=c+1) begin : delay_iteration_inner_block
+			delay1 #(.RESOLUTION(NUM_INPUTS)) delay_line(clk, delay_lines[c-1], delay_lines[c]);
+		end
 	end
 	for (a=0; a<NUM_INPUTS; a=a+1) begin : correlators_initial_block
 		COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
 			(1<<RESOLUTION)-1,
-			pulse_t[RESOLUTION*(CORRELATIONS_SIZE+NUM_INPUTS+a)+:RESOLUTION],
+			pulse_t[(CORRELATIONS_SIZE+SPECTRA_SIZE+a)*RESOLUTION+:RESOLUTION],
 			overflow[a],
 			delay_lines[0][a],
 			reset_delayed
 		);
-		COUNTER #(.RESOLUTION(RESOLUTION)) spectra_block (
-			(1<<RESOLUTION)-1,
-			pulse_t[RESOLUTION*(CORRELATIONS_SIZE+a)+:RESOLUTION],
-			,
-			delay_lines[0][a]&delay_lines[auto[a]][a],
-			reset_delayed
-		);
-		for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
-			COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
-				(1<<RESOLUTION)-1,
-				pulse_t[(((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*RESOLUTION+:RESOLUTION],
-				,
-				delay_lines[cross[a]][a]&delay_lines[cross[b]][b],
-				reset_delayed
-			);
+		for(y=0; y < JITTER_SIZE*2; y=y+1) begin : jitter_block
+			if(y<JITTER_SIZE) begin
+				COUNTER #(.RESOLUTION(RESOLUTION)) spectra_block (
+					(1<<RESOLUTION)-1,
+					pulse_t[(CORRELATIONS_SIZE+a*JITTER_SIZE+y)*RESOLUTION+:RESOLUTION],
+					,
+					delay_lines[0][a]&delay_lines[auto[a]+y][a],
+					reset_delayed
+				);
+			end
+			if(y!=JITTER_SIZE) begin
+				for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
+					COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
+						(1<<RESOLUTION)-1,
+						pulse_t[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*(JITTER_SIZE*2-1)+(y>JITTER_SIZE?y-1:y)-1)*RESOLUTION+:RESOLUTION],
+						,
+						delay_lines[cross[a]+(y<JITTER_SIZE?JITTER_SIZE-y-1:0)][a]&delay_lines[cross[b]+(y>JITTER_SIZE?y-JITTER_SIZE:0)][b],
+						reset_delayed
+					);
+				end
+			end
 		end
 	end
 endgenerate
