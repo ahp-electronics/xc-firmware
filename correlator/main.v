@@ -1,5 +1,5 @@
 /*
-    AHP Interferometer - a telescope array firmware
+    AHP XC - a multiline spectrograph and cross-correlator
     Copyright (C) 2020  Ilia Platone
 
     This library is free software; you can redistribute it and/or
@@ -45,7 +45,7 @@ parameter RESOLUTION = 24;
 parameter NUM_INPUTS = 8;
 parameter NUM_BASELINES = NUM_INPUTS*(NUM_INPUTS-1)/2;
 parameter[127:0] UNIT = (SECOND<<63)/TICK_FREQUENCY;
-parameter TICK = (SECOND*1000)/TICK_FREQUENCY;
+parameter[39:0] TICK = 40'd1000000000000/TICK_FREQUENCY;
 
 parameter CORRELATIONS_SIZE = NUM_BASELINES*(JITTER_SIZE*2-1);
 parameter SPECTRA_SIZE = NUM_INPUTS*JITTER_SIZE;
