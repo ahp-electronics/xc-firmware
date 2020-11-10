@@ -1,5 +1,5 @@
 /*
-    AHP Interferometer - a telescope array firmware
+    AHP XC - a multiline spectrograph and cross-correlator
     Copyright (C) 2020  Ilia Platone
 
     This library is free software; you can redistribute it and/or
