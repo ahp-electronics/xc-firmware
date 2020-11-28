@@ -77,15 +77,16 @@ main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_FREQUENCY(PLL_FREQUENCY), .BAUD_RATE(
 	active_leds
 );
 
-pll pll_block (clki, pll_clk);
+assign pll_clk = clki;
+//pll pll_block (clki, pll_clk);
+
+wire [NUM_INPUTS-1:0] pwm_out;
+assign pulse_out = pwm_out&~overflow;
 
 pwm_osc #(.RESOLUTION(8), .DIVIDER(75), .CHANNELS(NUM_INPUTS)) osc (
 	pwm_out,
 	clki,
 	integrating
 );
-
-wire [NUM_INPUTS-1:0] pwm_out;
-assign pulse_out = pwm_out&~overflow;
 
 endmodule

@@ -27,11 +27,12 @@ The count of pulses and correlation comes with an ASCII packet string ended with
 Each packet starts with a header with payload length indication, it is possible to change some parameters from the code
 
 + bytes 0-1: hexadecimal sample size value
-+ bytes 2-4: hexadecimal inputs quantity
-+ bytes 5-7: hexadecimal delay lines quantity
-+ bytes 8-15: hexadecimal value of the clock speed
-+ bytes +lines#: pulses count within the packet time of every input in descending order in big-endian hexadecimal ASCII text
++ bytes 2-3: hexadecimal inputs quantity
++ bytes 4-6: hexadecimal delay channels quantity
++ bytes 7-10: hexadecimal live delay channels quantity
++ bytes 11: hexadecimal flags [bits: 0=live autocorrelator, 1=live crosscorrelator]
++ bytes 12-15: hexadecimal value of the clock tau in picoseconds
 + bytes +lines#: autocorrelations count of pulses of each line by the selected autocorrelation line
-+ bytes +baselines#: cross-correlations count of pulses of each line with others by the selected delay amount
++ bytes +baselines#: crosscorrelations count of pulses of each line with others by the selected delay amount
 
 ###### The sampling rate is the same as the packet rate, the bandwidth is the same as the FPGA oscillator frequency

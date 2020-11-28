@@ -38,25 +38,29 @@ parameter PLL_FREQUENCY = 400000000;
 parameter TICK_FREQUENCY = 200000000;
 
 parameter BAUD_RATE = 57600;
-parameter SHIFT = 1;
 parameter DELAY_SIZE = 200;
+parameter LIVE_SPECTRUM = 1;
+parameter LIVE_CORRELATOR = 1;
 parameter JITTER_SIZE = 1;
 parameter RESOLUTION = 24;
 parameter NUM_INPUTS = 8;
 parameter NUM_BASELINES = NUM_INPUTS*(NUM_INPUTS-1)/2;
 parameter[127:0] UNIT = (SECOND<<63)/TICK_FREQUENCY;
 parameter[39:0] TICK = 40'd1000000000000/TICK_FREQUENCY;
+parameter SHIFT = 1;
 
-parameter CORRELATIONS_SIZE = NUM_BASELINES*(JITTER_SIZE*2-1);
-parameter SPECTRA_SIZE = NUM_INPUTS*JITTER_SIZE;
-parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+SPECTRA_SIZE+NUM_INPUTS)*RESOLUTION;
+parameter CORRELATIONS_JITTER_SIZE = (LIVE_CORRELATOR?JITTER_SIZE:1);
+parameter SPECTRA_JITTER_SIZE = (LIVE_SPECTRUM?JITTER_SIZE:1);
+parameter CORRELATIONS_SIZE = NUM_BASELINES*(CORRELATIONS_JITTER_SIZE*2-1);
+parameter SPECTRA_SIZE = NUM_INPUTS*SPECTRA_JITTER_SIZE;
+parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+SPECTRA_SIZE)*RESOLUTION;
 parameter HEADER_SIZE = 64;
 parameter PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE;
 
 parameter BAUD_TIME = SECOND/BAUD_RATE;
 
 parameter MAX_COUNT=(1<<RESOLUTION);
-parameter TOTAL_NIBBLES=NUM_BASELINES*RESOLUTION/4;
+parameter TOTAL_NIBBLES=PACKET_SIZE/4;
 
 output wire TX;
 input wire RX;
@@ -131,10 +135,11 @@ always@(posedge integration_clk) begin
 	overflow_out <= overflow;
 	tx_data[0+:PAYLOAD_SIZE] <= pulse_t;
 	tx_data[PAYLOAD_SIZE+:16] <= TICK;
-	tx_data[PAYLOAD_SIZE+16+:16] <= JITTER_SIZE;
-	tx_data[PAYLOAD_SIZE+16+16+:16] <= DELAY_SIZE;
-	tx_data[PAYLOAD_SIZE+16+16+16+:8] <= NUM_INPUTS-1;
-	tx_data[PAYLOAD_SIZE+16+16+16+8+:8] <= RESOLUTION;
+	tx_data[PAYLOAD_SIZE+16+:4] <= (LIVE_CORRELATOR<<1)|LIVE_SPECTRUM;
+	tx_data[PAYLOAD_SIZE+16+4+:16] <= JITTER_SIZE;
+	tx_data[PAYLOAD_SIZE+16+4+16+:12] <= DELAY_SIZE;
+	tx_data[PAYLOAD_SIZE+16+4+16+12+:8] <= NUM_INPUTS-1;
+	tx_data[PAYLOAD_SIZE+16+4+16+12+8+:8] <= RESOLUTION;
 end
 
 uart_rx #(.SHIFT(SHIFT)) rx_block(
@@ -170,8 +175,8 @@ always@(posedge RXIF) begin
 			auto_tmp [index][(RXREG[1:0]*3)+:3] <= RXREG[6:4];
 		else
 			cross_tmp [index][(RXREG[1:0]*3)+:3] <= RXREG[6:4];
-		auto[index] <= (auto_tmp [index] < DELAY_SIZE+JITTER_SIZE-1 ? auto_tmp [index] : DELAY_SIZE+JITTER_SIZE-2);
-		cross[index] <= (cross_tmp [index] < DELAY_SIZE+JITTER_SIZE-1 ? cross_tmp [index] : DELAY_SIZE+JITTER_SIZE-2);
+		auto[index] <= (auto_tmp [index] < DELAY_SIZE+(LIVE_SPECTRUM?SPECTRA_JITTER_SIZE:1)-1 ? auto_tmp [index] : DELAY_SIZE+JITTER_SIZE-2);
+		cross[index] <= (cross_tmp [index] < DELAY_SIZE+(LIVE_CORRELATOR?CORRELATIONS_JITTER_SIZE:1)-1 ? cross_tmp [index] : DELAY_SIZE+JITTER_SIZE-2);
 	end else if (RXREG[3])  begin
 		clock_divider <= (RXREG[1:0]<<4)|RXREG[7:4];
 	end
@@ -184,6 +189,7 @@ generate
 	genvar c;
 	genvar d;
 	genvar y;
+	genvar z;
 
 	for(d=1; d<DELAY_SIZE+JITTER_SIZE-1; d=d+2000) begin : delay_iteration_block
 		for(c=d; c < d+2000 && c < DELAY_SIZE+JITTER_SIZE-1; c=c+1) begin : delay_iteration_inner_block
@@ -191,32 +197,27 @@ generate
 		end
 	end
 	for (a=0; a<NUM_INPUTS; a=a+1) begin : correlators_initial_block
-		COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
-			(1<<RESOLUTION)-1,
-			pulse_t[(CORRELATIONS_SIZE+SPECTRA_SIZE+a)*RESOLUTION+:RESOLUTION],
-			overflow[a],
-			delay_lines[0][a],
-			reset_delayed
-		);
-		for(y=0; y < JITTER_SIZE*2; y=y+1) begin : jitter_block
-			if(y<JITTER_SIZE) begin
-				COUNTER #(.RESOLUTION(RESOLUTION)) spectra_block (
-					(1<<RESOLUTION)-1,
-					pulse_t[(CORRELATIONS_SIZE+a*JITTER_SIZE+y)*RESOLUTION+:RESOLUTION],
-					,
-					delay_lines[0][a]&delay_lines[auto[a]+y][a],
-					reset_delayed
-				);
-			end
-			if(y!=JITTER_SIZE) begin
-				for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
-					COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
+		for(z=0; z < JITTER_SIZE*2; z=z+2000) begin : jitter_block
+			for(y=z; y < z+2000 && y < DELAY_SIZE+JITTER_SIZE-1; y=y+1) begin : jitter_inner_block
+				if(y<SPECTRA_JITTER_SIZE) begin
+					COUNTER #(.RESOLUTION(RESOLUTION)) spectra_block (
 						(1<<RESOLUTION)-1,
-						pulse_t[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*(JITTER_SIZE*2-1)+(y>JITTER_SIZE?y-1:y)-1)*RESOLUTION+:RESOLUTION],
+						pulse_t[(CORRELATIONS_SIZE+a*SPECTRA_JITTER_SIZE+y)*RESOLUTION+:RESOLUTION],
 						,
-						delay_lines[cross[a]+(y<JITTER_SIZE?JITTER_SIZE-y-1:0)][a]&delay_lines[cross[b]+(y>JITTER_SIZE?y-JITTER_SIZE:0)][b],
+						delay_lines[0][a]&delay_lines[auto[a]+y][a],
 						reset_delayed
 					);
+				end
+				if(y!=CORRELATIONS_JITTER_SIZE&&y<(CORRELATIONS_JITTER_SIZE*2-1)) begin
+					for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
+						COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
+							(1<<RESOLUTION)-1,
+							pulse_t[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*(CORRELATIONS_JITTER_SIZE*2-1)+(y>CORRELATIONS_JITTER_SIZE?y-1:y)-1)*RESOLUTION+:RESOLUTION],
+							,
+							delay_lines[cross[a]+(y<CORRELATIONS_JITTER_SIZE?CORRELATIONS_JITTER_SIZE-y-1:0)][a]&delay_lines[cross[b]+(y>CORRELATIONS_JITTER_SIZE?y-CORRELATIONS_JITTER_SIZE:0)][b],
+							reset_delayed
+						);
+					end
 				end
 			end
 		end
