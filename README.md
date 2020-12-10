@@ -17,7 +17,7 @@ There is a set of commands to start integrations:
 + 0x1d: Start integration by enabling UART transmission
 + 0x0d: Stop integration by disabling UART transmission
 + 0x01: select active line: bits [7:6] => indexer, bits [5:4] => value
-+ 0x02: activate leds or power lines using bits [5:4]
++ 0x02: activate leds or power lines using bits [5:4], invert pulse reading with bit 6, single clock cycle pulse width with bit 7
 + 0x03: baudrate 57600 << bits [7:4]
 + 0x04: bits [1:0] => indexer, bits [6:4] => delay value. If bit 7 is 0, then delay for cross-correlations is set, if bit 4 is 1, then delay for autocorrelations is set.
 + 0x08: sampling rate = Clock_Frequency / bits [7:4]
