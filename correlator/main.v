@@ -39,6 +39,7 @@ parameter TICK_FREQUENCY = 200000000;
 
 parameter BAUD_RATE = 57600;
 parameter DELAY_SIZE = 200;
+parameter HAS_CORRELATOR = 1;
 parameter HAS_LIVE_SPECTRUM = 1;
 parameter HAS_LIVE_CORRELATOR = 1;
 parameter HAS_LED_FLAGS = 1;
@@ -52,7 +53,7 @@ parameter SHIFT = 1;
 
 parameter CORRELATIONS_JITTER_SIZE = (HAS_LIVE_CORRELATOR?JITTER_SIZE:1);
 parameter SPECTRA_JITTER_SIZE = (HAS_LIVE_SPECTRUM?JITTER_SIZE:1);
-parameter CORRELATIONS_SIZE = NUM_BASELINES*(CORRELATIONS_JITTER_SIZE*2-1);
+parameter CORRELATIONS_SIZE = (HAS_CORRELATOR ? NUM_BASELINES*(CORRELATIONS_JITTER_SIZE*2-1) : 0);
 parameter SPECTRA_SIZE = NUM_INPUTS*SPECTRA_JITTER_SIZE;
 parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+SPECTRA_SIZE+NUM_INPUTS)*RESOLUTION;
 parameter HEADER_SIZE = 64;
@@ -99,9 +100,11 @@ delay1 #(.RESOLUTION(NUM_INPUTS)) delay(pll_clk, in, in_delayed);
 
 generate
 	genvar x;
-	for (x = 0; x < NUM_INPUTS; x=x+1) begin
-		assign in[a] = leds[x*4+2]^signal_in[a];
-		assign pulse_in[x] = (leds[x*4+3] ? 1 : ~in_delayed[x]) & in[x];
+	if(HAS_LED_FLAGS) begin
+		for (x = 0; x < NUM_INPUTS; x=x+1) begin
+			assign in[a] = leds[x*4+2]^signal_in[a];
+			assign pulse_in[x] = (leds[x*4+3] ? 1 : ~in_delayed[x]) & in[x];
+		end
 	end
 endgenerate
 
@@ -138,7 +141,7 @@ always@(posedge integration_clk) begin
 	overflow_out <= overflow;
 	tx_data[0+:PAYLOAD_SIZE] <= pulse_t;
 	tx_data[PAYLOAD_SIZE+:16] <= TICK;
-	tx_data[PAYLOAD_SIZE+16+:4] <= (HAS_LIVE_CORRELATOR<<1)|HAS_LIVE_SPECTRUM;
+	tx_data[PAYLOAD_SIZE+16+:4] <= (HAS_CORRELATOR << 3)|(HAS_LED_FLAGS<<2)|(HAS_LIVE_CORRELATOR<<1)|HAS_LIVE_SPECTRUM;
 	tx_data[PAYLOAD_SIZE+16+4+:16] <= JITTER_SIZE;
 	tx_data[PAYLOAD_SIZE+16+4+16+:12] <= DELAY_SIZE;
 	tx_data[PAYLOAD_SIZE+16+4+16+12+:8] <= NUM_INPUTS-1;
@@ -169,7 +172,7 @@ always@(posedge RXIF) begin
 		integrating <= RXREG[4];
 	end else if (RXREG[3:0] == SET_INDEX) begin
 		index[RXREG[7:6]*2+:2] <= RXREG[5:4];
-	end else if (RXREG[3:0] == SET_LEDS) begin
+	end else if (RXREG[3:0] == SET_LEDS && HAS_LED_FLAGS) begin
 		leds[index*4+:4] <= RXREG[7:4];
 	end else if (RXREG[3:0] == SET_BAUD_RATE) begin
 		baud_rate <= RXREG[7:4];
@@ -218,15 +221,17 @@ generate
 						reset_delayed
 					);
 				end
-				if(y!=CORRELATIONS_JITTER_SIZE&&y<(CORRELATIONS_JITTER_SIZE*2-1)) begin
-					for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
-						COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
-							(1<<RESOLUTION)-1,
-							pulse_t[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*(CORRELATIONS_JITTER_SIZE*2-1)+(y>CORRELATIONS_JITTER_SIZE?y-1:y)-1)*RESOLUTION+:RESOLUTION],
-							,
-							delay_lines[cross[a]+(y<CORRELATIONS_JITTER_SIZE?CORRELATIONS_JITTER_SIZE-y-1:0)][a]&delay_lines[cross[b]+(y>CORRELATIONS_JITTER_SIZE?y-CORRELATIONS_JITTER_SIZE:0)][b],
-							reset_delayed
-						);
+				if(HAS_CORRELATOR) begin
+					if(y!=CORRELATIONS_JITTER_SIZE&&y<(CORRELATIONS_JITTER_SIZE*2-1)) begin
+						for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
+							COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
+								(1<<RESOLUTION)-1,
+								pulse_t[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*(CORRELATIONS_JITTER_SIZE*2-1)+(y>CORRELATIONS_JITTER_SIZE?y-1:y)-1)*RESOLUTION+:RESOLUTION],
+								,
+								delay_lines[cross[a]+(y<CORRELATIONS_JITTER_SIZE?CORRELATIONS_JITTER_SIZE-y-1:0)][a]&delay_lines[cross[b]+(y>CORRELATIONS_JITTER_SIZE?y-CORRELATIONS_JITTER_SIZE:0)][b],
+								reset_delayed
+							);
+						end
 					end
 				end
 			end
