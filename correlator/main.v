@@ -57,7 +57,8 @@ parameter CORRELATIONS_SIZE = (HAS_CORRELATOR ? NUM_BASELINES*(CORRELATIONS_JITT
 parameter SPECTRA_SIZE = NUM_INPUTS*SPECTRA_JITTER_SIZE;
 parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+SPECTRA_SIZE+NUM_INPUTS)*RESOLUTION;
 parameter HEADER_SIZE = 64;
-parameter PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE;
+parameter CHECK_SIZE = 18;
+parameter PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+CHECK_SIZE;
 
 parameter BAUD_TIME = SECOND/BAUD_RATE;
 
@@ -92,6 +93,7 @@ reg [11:0] auto_tmp [0:NUM_INPUTS-1];
 wire uart_clk;
 wire uart_clk_pulse;
 
+reg [CHECK_SIZE-1:0] checksum = 0;
 reg [7:0] index = 0;
 reg [3:0] baud_rate = 0;
 reg [5:0] clock_divider = 0;
@@ -102,7 +104,7 @@ generate
 	genvar x;
 	if(HAS_LED_FLAGS) begin
 		for (x = 0; x < NUM_INPUTS; x=x+1) begin
-			assign in[a] = leds[x*4+2]^signal_in[a];
+			assign in[x] = leds[x*4+2]^signal_in[x];
 			assign pulse_in[x] = (leds[x*4+3] ? 1 : ~in_delayed[x]) & in[x];
 		end
 	end
@@ -135,17 +137,26 @@ TX_WORD #(.SHIFT(SHIFT), .RESOLUTION(PACKET_SIZE)) tx_block(
  
 wire reset_delayed;
 delay1 reset_delay(clk, integration_clk, reset_delayed);
-integer k;
+integer v;
+
+
+always@(posedge integration_clk) begin
+	checksum <= 0;
+	for(v=CHECK_SIZE; v<PACKET_SIZE; v=v+1) begin
+		checksum <= checksum+tx_data[v];
+	end
+end
 
 always@(posedge integration_clk) begin
 	overflow_out <= overflow;
-	tx_data[0+:PAYLOAD_SIZE] <= pulse_t;
-	tx_data[PAYLOAD_SIZE+:16] <= TICK;
-	tx_data[PAYLOAD_SIZE+16+:4] <= (HAS_CORRELATOR << 3)|(HAS_LED_FLAGS<<2)|(HAS_LIVE_CORRELATOR<<1)|HAS_LIVE_SPECTRUM;
-	tx_data[PAYLOAD_SIZE+16+4+:16] <= JITTER_SIZE;
-	tx_data[PAYLOAD_SIZE+16+4+16+:12] <= DELAY_SIZE;
-	tx_data[PAYLOAD_SIZE+16+4+16+12+:8] <= NUM_INPUTS-1;
-	tx_data[PAYLOAD_SIZE+16+4+16+12+8+:8] <= RESOLUTION;
+	tx_data[0+:CHECK_SIZE] <= checksum;
+	tx_data[CHECK_SIZE+:PAYLOAD_SIZE] <= pulse_t;
+	tx_data[CHECK_SIZE+PAYLOAD_SIZE+:16] <= TICK;
+	tx_data[CHECK_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CORRELATOR << 3)|(HAS_LED_FLAGS<<2)|(HAS_LIVE_CORRELATOR<<1)|HAS_LIVE_SPECTRUM;
+	tx_data[CHECK_SIZE+PAYLOAD_SIZE+16+4+:16] <= JITTER_SIZE;
+	tx_data[CHECK_SIZE+PAYLOAD_SIZE+16+4+16+:12] <= DELAY_SIZE;
+	tx_data[CHECK_SIZE+PAYLOAD_SIZE+16+4+16+12+:8] <= NUM_INPUTS-1;
+	tx_data[CHECK_SIZE+PAYLOAD_SIZE+16+4+16+12+8+:8] <= RESOLUTION;
 end
 
 uart_rx #(.SHIFT(SHIFT)) rx_block(
