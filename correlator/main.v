@@ -57,7 +57,7 @@ parameter CORRELATIONS_SIZE = (HAS_CORRELATOR ? NUM_BASELINES*(CORRELATIONS_JITT
 parameter SPECTRA_SIZE = NUM_INPUTS*SPECTRA_JITTER_SIZE;
 parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+SPECTRA_SIZE+NUM_INPUTS)*RESOLUTION;
 parameter HEADER_SIZE = 64;
-parameter CHECK_SIZE = 18;
+parameter CHECK_SIZE = 20;
 parameter PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+CHECK_SIZE;
 
 parameter BAUD_TIME = SECOND/BAUD_RATE;
@@ -141,15 +141,6 @@ integer v;
 
 
 always@(posedge integration_clk) begin
-	checksum <= 0;
-	for(v=CHECK_SIZE; v<PACKET_SIZE; v=v+1) begin
-		checksum <= checksum+tx_data[v];
-	end
-end
-
-always@(posedge integration_clk) begin
-	overflow_out <= overflow;
-	tx_data[0+:CHECK_SIZE] <= checksum;
 	tx_data[CHECK_SIZE+:PAYLOAD_SIZE] <= pulse_t;
 	tx_data[CHECK_SIZE+PAYLOAD_SIZE+:16] <= TICK;
 	tx_data[CHECK_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CORRELATOR << 3)|(HAS_LED_FLAGS<<2)|(HAS_LIVE_CORRELATOR<<1)|HAS_LIVE_SPECTRUM;
@@ -157,6 +148,12 @@ always@(posedge integration_clk) begin
 	tx_data[CHECK_SIZE+PAYLOAD_SIZE+16+4+16+:12] <= DELAY_SIZE;
 	tx_data[CHECK_SIZE+PAYLOAD_SIZE+16+4+16+12+:8] <= NUM_INPUTS-1;
 	tx_data[CHECK_SIZE+PAYLOAD_SIZE+16+4+16+12+8+:8] <= RESOLUTION;
+	checksum <= 0;
+	for(v=CHECK_SIZE; v<PACKET_SIZE; v=v+1) begin
+		checksum <= checksum+tx_data[v];
+	end
+	overflow_out <= overflow;
+	tx_data[0+:CHECK_SIZE] <= checksum;
 end
 
 uart_rx #(.SHIFT(SHIFT)) rx_block(
