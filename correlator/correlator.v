@@ -34,18 +34,18 @@ module correlator (
 	);
 
 parameter SECOND = 1000000000;
-parameter MUX_LINES = 1;
-parameter NUM_LINES = 8;
+parameter MUX_LINES = 4;
+parameter NUM_LINES = 2;
 parameter CLK_FREQUENCY = 10000000;
 parameter PLL_FREQUENCY = 400000000;
 parameter TICK_FREQUENCY = (PLL_FREQUENCY/(1+MUX_LINES));
 parameter BAUD_RATE = 57600;
    
-parameter HAS_LIVE_SPECTRUM = 0;
+parameter HAS_LIVE_SPECTRUM = 1;
 parameter HAS_LIVE_CORRELATOR = 0;
 parameter HAS_CORRELATOR = 1;
 parameter HAS_LED_FLAGS = 1;
-parameter JITTER_SIZE = 1;
+parameter JITTER_SIZE = 150;
 parameter DELAY_SIZE = 150;
 parameter RESOLUTION = 20;
 parameter NUM_INPUTS = NUM_LINES*MUX_LINES;
