@@ -34,8 +34,8 @@ module correlator (
 	);
 
 parameter SECOND = 1000000000;
-parameter MUX_LINES = 4;
-parameter NUM_LINES = 2;
+parameter MUX_LINES = 1;
+parameter NUM_LINES = 8;
 parameter CLK_FREQUENCY = 10000000;
 parameter PLL_FREQUENCY = 400000000;
 parameter TICK_FREQUENCY = (PLL_FREQUENCY/(1+MUX_LINES));
