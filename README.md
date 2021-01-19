@@ -2,7 +2,7 @@
 
 #### This repository contains code of the XC8 series correlators
 
-![alt text](https://raw.githubusercontent.com/ahp-electronics/xc-firwmare/master/pictures/XC8_small.png "XC8")
+![AHP XC8 cross-correlator](https://raw.githubusercontent.com/ahp-electronics/pictures/master/XC8_small.png "XC8")
 
 The generated SVF file can be downloaded to the device using urJTAG http://urjtag.org/
 
