@@ -28,7 +28,7 @@ module correlator (
 	line_out,
 	integration_clk_pulse,
 	sampling_clk,
-	active_line,
+	out_line,
 	clki,
 	enable
 	);
@@ -40,7 +40,7 @@ parameter CLK_FREQUENCY = 10000000;
 parameter PLL_FREQUENCY = 400000000;
 parameter TICK_FREQUENCY = (PLL_FREQUENCY/(1+MUX_LINES));
 parameter BAUD_RATE = 57600;
-
+   
 parameter HAS_LIVE_SPECTRUM = 0;
 parameter HAS_LIVE_CORRELATOR = 0;
 parameter HAS_CORRELATOR = 1;
@@ -52,6 +52,7 @@ parameter NUM_INPUTS = NUM_LINES*MUX_LINES;
 parameter NUM_CORRELATORS = NUM_INPUTS*(NUM_INPUTS-1)/2;
 
 output reg sh_reset; 
+output reg[NUM_LINES*2-1:0] out_line;
 output reg[MUX_LINES:0] mux_out;
 input wire[NUM_LINES-1:0] line_in;
 output reg[NUM_LINES-1:0] line_out;
@@ -63,7 +64,7 @@ input wire RX;
 reg[NUM_INPUTS-1:0] pulse_in;
 wire[NUM_INPUTS-1:0] pulse_out;
 output wire integration_clk_pulse;
-output wire[NUM_INPUTS*2-1:0] active_line;
+wire[NUM_INPUTS*2-1:0] active_line;
 wire[NUM_INPUTS*4-1:0] active_leds;
 wire[NUM_INPUTS-1:0] voltage;
 wire clk;
@@ -82,6 +83,7 @@ always@(posedge pll_clk) begin
 		for (x = 0; x < NUM_LINES; x=x+1) begin
 			pulse_in[index*NUM_LINES+x] <= line_in[x];
 			line_out[x] <= pulse_out[index*NUM_LINES+x];
+			out_line[x*2+:2] <= active_line[(index*NUM_LINES+x)*2+:2];
 		end
 	end else if(index == MUX_LINES) begin
 		sh_reset <= 1;
