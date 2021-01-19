@@ -56,9 +56,14 @@ uart_tx #(.SHIFT(SHIFT)) tx_block(
 );
 
 always@(posedge done or posedge stb) begin
-	if(status == 3)
+	if(done && stb)
 		status <= 0;
-	status <= status | (done | (stb << 1));
+	else if(done && !stb)
+		status <= 1;
+	else if(!done && stb)
+		status <= 2;
+	else if(!done && !stb)
+		status <= 0;
 end
 	
 always@(posedge TXIF or negedge enable) begin

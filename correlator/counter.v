@@ -23,33 +23,33 @@ module COUNTER (
 		counter_max,
 		counter_out,
 		overflow,
+		signal,
 		clk,
 		reset
 	);
 	parameter RESOLUTION=64;
 	input wire [RESOLUTION-1:0] counter_max;
-	output wire [RESOLUTION-1:0] counter_out;
+	output reg [RESOLUTION-1:0] counter_out;
 	output wire overflow;
+	input wire signal;
 	input wire clk;
 	input wire reset;
-	reg [RESOLUTION-1:0] counter_tmp;
-	assign counter_out = counter_tmp;
-	assign overflow = (counter_tmp == counter_max);
+	assign overflow = (counter_out == counter_max);
 	reg _reset;
-	always @(posedge (_reset^clk))
+	always @(posedge (clk))
 	begin
 		if(~_reset) begin
-			if (counter_tmp < counter_max)
-				counter_tmp <= counter_tmp + 1;
+			if (counter_out < counter_max && signal)
+				counter_out <= counter_out + 1;
 		end else begin
-			counter_tmp <= 0;
+			counter_out <= 0;
 		end
 	end
 	
 	always @(*) begin
 		if(reset)
 			_reset <= 1;
-		else if(!counter_tmp)
+		else if(!counter_out)
 			_reset <= 0;
 	end
 		
