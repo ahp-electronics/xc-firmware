@@ -185,7 +185,7 @@ always@(posedge RXIF) begin
 		leds[index*4+:4] <= RXREG[7:4];
 	end else if (RXREG[3:0] == SET_BAUD_RATE) begin
 		baud_rate <= RXREG[7:4];
-	end else if (RXREG[2]) begin
+	end else if ((RXREG[3:0]&4'b1100) == SET_DELAY) begin
 		if (RXREG[7])
 			auto_tmp [index][(RXREG[1:0]*3)+:3] <= RXREG[6:4];
 		else
@@ -237,8 +237,8 @@ generate
 			pll_clk,
 			reset_delayed
 		);
-		for(z=0; z < JITTER_SIZE*2; z=z+2000) begin : jitter_block
-			for(y=z; y < z+2000 && y < DELAY_SIZE+JITTER_SIZE-1; y=y+1) begin : jitter_inner_block
+		for(z=0; z < JITTER_SIZE*2; z=z+512) begin : jitter_block
+			for(y=z; y < z+512 && y < JITTER_SIZE*2; y=y+1) begin : jitter_inner_block
 				if(y<SPECTRA_JITTER_SIZE) begin
 					COUNTER #(.RESOLUTION(RESOLUTION)) spectra_block (
 						(1<<RESOLUTION)-1,

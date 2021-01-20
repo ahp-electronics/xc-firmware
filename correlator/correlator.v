@@ -34,36 +34,41 @@ module correlator (
 	);
 
 parameter SECOND = 1000000000;
-parameter MUX_LINES = 1;
-parameter NUM_LINES = 8;
 parameter CLK_FREQUENCY = 10000000;
 parameter PLL_FREQUENCY = 400000000;
-parameter TICK_FREQUENCY = (PLL_FREQUENCY/(1+MUX_LINES));
-parameter BAUD_RATE = 57600;
-   
-parameter HAS_LIVE_SPECTRUM = 1;
-parameter HAS_LIVE_CORRELATOR = 0;
-parameter HAS_CORRELATOR = 1;
-parameter HAS_LED_FLAGS = 1;
-parameter JITTER_SIZE = 150;
 parameter DELAY_SIZE = 150;
 parameter RESOLUTION = 20;
+parameter MUX_LINES = 1;
+parameter NUM_LINES = 8;
+parameter HAS_LED_FLAGS = 1;
+parameter HAS_CORRELATOR = 1;
+parameter MAX_LAG = 1;
+parameter HAS_LIVE_SPECTRUM = 0;
+parameter HAS_LIVE_CORRELATOR = 0;
+parameter BAUD_RATE = 57600;
+   
+parameter TICK_FREQUENCY = (PLL_FREQUENCY/(1+MUX_LINES));
+parameter JITTER_SIZE = (HAS_LIVE_SPECTRUM|HAS_LIVE_CORRELATOR)?MAX_LAG:1;
 parameter NUM_INPUTS = NUM_LINES*MUX_LINES;
 parameter NUM_CORRELATORS = NUM_INPUTS*(NUM_INPUTS-1)/2;
 
-output reg sh_reset; 
-output reg[NUM_LINES*2-1:0] out_line;
-output reg[MUX_LINES:0] mux_out;
-input wire[NUM_LINES-1:0] line_in;
-output reg[NUM_LINES-1:0] line_out;
-output wire sampling_clk;
-input wire enable;
-input wire clki;
 output wire TX;
 input wire RX;
+
+input wire clki;
+
+output wire integration_clk_pulse;
+output wire sampling_clk;
+output reg sh_reset;
+input wire enable;
+
+input wire[NUM_LINES-1:0] line_in;
+output reg[NUM_LINES*2-1:0] out_line;
+output reg[NUM_LINES-1:0] line_out;
+output reg[MUX_LINES:0] mux_out;
+
 reg[NUM_INPUTS-1:0] pulse_in;
 wire[NUM_INPUTS-1:0] pulse_out;
-output wire integration_clk_pulse;
 wire[NUM_INPUTS*2-1:0] active_line;
 wire[NUM_INPUTS*4-1:0] active_leds;
 wire[NUM_INPUTS-1:0] voltage;
@@ -117,7 +122,7 @@ main #(.CLK_FREQUENCY(CLK_FREQUENCY), .TICK_FREQUENCY(TICK_FREQUENCY), .HAS_CORR
 );
 
 pll pll_block (clki, pll_clk);
-pwm_osc #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(10000), .RESOLUTION(8), .CHANNELS(8)) osc (
+pwm_osc #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(100000/NUM_INPUTS), .RESOLUTION(8), .CHANNELS(NUM_INPUTS)) osc (
 	pwm_out,
 	clki,
 	integrating
