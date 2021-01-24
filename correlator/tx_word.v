@@ -24,7 +24,7 @@ module TX_WORD(
 	tx_data,
 	clk,
 	stb,
-	done,
+	tx_done,
 	enable
 	);
 
@@ -36,30 +36,22 @@ output wire TX;
 input wire [RESOLUTION-1:0] tx_data;
 input wire enable;
 input wire stb;
-output reg done;
+output wire tx_done;
 input wire clk;
 
+reg done;
+assign tx_done = done;
 reg signed [31:0] tidx;
 wire TXIF;
 reg [7:0] TXREG;
-	
-reg[1:0] status;
-wire transmit;
-assign transmit = (status == 1) ? 0 : enable;
 
 uart_tx #(.SHIFT(SHIFT)) tx_block(
 	TX,
 	TXREG,
 	TXIF,
-	transmit,
+	enable,
 	clk
 );
-
-always@(posedge done or posedge stb) begin
-	if(status == 3)
-		status <= 0;
-	status <= status | (done | (stb << 1));
-end
 	
 always@(posedge TXIF or negedge enable) begin
 	if(!enable) begin

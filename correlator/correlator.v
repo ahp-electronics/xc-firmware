@@ -22,71 +22,49 @@
 module correlator (
 	TX,
 	RX,
-	pulse_in,
-	pulse_out,
-	integration_clk_pulse,
-	active_line,
+	jp1,
+	jp2,
 	clki
 	);
 
-parameter SECOND = 1000000000;
-parameter CLK_FREQUENCY = 50000000;
-parameter PLL_FREQUENCY = 400000000;
-
+parameter CLK_FREQUENCY = 10000000;
+parameter PLL_MULTIPLIER = 50;
+parameter PLL_DIVIDER = 1;
+parameter MUX_LINES = 2;
+parameter NUM_LINES = 4;
+parameter DELAY_SIZE = 200;
+parameter RESOLUTION = 8;
+parameter HAS_PSU = 0;
+parameter HAS_LED_FLAGS = 0;
+parameter HAS_CORRELATOR = 2;
+parameter MAX_LAG = 1;
+parameter HAS_LIVE_SPECTRUM = 0;
+parameter HAS_LIVE_CORRELATOR = 0;
 parameter BAUD_RATE = 57600;
 
-parameter JITTER_SIZE = 1;
-parameter DELAY_SIZE = 128;
-parameter RESOLUTION = 24;
-parameter NUM_INPUTS = 8;
-parameter NUM_CORRELATORS = NUM_INPUTS*(NUM_INPUTS-1)/2;
-
-input wire clki;
 output wire TX;
 input wire RX;
-input wire[NUM_INPUTS-1:0] pulse_in;
-output wire[NUM_INPUTS-1:0] pulse_out;
-output wire[NUM_INPUTS-1:0] leds;
-output wire integration_clk_pulse;
-output wire[NUM_INPUTS*2-1:0] active_line;
-wire[NUM_INPUTS*4-1:0] active_leds;
-wire clk;
-wire integrating;
-wire pll_clk;
-wire[NUM_INPUTS-1:0] overflow;
-wire[NUM_INPUTS-1:0] in_line;
 
-generate
-	genvar a;
-	for(a=0; a<NUM_INPUTS; a=a+1) begin
-		assign active_line[a*2+:2] = active_leds[a*4+:2];
-		assign in_line[a] = active_leds[a*4+2]^~pulse_in[a];
-	end
-endgenerate
+wire clki;
 
-main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_FREQUENCY(PLL_FREQUENCY), .BAUD_RATE(BAUD_RATE), .RESOLUTION(RESOLUTION), .NUM_INPUTS(NUM_INPUTS), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .JITTER_SIZE(JITTER_SIZE)) main_block(
+wire[NUM_LINES-1:0] line_in;
+wire[NUM_LINES*3-1:0] line_out;
+wire[MUX_LINES:0] mux_out;
+
+inout wire[3:0] jp1;
+inout wire[3:0] jp2;
+
+assign line_in[0+:4] = jp1[0+:4];
+assign mux_out[0+:4] = jp2[0+:4];
+
+main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CORRELATOR(HAS_CORRELATOR), .HAS_LIVE_SPECTRUM(HAS_LIVE_SPECTRUM), .HAS_LIVE_CORRELATOR(HAS_LIVE_CORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .MAX_LAG(MAX_LAG)) main_block(
 	TX,
 	RX,
-	in_line,
-	overflow,
-	pll_clk,
-	clk,
+	line_in,
+	line_out,
+	mux_out,
 	clki,
-	integration_clk_pulse,
-	integrating,
-	active_leds
-);
-
-assign pll_clk = clki;
-//pll pll_block (clki, pll_clk);
-
-wire [NUM_INPUTS-1:0] pwm_out;
-assign pulse_out = pwm_out&~overflow;
-
-pwm_osc #(.RESOLUTION(8), .DIVIDER(75), .CHANNELS(NUM_INPUTS)) osc (
-	pwm_out,
-	clki,
-	integrating
+	1
 );
 
 endmodule

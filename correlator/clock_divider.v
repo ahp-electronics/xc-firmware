@@ -30,9 +30,9 @@ module CLK_GEN
 	parameter[63:0] CLK_FREQUENCY = 64'd420000000;
 	parameter[63:0] SECOND = 64'd2000000000;
 	parameter[63:0] UNIT = SECOND/CLK_FREQUENCY;
-	parameter[63:0] RESOLUTION = 64;
+	parameter[63:0] RESOLUTION = 32;
 	
-	input wire [63:0] ns;
+	input wire [RESOLUTION-1:0] ns;
 	output reg clk_out;
 	input wire clk;
 	input wire enable;

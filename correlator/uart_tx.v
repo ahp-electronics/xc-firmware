@@ -40,11 +40,11 @@ input wire clk;
 reg [5+SHIFT:0] bit_count = (WORD_WIDTH+STOP_BITS)<<SHIFT;
 
 always@(posedge clk) begin
-	case(bit_count[SHIFT+:6])
+	case(bit_count[SHIFT+:5])
 		WORD_WIDTH+STOP_BITS:
 		begin
 			tx_done <= 0;
-			if(tx_start) begin
+			if(tx_start) begin 
 				bit_count <= 0;
 				tx <= 0;
 			end else begin
@@ -60,7 +60,7 @@ always@(posedge clk) begin
 		default:
 		begin
 			tx_done <= 0;
-			tx <= din[bit_count[SHIFT+:6]];
+			tx <= din[bit_count[SHIFT+:5]];
 			bit_count <= bit_count+1;
 		end
 	endcase
