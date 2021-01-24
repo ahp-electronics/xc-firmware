@@ -37,7 +37,7 @@ module PWM (
 	output wire overflow;
 
 	COUNTER #(.RESOLUTION(RESOLUTION)) counter(
-		(1<<(RESOLUTION))-1,
+		~0,
 		counter_out,
 		overflow,
 		1'd1,

@@ -44,7 +44,7 @@ always@(posedge clk) begin
 		WORD_WIDTH+STOP_BITS:
 		begin
 			tx_done <= 0;
-			if(tx_start) begin
+			if(tx_start) begin 
 				bit_count <= 0;
 				tx <= 0;
 			end else begin

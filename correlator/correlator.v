@@ -22,111 +22,49 @@
 module correlator (
 	TX,
 	RX,
-	sh_reset,
-	mux_out,
-	line_in,
-	line_out,
-	integration_clk_pulse,
-	sampling_clk,
-	out_line,
-	clki,
-	enable
+	jp1,
+	jp2,
+	clki
 	);
 
-parameter SECOND = 1000000000;
 parameter CLK_FREQUENCY = 10000000;
-parameter PLL_FREQUENCY = 400000000;
-parameter DELAY_SIZE = 150;
-parameter RESOLUTION = 20;
-parameter MUX_LINES = 1;
-parameter NUM_LINES = 8;
-parameter HAS_LED_FLAGS = 1;
-parameter HAS_CORRELATOR = 1;
+parameter PLL_MULTIPLIER = 50;
+parameter PLL_DIVIDER = 1;
+parameter MUX_LINES = 2;
+parameter NUM_LINES = 4;
+parameter DELAY_SIZE = 200;
+parameter RESOLUTION = 8;
+parameter HAS_PSU = 0;
+parameter HAS_LED_FLAGS = 0;
+parameter HAS_CORRELATOR = 2;
 parameter MAX_LAG = 1;
 parameter HAS_LIVE_SPECTRUM = 0;
 parameter HAS_LIVE_CORRELATOR = 0;
 parameter BAUD_RATE = 57600;
-   
-parameter TICK_FREQUENCY = (PLL_FREQUENCY/(1+MUX_LINES));
-parameter JITTER_SIZE = (HAS_LIVE_SPECTRUM|HAS_LIVE_CORRELATOR)?MAX_LAG:1;
-parameter NUM_INPUTS = NUM_LINES*MUX_LINES;
-parameter NUM_CORRELATORS = NUM_INPUTS*(NUM_INPUTS-1)/2;
 
 output wire TX;
 input wire RX;
 
-input wire clki;
+wire clki;
 
-output wire integration_clk_pulse;
-output wire sampling_clk;
-output reg sh_reset;
-input wire enable;
+wire[NUM_LINES-1:0] line_in;
+wire[NUM_LINES*3-1:0] line_out;
+wire[MUX_LINES:0] mux_out;
 
-input wire[NUM_LINES-1:0] line_in;
-output reg[NUM_LINES*2-1:0] out_line;
-output reg[NUM_LINES-1:0] line_out;
-output reg[MUX_LINES:0] mux_out;
+inout wire[3:0] jp1;
+inout wire[3:0] jp2;
 
-reg[NUM_INPUTS-1:0] pulse_in;
-wire[NUM_INPUTS-1:0] pulse_out;
-wire[NUM_INPUTS*2-1:0] active_line;
-wire[NUM_INPUTS*4-1:0] active_leds;
-wire[NUM_INPUTS-1:0] voltage;
-wire clk;
-wire integrating;
-wire pll_clk;
-wire[NUM_INPUTS-1:0] overflow;
-wire [NUM_INPUTS-1:0] pwm_out;
-reg index = 0;
-reg [31:0] x = 0;
+assign line_in[0+:4] = jp1[0+:4];
+assign mux_out[0+:4] = jp2[0+:4];
 
-always@(posedge pll_clk) begin
-	if(index >= 0 && index < MUX_LINES) begin
-		sh_reset <= 0;
-		mux_out <= 1<<index;
-		index <= index+1;
-		for (x = 0; x < NUM_LINES; x=x+1) begin
-			pulse_in[index*NUM_LINES+x] <= line_in[x];
-			line_out[x] <= pulse_out[index*NUM_LINES+x];
-			out_line[x*2+:2] <= active_line[(index*NUM_LINES+x)*2+:2];
-		end
-	end else if(index == MUX_LINES) begin
-		sh_reset <= 1;
-		mux_out <= 0;
-		index <= 0;
-	end
-end
-
-generate 
-	genvar a;
-	for(a=0; a<NUM_INPUTS; a=a+1) begin
-		assign active_line[a*2] = active_leds[a*4];
-		assign active_line[a*2+1] = active_leds[a*4+1]&voltage[a];
-	end
-endgenerate
-
-main #(.CLK_FREQUENCY(CLK_FREQUENCY), .TICK_FREQUENCY(TICK_FREQUENCY), .HAS_CORRELATOR(HAS_CORRELATOR), .HAS_LIVE_SPECTRUM(HAS_LIVE_SPECTRUM), .HAS_LIVE_CORRELATOR(HAS_LIVE_CORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .PLL_FREQUENCY(PLL_FREQUENCY), .RESOLUTION(RESOLUTION), .NUM_INPUTS(NUM_INPUTS), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .JITTER_SIZE(JITTER_SIZE)) main_block(
+main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CORRELATOR(HAS_CORRELATOR), .HAS_LIVE_SPECTRUM(HAS_LIVE_SPECTRUM), .HAS_LIVE_CORRELATOR(HAS_LIVE_CORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .MAX_LAG(MAX_LAG)) main_block(
 	TX,
 	RX,
-	voltage,
-	pulse_in,
-	overflow,
-	pll_clk,
-	clk,
+	line_in,
+	line_out,
+	mux_out,
 	clki,
-	integration_clk_pulse,
-	sampling_clk,
-	integrating,
-	active_leds,
-	enable
+	1
 );
-
-pll pll_block (clki, pll_clk);
-pwm_osc #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(100000/NUM_INPUTS), .RESOLUTION(8), .CHANNELS(NUM_INPUTS)) osc (
-	pwm_out,
-	clki,
-	integrating
-);
-assign pulse_out = pwm_out&~overflow;
 
 endmodule
