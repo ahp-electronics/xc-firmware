@@ -5,7 +5,31 @@
 
 
 `timescale 1 ns / 1 ps
-module pll (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
+module pll (clki, clko, clkop)/* synthesis NGD_DRC_MASK=1 */;
+	parameter MULTIPLIER = 1;
+	parameter DIVIDER = 1;
+	
+	input wire clki;
+	output reg clko;
+	output wire clkop;
+	
+	wire pll_clk;
+	reg [7:0] clock_pulse = 0;
+	
+	plli #(.MULTIPLIER(MULTIPLIER), .DIVIDER(DIVIDER)) plli_block (clki, pll_clk);
+	plli #(.MULTIPLIER(MULTIPLIER), .DIVIDER(DIVIDER)) pllo_block (clko, clkop);
+
+	always@(posedge pll_clk) begin
+		if(clock_pulse < MULTIPLIER) begin
+			clock_pulse <= clock_pulse+(DIVIDER<<1);
+		end else begin
+			clko <= ~clko;
+			clock_pulse <= 0;
+		end
+	end
+endmodule
+
+module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
     input wire CLKI;
     output wire CLKOP;
 

@@ -25,7 +25,7 @@ module main (
 	line_in,
 	line_out,
 	mux_out,
-	clki,
+	clock,
 	enable
 );
 
@@ -44,6 +44,7 @@ parameter MAX_LAG = 1;
 parameter HAS_LIVE_SPECTRUM = 0;
 parameter HAS_LIVE_CORRELATOR = 0;
 parameter BAUD_RATE = 57600;
+parameter SHIFT = 1;
 
 parameter SECOND = 1000000000;
 parameter TICK_FREQUENCY = (PLL_FREQUENCY/(1+MUX_LINES));
@@ -60,7 +61,7 @@ parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+SPECTRA_SIZE+NUM_INPUTS)*RESOLUTION;
 parameter HEADER_SIZE = 64;
 parameter PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE;
 
-parameter BAUD_TIME = SECOND/BAUD_RATE;
+parameter BAUD_TIME = (SECOND/BAUD_RATE)>>SHIFT;
 
 parameter MAX_COUNT=(1<<RESOLUTION);
 parameter TOTAL_NIBBLES=PACKET_SIZE/4;
@@ -75,10 +76,12 @@ output reg[MUX_LINES-1:0] mux_out;
 wire[NUM_INPUTS-1:0] in_delayed;
 wire[NUM_INPUTS-1:0] pulse_in;
 wire[NUM_INPUTS-1:0] in;
-input wire clki;
 
+input wire clock;
+wire clki;
 wire sampling_clk;
 wire pll_clk;
+wire plli_clk;
 wire clk;
 wire integration_clk;
 wire uart_clk;
@@ -119,7 +122,8 @@ reg [5:0] clock_divider = 0;
 assign integration_clk = tx_done;
 assign delay_lines[0] = pulse_in;
 
-pll #(.MULTIPLIER(PLL_MULTIPLIER), .DIVIDER(PLL_DIVIDER)) pll_block (clki, pll_clk);
+pll #(.MULTIPLIER(PLL_MULTIPLIER), .DIVIDER(PLL_DIVIDER)) pll_block (clock, clki, pll_clk);
+
 always@(*) begin
 	mux_out <= 1<<mux_line;
 	signal_in[mux_line*NUM_LINES+:NUM_LINES] <= line_in;
@@ -127,11 +131,11 @@ always@(*) begin
 		line_out[0+:NUM_LINES] <= pwm_out[mux_line*NUM_LINES+:NUM_LINES]&~overflow[mux_line*NUM_LINES+:NUM_LINES];
 		for(k=0; k<NUM_INPUTS; k=k+1) begin
 			line_out[NUM_LINES+k*2] = leds[k*4];
-			line_out[NUM_LINES+k*2+1] = leds[k*4+1]&(!HAS_PSU ? 1 : voltage[k]);
+			line_out[NUM_LINES+k*2+1] = leds[k*4+1]&(HAS_PSU ? ~voltage[k] : 1);
 		end
 	end
 end
-
+	
 always@(posedge pll_clk) begin
 	if(mux_line < MUX_LINES-1) begin
 		mux_line <= mux_line+1;
@@ -170,7 +174,7 @@ CLK_GEN #(.CLK_FREQUENCY(PLL_FREQUENCY), .RESOLUTION(128)) divider_block(
 );
 
 CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) uart_clock_block(
-	BAUD_TIME>>(baud_rate+1),
+	BAUD_TIME>>baud_rate,
 	uart_clk,
 	clki,
 	,
@@ -178,20 +182,27 @@ CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) uart_clock_block(
 );
 
 CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) pwm_clock_block(
-	10000000,
+	1250000,
 	pwm_clk,
 	clki,
 	,
-	enable
+	enable&HAS_PSU
 );
 
-TX_WORD #(.SHIFT(1), .RESOLUTION(PACKET_SIZE)) tx_block(
+TX_WORD #(.SHIFT(SHIFT), .RESOLUTION(PACKET_SIZE)) tx_block(
 	TX,
 	tx_data,
 	uart_clk,
 	, 
 	tx_done,
 	integrating
+);
+
+uart_rx #(.SHIFT(SHIFT)) rx_block(
+	RX,
+	RXREG,
+	RXIF,
+	uart_clk
 );
 
 always@(posedge integration_clk) begin
@@ -203,13 +214,6 @@ always@(posedge integration_clk) begin
 	tx_data[PAYLOAD_SIZE+16+4+16+12+:8] <= NUM_INPUTS-1;
 	tx_data[PAYLOAD_SIZE+16+4+16+12+8+:8] <= RESOLUTION;
 end
-
-uart_rx #(.SHIFT(1)) rx_block(
-	RX,
-	RXREG,
-	RXIF,
-	uart_clk
-);
 
 parameter[3:0]
 	CLEAR = 0,

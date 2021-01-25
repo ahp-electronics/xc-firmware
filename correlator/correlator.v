@@ -28,15 +28,15 @@ module correlator (
 	);
 
 parameter CLK_FREQUENCY = 10000000;
-parameter PLL_MULTIPLIER = 50;
+parameter PLL_MULTIPLIER = 40;
 parameter PLL_DIVIDER = 1;
 parameter MUX_LINES = 2;
 parameter NUM_LINES = 4;
-parameter DELAY_SIZE = 200;
-parameter RESOLUTION = 8;
+parameter DELAY_SIZE = 180;
+parameter RESOLUTION = 16;
 parameter HAS_PSU = 0;
-parameter HAS_LED_FLAGS = 0;
-parameter HAS_CORRELATOR = 2;
+parameter HAS_LED_FLAGS = 1;
+parameter HAS_CORRELATOR = 1;
 parameter MAX_LAG = 1;
 parameter HAS_LIVE_SPECTRUM = 0;
 parameter HAS_LIVE_CORRELATOR = 0;
@@ -45,17 +45,18 @@ parameter BAUD_RATE = 57600;
 output wire TX;
 input wire RX;
 
-wire clki;
+input wire clki;
 
 wire[NUM_LINES-1:0] line_in;
 wire[NUM_LINES*3-1:0] line_out;
 wire[MUX_LINES:0] mux_out;
 
-inout wire[3:0] jp1;
-inout wire[3:0] jp2;
+inout wire[19:0] jp1;
+inout wire[19:0] jp2;
 
-assign line_in[0+:4] = jp1[0+:4];
-assign mux_out[0+:4] = jp2[0+:4];
+assign line_in = jp1[0+:NUM_LINES];
+assign jp1[NUM_LINES+:MUX_LINES] = mux_out;
+assign jp2[0+:NUM_LINES*3] = line_out;
 
 main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CORRELATOR(HAS_CORRELATOR), .HAS_LIVE_SPECTRUM(HAS_LIVE_SPECTRUM), .HAS_LIVE_CORRELATOR(HAS_LIVE_CORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .MAX_LAG(MAX_LAG)) main_block(
 	TX,
