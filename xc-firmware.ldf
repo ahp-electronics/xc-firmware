@@ -81,7 +81,7 @@
         <Source name="boards/lcmxo3l.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
-        <Source name="xc8/source/xc-firmware_xc8.xcf" type="Programming Project File" type_short="Programming">
+        <Source name="xc8/xc-firmware_xc8.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
     </Implementation>
