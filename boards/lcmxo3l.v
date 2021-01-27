@@ -32,7 +32,9 @@ endmodule
 module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
     input wire CLKI;
     output wire CLKOP;
-
+	parameter MULTIPLIER = 1;
+	parameter DIVIDER = 1;
+	
     wire LOCK;
     wire CLKOP_t;
     wire scuba_vlo;
