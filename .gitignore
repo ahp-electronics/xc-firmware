@@ -1,0 +1,6 @@
+*lib*
+*.kicad_pcb-bak
+.zip
+*.xls
+fp-info-cache
+*.html
