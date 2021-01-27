@@ -18,16 +18,18 @@
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<File>/home/plato/dev/github/correlator/intensity/correlator_intensity.bit</File>
-			<FileTime>01/27/21 00:51:36</FileTime>
-			<Operation>FLASH Erase Only</Operation>
+			<File>/home/plato/dev/github/xc-firmware/xc8/xc-firmware_xc8.bit</File>
+			<FileTime>01/27/21 20:52:16</FileTime>
+			<JedecChecksum>N/A</JedecChecksum>
+			<Operation>SRAM Erase,Program,Verify</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
 				<IOState>HighZ</IOState>
 				<PreloadLength>664</PreloadLength>
 				<IOVectorData>0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</IOVectorData>
 				<SVFProcessor>SVF Processor</SVFProcessor>
-				<AccessMode>FLASH</AccessMode>
+				<Usercode>0x00000000</Usercode>
+				<AccessMode>SRAM</AccessMode>
 			</Option>
 		</Device>
 	</Chain>

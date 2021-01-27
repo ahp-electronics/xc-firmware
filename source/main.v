@@ -56,7 +56,8 @@ parameter JITTER_SIZE = (HAS_LIVE_SPECTRUM|HAS_LIVE_CORRELATOR)?MAX_LAG:1;
 parameter NUM_BASELINES = NUM_INPUTS*(NUM_INPUTS-1)/2;
 parameter CORRELATIONS_JITTER_SIZE = (HAS_LIVE_CORRELATOR?JITTER_SIZE:1);
 parameter SPECTRA_JITTER_SIZE = (HAS_LIVE_SPECTRUM?JITTER_SIZE:1);
-parameter CORRELATIONS_SIZE = (HAS_CORRELATOR ? NUM_BASELINES*(CORRELATIONS_JITTER_SIZE*2-1) : 0);
+parameter CORRELATIONS_HEAD_TAIL_SIZE = CORRELATIONS_JITTER_SIZE*2-1;
+parameter CORRELATIONS_SIZE = (HAS_CORRELATOR ? NUM_BASELINES*CORRELATIONS_HEAD_TAIL_SIZE : 0);
 parameter SPECTRA_SIZE = NUM_INPUTS*SPECTRA_JITTER_SIZE;
 parameter PAYLOAD_SIZE = (CORRELATIONS_SIZE+SPECTRA_SIZE+NUM_INPUTS)*RESOLUTION;
 parameter HEADER_SIZE = 64;
@@ -257,7 +258,7 @@ always@(posedge RXIF) begin
 		voltage_pwm[current_line] <= RXREG[7:4];
 	end
 end
-	
+
 generate
 	genvar a;
 	genvar b;
@@ -283,7 +284,7 @@ generate
 		end
 		COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
 			~0,
-			pulses[(CORRELATIONS_SIZE+NUM_INPUTS*SPECTRA_JITTER_SIZE+a)*RESOLUTION+:RESOLUTION],
+			pulses[(CORRELATIONS_SIZE+NUM_INPUTS*SPECTRA_JITTER_SIZE+NUM_INPUTS-1-a)*RESOLUTION+:RESOLUTION],
 			,
 			delay_lines[cross[a]][a],
 			pll_clk,
@@ -294,7 +295,7 @@ generate
 				if(y<SPECTRA_JITTER_SIZE) begin
 					COUNTER #(.RESOLUTION(RESOLUTION)) spectra_block (
 						~0,
-						pulses[(CORRELATIONS_SIZE+a*SPECTRA_JITTER_SIZE+y)*RESOLUTION+:RESOLUTION],
+						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*SPECTRA_JITTER_SIZE-1-y)*RESOLUTION+:RESOLUTION],
 						,
 						delay_lines[cross[a]][a]&delay_lines[cross[a]+auto[a]+y][a],
 						pll_clk,
@@ -302,11 +303,11 @@ generate
 					);
 				end
 				if(HAS_CORRELATOR) begin
-					if(y!=CORRELATIONS_JITTER_SIZE&&y<(CORRELATIONS_JITTER_SIZE*2-1)) begin
+					if(y!=CORRELATIONS_JITTER_SIZE&&y<CORRELATIONS_HEAD_TAIL_SIZE) begin
 						for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
 							COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
 								~0,
-								pulses[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*(CORRELATIONS_JITTER_SIZE*2-1)+(y>CORRELATIONS_JITTER_SIZE?y-1:y)-1)*RESOLUTION+:RESOLUTION],
+								pulses[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*CORRELATIONS_HEAD_TAIL_SIZE+(y>CORRELATIONS_JITTER_SIZE?y-1:y)-1)*RESOLUTION+:RESOLUTION],
 								,
 								delay_lines[cross[a]+(y<CORRELATIONS_JITTER_SIZE?CORRELATIONS_JITTER_SIZE-y-1:0)][a]&delay_lines[cross[b]+(y>CORRELATIONS_JITTER_SIZE?y-CORRELATIONS_JITTER_SIZE:0)][b],
 								pll_clk,

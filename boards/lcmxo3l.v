@@ -84,8 +84,8 @@ module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
     defparam PLLInst_0.CLKOS2_DIV = 1 ;
     defparam PLLInst_0.CLKOS_DIV = 1 ;
     defparam PLLInst_0.CLKOP_DIV = 1 ;
-    defparam PLLInst_0.CLKFB_DIV = 35 ;
-    defparam PLLInst_0.CLKI_DIV = 1 ;
+    defparam PLLInst_0.CLKFB_DIV = MULTIPLIER ;
+    defparam PLLInst_0.CLKI_DIV = DIVIDER ;
     defparam PLLInst_0.FEEDBK_PATH = "CLKOP" ;
     EHXPLLJ PLLInst_0 (.CLKI(CLKI), .CLKFB(CLKOP_t), .PHASESEL1(scuba_vlo), 
         .PHASESEL0(scuba_vlo), .PHASEDIR(scuba_vlo), .PHASESTEP(scuba_vlo), 
@@ -101,8 +101,6 @@ module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
         .LOCK(LOCK), .INTLOCK(), .REFCLK(), .CLKINTFB(), .DPHSRC(), .PLLACK(), 
         .PLLDATO7(), .PLLDATO6(), .PLLDATO5(), .PLLDATO4(), .PLLDATO3(), 
         .PLLDATO2(), .PLLDATO1(), .PLLDATO0())
-             /* synthesis FREQUENCY_PIN_CLKOP="420.000000" */
-             /* synthesis FREQUENCY_PIN_CLKI="12.000000" */
              /* synthesis ICP_CURRENT="6" */
              /* synthesis LPF_RESISTOR="8" */;
 
@@ -110,8 +108,6 @@ module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
 
 
     // exemplar begin
-    // exemplar attribute PLLInst_0 FREQUENCY_PIN_CLKOP 420.000000
-    // exemplar attribute PLLInst_0 FREQUENCY_PIN_CLKI 12.000000
     // exemplar attribute PLLInst_0 ICP_CURRENT 6
     // exemplar attribute PLLInst_0 LPF_RESISTOR 8
     // exemplar end
