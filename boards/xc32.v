@@ -19,7 +19,7 @@
 
 `timescale 1 ns / 1 ps
 
-module xc-firmware (
+module xc_firmware (
 	TX,
 	RX,
 	jp1,

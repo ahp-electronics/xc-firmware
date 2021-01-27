@@ -5,7 +5,33 @@
 
 
 `timescale 1 ns / 1 ps
-module pll (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
+module pll (clki, clko, clkop)/* synthesis NGD_DRC_MASK=1 */;
+	parameter MULTIPLIER = 1;
+	parameter DIVIDER = 1;
+	
+    input wire clki;
+    output wire clkop;
+	output reg clko;
+	
+	wire pll_clk;
+	reg [7:0] clock_pulse = 0;
+	
+	plli #(.MULTIPLIER(MULTIPLIER), .DIVIDER(DIVIDER)) plli_block (clki, pll_clk);
+	plli #(.MULTIPLIER(MULTIPLIER), .DIVIDER(DIVIDER)) pllo_block (clko, clkop);
+
+	always@(posedge pll_clk) begin
+		if(clock_pulse < MULTIPLIER) begin
+			clock_pulse <= clock_pulse+(DIVIDER<<1);
+		end else begin
+			clko <= ~clko;
+			clock_pulse <= 0;
+		end
+	end
+endmodule
+
+module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
+	parameter MULTIPLIER = 1;
+	parameter DIVIDER = 1;
     input wire CLKI;
     output wire CLKOP;
 
@@ -49,8 +75,8 @@ module pll (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
     defparam PLLInst_0.CLKOS2_DIV = 1 ;
     defparam PLLInst_0.CLKOS_DIV = 1 ;
     defparam PLLInst_0.CLKOP_DIV = 1 ;
-    defparam PLLInst_0.CLKFB_DIV = 40 ;
-    defparam PLLInst_0.CLKI_DIV = 1 ;
+    defparam PLLInst_0.CLKFB_DIV = MULTIPLIER ;
+    defparam PLLInst_0.CLKI_DIV = DIVIDER ;
     defparam PLLInst_0.FEEDBK_PATH = "CLKOP" ;
     EHXPLLL PLLInst_0 (.CLKI(buf_CLKI), .CLKFB(CLKOP_t), .PHASESEL1(scuba_vlo), 
         .PHASESEL0(scuba_vlo), .PHASEDIR(scuba_vlo), .PHASESTEP(scuba_vlo), 
@@ -58,8 +84,6 @@ module pll (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
         .RST(scuba_vlo), .ENCLKOP(scuba_vlo), .ENCLKOS(scuba_vlo), .ENCLKOS2(scuba_vlo), 
         .ENCLKOS3(scuba_vlo), .CLKOP(CLKOP_t), .CLKOS(), .CLKOS2(), .CLKOS3(), 
         .LOCK(LOCK), .INTLOCK(), .REFCLK(REFCLK), .CLKINTFB())
-             /* synthesis FREQUENCY_PIN_CLKOP="400.000000" */
-             /* synthesis FREQUENCY_PIN_CLKI="10.000000" */
              /* synthesis ICP_CURRENT="16" */
              /* synthesis LPF_RESISTOR="8" */;
 
