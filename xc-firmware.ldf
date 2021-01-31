@@ -78,6 +78,9 @@
         <Source name="source/indicators.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="source/cmd_parser.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="boards/lcmxo3l.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>

@@ -91,78 +91,54 @@ wire integration_clk;
 wire uart_clk;
 wire voltage_clk;
 wire reset_delayed;
-
-reg integrating = 0;
+ 
 wire[NUM_INPUTS-1:0] pwm_out;
 wire [NUM_INPUTS-1:0] overflow;
 
 wire[NUM_INPUTS-1:0] voltage;
-reg[NUM_INPUTS*4-1:0] leds;
-
-wire [7:0] RXREG;
-wire RXIF;
 
 wire tx_done;
 reg [PACKET_SIZE-1:0] tx_data;
 wire [PAYLOAD_SIZE-1:0] pulses;
 
-wire [NUM_INPUTS-1:0] delay_lines [0:DELAY_SIZE*2+JITTER_SIZE-1];
+wire [NUM_INPUTS-1:0] delay_lines [0:DELAY_SIZE+JITTER_SIZE-1];
 
 reg [11:0] cross [0:NUM_INPUTS-1];
 reg [11:0] auto [0:NUM_INPUTS-1];
-reg [11:0] cross_tmp [0:NUM_INPUTS-1];
-reg [11:0] auto_tmp [0:NUM_INPUTS-1];
 
-reg[3:0] test[NUM_INPUTS-1:0];
-reg[3:0] voltage_pwm[NUM_INPUTS-1:0];
 reg[NUM_INPUTS-1:0] signal_in;
 
-reg [7:0]current_line = 0;
 reg [7:0] mux_line = 0;
 reg [7:0] k;
 
-reg [3:0] baud_rate = 0;
-reg [3:0] clock_divider = 0;
+wire [NUM_INPUTS*(DELAY_SIZE+JITTER_SIZE)-1:0] delays;
+
+wire integrating;
+wire[7:0] current_line;
+wire[3:0] baud_rate;
+wire[3:0] clock_divider;
+
+wire[3:0] leds[0:NUM_INPUTS-1];
+wire[3:0] test[0:NUM_INPUTS-1];
+wire[3:0] voltage_pwm[0:NUM_INPUTS-1];
+wire[11:0] cross_tmp [0:NUM_INPUTS-1];
+wire[11:0] auto_tmp [0:NUM_INPUTS-1];
+
+wire[4*NUM_INPUTS-1:0] leds_a;
+wire[4*NUM_INPUTS-1:0] test_a;
+wire[4*NUM_INPUTS-1:0] voltage_pwm_a;
+wire[12*NUM_INPUTS-1:0] cross_tmp_a;
+wire[12*NUM_INPUTS-1:0] auto_tmp_a;
+
+wire RXIF;
+wire[7:0] RXREG;
 
 assign integration_clk = tx_done;
-assign delay_lines[0] = pulse_in;
 
+fifo #(.RESOLUTION(NUM_INPUTS), .DELAY_SIZE(DELAY_SIZE+JITTER_SIZE)) delay_line(clk, pulse_in, delays);
 pll #(.MULTIPLIER(PLL_MULTIPLIER), .DIVIDER(PLL_DIVIDER)) pll_block (clock, clki, pll_clk);
-
-always@(*) begin
-	mux_out <= 1<<mux_line;
-	signal_in[mux_line*NUM_LINES+:NUM_LINES] <= line_in;
-	if(HAS_LED_FLAGS) begin
-		line_out[0+:NUM_LINES] <= pwm_out[mux_line*NUM_LINES+:NUM_LINES]&~overflow[mux_line*NUM_LINES+:NUM_LINES];
-		for(k=0; k<NUM_INPUTS; k=k+1) begin
-			line_out[NUM_LINES+k*2] = leds[k*4]&(test[k][0] ? clk : 1);
-			line_out[NUM_LINES+k*2+1] = leds[k*4+1]&(HAS_PSU ? ~voltage[k] : 1);
-		end
-	end
-end
-	
-always@(posedge pll_clk) begin
-	if(mux_line < MUX_LINES-1) begin
-		mux_line <= mux_line+1;
-	end else begin
-		mux_line <= 0;
-	end
-end
-
-generate
-	genvar x;
-	for (x = 0; x < NUM_INPUTS; x=x+1) begin
-		if(HAS_LED_FLAGS) begin
-			delay1 delay(pll_clk, in[x], in_delayed[x]);
-			assign in[x] = leds[x*4+2]^signal_in[x];
-			assign pulse_in[x] = (leds[x*4+3] ? 1 : ~in_delayed[x]) & in[x];
-		end else begin
-			assign pulse_in[x] = signal_in[x];
-		end
-	end
-endgenerate
-
-delay1 reset_delay(clk, integration_clk, reset_delayed);
+dff reset_delay(clk, integration_clk, reset_delayed);
+dff #(.RESOLUTION(NUM_INPUTS)) input_delay(pll_clk, in, in_delayed);
 
 indicators #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(5000), .CHANNELS(NUM_INPUTS), .RESOLUTION(8)) indicators_block(
 	pwm_out[0+:NUM_INPUTS],
@@ -210,6 +186,40 @@ uart_rx #(.SHIFT(SHIFT)) rx_block(
 	uart_clk
 );
 
+CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LED_FLAGS(HAS_LED_FLAGS)) parser (
+	RXREG,
+	voltage_pwm_a,
+	test_a,
+	cross_tmp_a,
+	auto_tmp_a,
+	leds_a,
+	clock_divider,
+	baud_rate,
+	current_line,
+	integrating,
+	RXIF
+);
+
+always@(*) begin
+	mux_out <= 1<<mux_line;
+	signal_in[mux_line*NUM_LINES+:NUM_LINES] <= line_in;
+	if(HAS_LED_FLAGS) begin
+		line_out[0+:NUM_LINES] <= pwm_out[mux_line*NUM_LINES+:NUM_LINES]&~overflow[mux_line*NUM_LINES+:NUM_LINES];
+		for(k=0; k<NUM_INPUTS; k=k+1) begin
+			line_out[NUM_LINES+k*2] = leds[k][0]&(test[k][0] ? pll_clk : 1);
+			line_out[NUM_LINES+k*2+1] = leds[k][1]&(HAS_PSU ? ~voltage[k] : 1);
+		end
+	end
+end
+	
+always@(posedge pll_clk) begin
+	if(mux_line < MUX_LINES-1) begin
+		mux_line <= mux_line+1;
+	end else begin
+		mux_line <= 0;
+	end
+end
+
 always@(posedge integration_clk) begin
 	auto[current_line] <= test[current_line][1] ? ((auto[current_line]+1) < MAX_LAG_AUTO ? auto[current_line]+1 : MAX_LAG_AUTO-1) : (auto_tmp [current_line] < MAX_LAG_AUTO ? auto_tmp [current_line] : MAX_LAG_AUTO-1);
 	cross[current_line] <= test[current_line][2] ? ((cross[current_line]+1) < MAX_LAG_CROSS ? cross[current_line]+1 : MAX_LAG_CROSS-1) : (cross_tmp [current_line] < MAX_LAG_CROSS ? cross_tmp [current_line] : MAX_LAG_CROSS-1);
@@ -222,57 +232,30 @@ always@(posedge integration_clk) begin
 	tx_data[PAYLOAD_SIZE+16+4+16+12+8+:8] <= RESOLUTION;
 end
 
-parameter[3:0]
-	CLEAR = 0,
-	SET_LINE = 1,
-	SET_LEDS = 2,
-	SET_BAUD_RATE = 3,
-	SET_DELAY = 4,
-	SET_FREQ_DIV = 8,
-	SET_VOLTAGE = 9,
-	ENABLE_TEST = 12,
-	ENABLE_CAPTURE = 13;
-	
-always@(posedge RXIF) begin
-	if (RXREG[3:0] == CLEAR) begin
-		cross_tmp[current_line] <= 0;
-		auto_tmp[current_line] <= 0;
-	end else if (RXREG[3:0] == ENABLE_CAPTURE) begin
-		integrating <= RXREG[4];
-	end else if (RXREG[3:0] == SET_LINE) begin
-		current_line[RXREG[7:6]*2+:2] <= RXREG[5:4];
-	end else if (RXREG[3:0] == SET_LEDS && HAS_LED_FLAGS) begin
-		leds[current_line*4+:4] <= RXREG[7:4];
-	end else if (RXREG[3:0] == SET_BAUD_RATE) begin
-		baud_rate <= RXREG[7:4];
-	end else if ((RXREG[3:0]&4'b1100) == SET_DELAY) begin
-		if (RXREG[7])
-			auto_tmp [current_line][(RXREG[1:0]*3)+:3] <= RXREG[6:4];
-		else
-			cross_tmp [current_line][(RXREG[1:0]*3)+:3] <= RXREG[6:4];
-	end else if (RXREG[3:0] == SET_FREQ_DIV) begin
-		clock_divider <= RXREG[7:4];
-	end else if (RXREG[3:0] == ENABLE_TEST) begin
-		test[current_line] <= RXREG[7:4];
-	end else if (RXREG[3:0] == SET_VOLTAGE) begin
-		voltage_pwm[current_line] <= RXREG[7:4];
-	end
-end
-
 generate
 	genvar a;
 	genvar b;
 	genvar c;
 	genvar d;
+	genvar x;
 	genvar y;
 	genvar z;
+	for(x = 0; x < DELAY_SIZE+JITTER_SIZE; x=x+1)
+		assign delay_lines[x] = delays[x*NUM_INPUTS+:NUM_INPUTS];
 
-	for(d=1; d<DELAY_SIZE+JITTER_SIZE-1; d=d+2000) begin : delay_iteration_block
-		for(c=d; c < d+2000 && c < DELAY_SIZE+JITTER_SIZE-1; c=c+1) begin : delay_iteration_inner_block
-			delay1 #(.RESOLUTION(NUM_INPUTS)) delay_line(clk, delay_lines[c-1], delay_lines[c]);
-		end
-	end
 	for (a=0; a<NUM_INPUTS; a=a+1) begin : correlators_initial_block
+		assign leds[a] = leds_a[a*4+:4];
+		assign test[a] = test_a[a*4+:4];
+		assign voltage_pwm[a] = voltage_pwm_a[a*4+:4];
+		assign cross_tmp[a] = cross_tmp_a[a*12+:12];
+		assign auto_tmp[a] = auto_tmp_a[a*12+:12];
+		
+		if(HAS_LED_FLAGS) begin
+			assign in[a] = leds[a][2]^signal_in[a];
+			assign pulse_in[a] = (leds[a][3] ? 1 : ~in_delayed[a]) & in[a];
+		end else begin
+			assign pulse_in[a] = signal_in[a];
+		end
 		if(HAS_PSU) begin
 			PWM #(.RESOLUTION(4)) pwm(
 				voltage_pwm[a],
@@ -286,7 +269,7 @@ generate
 			~0,
 			pulses[(CORRELATIONS_SIZE+NUM_INPUTS*SPECTRA_JITTER_SIZE+NUM_INPUTS-1-a)*RESOLUTION+:RESOLUTION],
 			,
-			delay_lines[cross[a]][a],
+			delay_lines[0][a],
 			pll_clk,
 			reset_delayed
 		);
@@ -297,8 +280,8 @@ generate
 						~0,
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*SPECTRA_JITTER_SIZE-1-y)*RESOLUTION+:RESOLUTION],
 						,
-						delay_lines[cross[a]][a]&delay_lines[cross[a]+auto[a]+y][a],
-						pll_clk,
+						delay_lines[0][a]*delay_lines[auto[a]+y][a],
+						clk,
 						reset_delayed
 					);
 				end
@@ -307,10 +290,10 @@ generate
 						for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
 							COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
 								~0,
-								pulses[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*CORRELATIONS_HEAD_TAIL_SIZE+(y>CORRELATIONS_JITTER_SIZE?y-1:y)-1)*RESOLUTION+:RESOLUTION],
+								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>CORRELATIONS_JITTER_SIZE?y-1:y)-1)*RESOLUTION+:RESOLUTION],
 								,
-								delay_lines[cross[a]+(y<CORRELATIONS_JITTER_SIZE?CORRELATIONS_JITTER_SIZE-y-1:0)][a]&delay_lines[cross[b]+(y>CORRELATIONS_JITTER_SIZE?y-CORRELATIONS_JITTER_SIZE:0)][b],
-								pll_clk,
+								delay_lines[cross[a]+(y<CORRELATIONS_JITTER_SIZE?CORRELATIONS_JITTER_SIZE-y-1:0)][a]*delay_lines[cross[b]+(y>CORRELATIONS_JITTER_SIZE?y-CORRELATIONS_JITTER_SIZE:0)][b],
+								clk,
 								reset_delayed
 							);
 						end

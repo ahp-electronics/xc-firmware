@@ -19,7 +19,7 @@
 
 `timescale 1 ns / 1 ps
 
-module delay1 (
+module dff (
 	clk,
 	d,
 	q
@@ -35,3 +35,26 @@ always @ ( posedge clk)
 	end
 endmodule
 
+module fifo (
+	clk,
+	d,
+	q
+	);
+	parameter DELAY_SIZE = 1;
+	parameter RESOLUTION=1;
+	
+	input wire clk;
+	input wire[RESOLUTION-1:0] d;
+	output wire[DELAY_SIZE*RESOLUTION-1:0] q;
+	 
+	assign q[0+:RESOLUTION] = d;
+	generate
+		genvar a;
+		genvar b;
+		for(a=1; a<DELAY_SIZE; a=a+2000) begin : delay_iteration_block
+			for(b=a; b < a+2000 && b < DELAY_SIZE; b=b+1) begin : delay_iteration_inner_block
+				dff #(.RESOLUTION(RESOLUTION)) delay(clk, q[(b-1)*RESOLUTION+:RESOLUTION], q[b*RESOLUTION+:RESOLUTION]);
+			end
+		end
+	endgenerate
+endmodule

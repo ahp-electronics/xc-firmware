@@ -30,6 +30,7 @@ parameter CLK_FREQUENCY = 13300000;
 parameter PLL_MULTIPLIER = 60;
 parameter PLL_DIVIDER = 2;
 parameter MUX_LINES = 1;
+
 parameter NUM_LINES = 8;
 parameter DELAY_SIZE = 150;
 parameter RESOLUTION = 16;
@@ -49,7 +50,7 @@ wire clko;
 
 wire[NUM_LINES-1:0] line_in;
 wire[NUM_LINES*3-1:0] line_out;
-wire[MUX_LINES:0] mux_out;
+wire[MUX_LINES-1:0] mux_out;
 
 inout wire[19:0] jp1;
 inout wire[19:0] jp2;
@@ -88,7 +89,7 @@ assign jp2[3] = line_out[21];
 assign jp2[0] = line_out[22];
 assign jp2[1] = line_out[23];
 
-OSCH #(.NOM_FREQ("13.30")) intosc (0, clki, );
+OSCH #(.NOM_FREQ("13.30")) intosc (1'b0, clki, );
 
 main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CORRELATOR(HAS_CORRELATOR), .HAS_LIVE_SPECTRUM(HAS_LIVE_SPECTRUM), .HAS_LIVE_CORRELATOR(HAS_LIVE_CORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .MAX_LAG(MAX_LAG)) main_block(
 	TX,
@@ -98,7 +99,7 @@ main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVI
 	mux_out,
 	clki,
 	clko,
-	1
+	1'b1
 );
 
 endmodule

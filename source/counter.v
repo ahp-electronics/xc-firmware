@@ -28,10 +28,11 @@ module COUNTER (
 		reset
 	);
 	parameter RESOLUTION=64;
+	parameter WORD_WIDTH=1;
 	input wire [RESOLUTION-1:0] counter_max;
 	output reg [RESOLUTION-1:0] counter_out;
 	output wire overflow;
-	input wire signal;
+	input wire[WORD_WIDTH-1:0] signal;
 	input wire clk;
 	input wire reset;
 	assign overflow = (counter_out == counter_max);
@@ -39,8 +40,8 @@ module COUNTER (
 	always @(posedge (clk))
 	begin
 		if(~_reset) begin
-			if (counter_out < counter_max && signal)
-				counter_out <= counter_out + 1;
+			if (counter_out < counter_max)
+				counter_out <= counter_out + signal;
 		end else begin
 			counter_out <= 0;
 		end

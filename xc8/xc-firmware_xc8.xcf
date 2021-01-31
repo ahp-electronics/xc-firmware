@@ -18,10 +18,10 @@
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<File>/home/plato/dev/github/xc-firmware/xc8/xc-firmware_xc8.bit</File>
-			<FileTime>01/27/21 20:52:16</FileTime>
-			<JedecChecksum>N/A</JedecChecksum>
-			<Operation>SRAM Erase,Program,Verify</Operation>
+			<File>/home/plato/dev/github/xc-firmware/xc8/xc-firmware_xc8.jed</File>
+			<FileTime>01/30/21 23:32:41</FileTime>
+			<JedecChecksum>0x5F9E</JedecChecksum>
+			<Operation>FLASH Program</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
 				<IOState>HighZ</IOState>
@@ -29,7 +29,7 @@
 				<IOVectorData>0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</IOVectorData>
 				<SVFProcessor>SVF Processor</SVFProcessor>
 				<Usercode>0x00000000</Usercode>
-				<AccessMode>SRAM</AccessMode>
+				<AccessMode>FLASH</AccessMode>
 			</Option>
 		</Device>
 	</Chain>
