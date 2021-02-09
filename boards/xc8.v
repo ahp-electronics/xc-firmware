@@ -20,40 +20,43 @@
 `timescale 1 ns / 1 ps
 
 module xc_firmware (
-	TX,
-	RX,
+	clki,
 	jp1,
 	jp2
 	);
 
-parameter CLK_FREQUENCY = 13300000;
-parameter PLL_MULTIPLIER = 60;
-parameter PLL_DIVIDER = 2;
+parameter CLK_FREQUENCY = 10000000;
+parameter PLL_MULTIPLIER = 40;
+parameter PLL_DIVIDER = 1;
 parameter MUX_LINES = 1;
-
 parameter NUM_LINES = 8;
-parameter DELAY_SIZE = 150;
-parameter RESOLUTION = 16;
+parameter DELAY_SIZE = 2048;
+parameter RESOLUTION = 24;
 parameter HAS_PSU = 0;
 parameter HAS_LED_FLAGS = 1;
 parameter HAS_CORRELATOR = 1;
-parameter MAX_LAG = 1;
-parameter HAS_LIVE_SPECTRUM = 0;
-parameter HAS_LIVE_CORRELATOR = 0;
+parameter LAG_AUTO = 1;
+parameter LAG_CROSS = 1;
 parameter BAUD_RATE = 57600;
 
-output wire TX;
-input wire RX;
+input wire clki;
+inout wire[19:0] jp1;
+inout wire[19:0] jp2;
 
-wire clki;
+wire TX;
+wire RX;
 wire clko;
+wire enable;
 
+wire clk;
 wire[NUM_LINES-1:0] line_in;
 wire[NUM_LINES*3-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 
-inout wire[19:0] jp1;
-inout wire[19:0] jp2;
+assign clko = jp2[16];
+assign jp2[18] = TX;
+assign enable = jp2[17];
+assign RX = jp2[19];
 
 assign line_in[0] = jp1[14];
 assign line_in[1] = jp1[12];
@@ -71,7 +74,7 @@ assign jp1[2] = line_out[12];
 assign jp1[3] = line_out[13];
 assign jp1[0] = line_out[14];
 assign jp1[1] = line_out[15];
-
+ 
 assign line_in[4] = jp2[14];
 assign line_in[5] = jp2[12];
 assign line_in[6] = jp2[10];
@@ -89,9 +92,7 @@ assign jp2[3] = line_out[21];
 assign jp2[0] = line_out[22];
 assign jp2[1] = line_out[23];
 
-OSCH #(.NOM_FREQ("13.30")) intosc (1'b0, clki, );
-
-main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CORRELATOR(HAS_CORRELATOR), .HAS_LIVE_SPECTRUM(HAS_LIVE_SPECTRUM), .HAS_LIVE_CORRELATOR(HAS_LIVE_CORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .MAX_LAG(MAX_LAG)) main_block(
+main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CORRELATOR(HAS_CORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .LAG_AUTO(LAG_AUTO), .LAG_CROSS(LAG_CROSS)) main_block(
 	TX,
 	RX,
 	line_in,

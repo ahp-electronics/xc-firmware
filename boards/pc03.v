@@ -5,28 +5,20 @@
 
 
 `timescale 1 ns / 1 ps
-module pll (clki, clko, clkop)/* synthesis NGD_DRC_MASK=1 */;
+module pll (clki, clko, clkop);
 	parameter MULTIPLIER = 1;
 	parameter DIVIDER = 1;
 	
     input wire clki;
     output wire clkop;
-	output reg clko;
+	output wire clko;
 	
 	wire pll_clk;
 	reg [7:0] clock_pulse = 0;
 	
 	plli #(.MULTIPLIER(MULTIPLIER), .DIVIDER(DIVIDER)) plli_block (clki, pll_clk);
-	plli #(.MULTIPLIER(MULTIPLIER), .DIVIDER(DIVIDER)) pllo_block (clko, clkop);
-
-	always@(posedge pll_clk) begin
-		if(clock_pulse < MULTIPLIER) begin
-			clock_pulse <= clock_pulse+(DIVIDER<<1);
-		end else begin
-			clko <= ~clko;
-			clock_pulse <= 0;
-		end
-	end
+	assign clkop = pll_clk;
+	assign clko = clki;
 endmodule
 
 module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
@@ -83,19 +75,8 @@ module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
         .PHASELOADREG(scuba_vlo), .STDBY(scuba_vlo), .PLLWAKESYNC(scuba_vlo), 
         .RST(scuba_vlo), .ENCLKOP(scuba_vlo), .ENCLKOS(scuba_vlo), .ENCLKOS2(scuba_vlo), 
         .ENCLKOS3(scuba_vlo), .CLKOP(CLKOP_t), .CLKOS(), .CLKOS2(), .CLKOS3(), 
-        .LOCK(LOCK), .INTLOCK(), .REFCLK(REFCLK), .CLKINTFB())
-             /* synthesis ICP_CURRENT="16" */
-             /* synthesis LPF_RESISTOR="8" */;
+        .LOCK(LOCK), .INTLOCK(), .REFCLK(REFCLK), .CLKINTFB());
 
     assign CLKOP = CLKOP_t;
-
-
-    // exemplar begin
-    // exemplar attribute Inst1_IB IO_TYPE LVTTL33
-    // exemplar attribute PLLInst_0 FREQUENCY_PIN_CLKOP 400.000000
-    // exemplar attribute PLLInst_0 FREQUENCY_PIN_CLKI 10.000000
-    // exemplar attribute PLLInst_0 ICP_CURRENT 16
-    // exemplar attribute PLLInst_0 LPF_RESISTOR 8
-    // exemplar end
 
 endmodule

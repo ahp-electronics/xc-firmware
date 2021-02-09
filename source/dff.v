@@ -51,8 +51,8 @@ module fifo (
 	generate
 		genvar a;
 		genvar b;
-		for(a=1; a<DELAY_SIZE; a=a+2000) begin : delay_iteration_block
-			for(b=a; b < a+2000 && b < DELAY_SIZE; b=b+1) begin : delay_iteration_inner_block
+		for(a=1; a<DELAY_SIZE; a=a+512) begin : delay_iteration_block
+			for(b=a; b < a+512 && b < DELAY_SIZE; b=b+1) begin : delay_iteration_inner_block
 				dff #(.RESOLUTION(RESOLUTION)) delay(clk, q[(b-1)*RESOLUTION+:RESOLUTION], q[b*RESOLUTION+:RESOLUTION]);
 			end
 		end

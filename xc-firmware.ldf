@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="xc-firmware" device="LCMXO3LF-6900C-6BG256C" default_implementation="xc8">
+<BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6BG256C" default_implementation="xc8">
     <Options/>
     <Implementation title="xc32" dir="xc32" description="xc32" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
@@ -36,6 +36,9 @@
         <Source name="source/indicators.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="source/cmd_parser.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
@@ -47,9 +50,6 @@
         <Options def_top="xc_firmware"/>
         <Source name="boards/xc8.v" type="Verilog" type_short="Verilog">
             <Options top_module="xc_firmware"/>
-        </Source>
-        <Source name="boards/lcmxo3l.v" type="Verilog" type_short="Verilog">
-            <Options/>
         </Source>
         <Source name="source/main.v" type="Verilog" type_short="Verilog">
             <Options/>
@@ -81,7 +81,10 @@
         <Source name="source/cmd_parser.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="boards/lcmxo3l.lpf" type="Logic Preference" type_short="LPF">
+        <Source name="boards/pc03.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
         <Source name="xc8/xc-firmware_xc8.xcf" type="Programming Project File" type_short="Programming">
