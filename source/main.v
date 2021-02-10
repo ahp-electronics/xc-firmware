@@ -40,7 +40,7 @@ parameter DELAY_SIZE = 1;
 parameter RESOLUTION = 4;
 parameter HAS_LED_FLAGS = 0;
 parameter HAS_CROSSCORRELATOR = 0;
-parameter HAS_PSU = 0;
+parameter HAS_PSU = 1;
 parameter LAG_AUTO = 1;
 parameter LAG_CROSS = 1;
 parameter BAUD_RATE = 57600;
@@ -163,7 +163,7 @@ CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) uart_clock_block(
 );
 
 CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) pwm_clock_block(
-	1250000,
+	62500,
 	pwm_clk,
 	clki,
 	,

@@ -18,7 +18,8 @@
 				<BScanVal>0</BScanVal>
 			</Bypass>
 			<File>/home/plato/dev/github/xc-firmware/xc8/xc-firmware_xc8.bit</File>
-			<FileTime>02/09/21 23:57:07</FileTime>
+			<FileTime>02/10/21 01:06:48</FileTime>
+			<JedecChecksum>N/A</JedecChecksum>
 			<Operation>SPI Flash Erase,Program,Verify</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
