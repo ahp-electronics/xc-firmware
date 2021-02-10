@@ -18,8 +18,7 @@
 				<BScanVal>0</BScanVal>
 			</Bypass>
 			<File>/home/plato/dev/github/xc-firmware/xc8/xc-firmware_xc8.bit</File>
-			<FileTime>02/09/21 03:00:39</FileTime>
-			<JedecChecksum>N/A</JedecChecksum>
+			<FileTime>02/09/21 23:57:07</FileTime>
 			<Operation>SPI Flash Erase,Program,Verify</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -68,8 +67,7 @@
 					<DeviceSize>128</DeviceSize>
 					<DataSize>1032632</DataSize>
 					<NumberOfDevices>1</NumberOfDevices>
-					<Secure value="TRUE"/>
-					<ReInitialize value="TRUE"/>
+					<ReInitialize value="FALSE"/>
 				</Device>
 			</FlashDevice>
 			<FPGADevice>

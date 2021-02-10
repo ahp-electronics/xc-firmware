@@ -76,6 +76,7 @@ input wire RX;
 input wire[NUM_LINES-1:0] line_in;
 output reg[NUM_LINES*3-1:0] line_out;
 output reg[MUX_LINES-1:0] mux_out;
+
 wire[NUM_INPUTS-1:0] in_delayed;
 wire[NUM_INPUTS-1:0] pulse_in;
 wire[NUM_INPUTS-1:0] in;
@@ -92,25 +93,25 @@ wire voltage_clk;
 wire reset_delayed;
  
 wire[NUM_INPUTS-1:0] pwm_out;
-wire [NUM_INPUTS-1:0] overflow;
+wire[NUM_INPUTS-1:0] overflow;
 
 wire[NUM_INPUTS-1:0] voltage;
 
 wire tx_done;
-reg [PACKET_SIZE-1:0] tx_data;
-wire [PAYLOAD_SIZE-1:0] pulses;
+reg[PACKET_SIZE-1:0] tx_data;
+wire[PAYLOAD_SIZE-1:0] pulses;
 
-wire [NUM_INPUTS-1:0] delay_lines [0:DELAY_SIZE+MAX_LAG-1];
+wire[NUM_INPUTS-1:0] delay_lines [0:DELAY_SIZE+MAX_LAG-1];
 
-reg [11:0] cross [0:NUM_INPUTS-1];
-reg [11:0] auto [0:NUM_INPUTS-1];
+reg[11:0] cross [0:NUM_INPUTS-1];
+reg[11:0] auto [0:NUM_INPUTS-1];
 
 reg[NUM_INPUTS-1:0] signal_in;
 
-reg [7:0] mux_line = 0;
-reg [7:0] k;
+reg[7:0] mux_line = 0;
+reg[7:0] k;
 
-wire [NUM_INPUTS*(DELAY_SIZE+MAX_LAG)-1:0] delays;
+wire[NUM_INPUTS*(DELAY_SIZE+MAX_LAG)-1:0] delays;
 
 wire integrating;
 wire[7:0] current_line;
@@ -140,7 +141,7 @@ dff reset_delay(clk, integration_clk, reset_delayed);
 dff #(.RESOLUTION(NUM_INPUTS)) input_delay(pll_clk, in, in_delayed);
 
 indicators #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(5000), .CHANNELS(NUM_INPUTS), .RESOLUTION(8)) indicators_block(
-	pwm_out[0+:NUM_INPUTS],
+	pwm_out,
 	clki,
 	integrating
 	);
