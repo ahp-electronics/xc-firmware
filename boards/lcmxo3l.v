@@ -12,7 +12,6 @@ module pll (clki, clko, clkop)/* synthesis NGD_DRC_MASK=1 */;
 	input wire clki;
 	output reg clko;
 	output wire clkop;
-	
 	wire pll_clk;
 	reg [7:0] clock_pulse = 0;
 	

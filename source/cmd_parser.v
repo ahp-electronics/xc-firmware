@@ -50,7 +50,7 @@ parameter[3:0]
 input wire clk;
 input wire [7:0] cmd;
 
-output reg[4*NUM_INPUTS-1:0] voltage_pwm = 0;
+output reg[8*NUM_INPUTS-1:0] voltage_pwm = 0;
 output reg[4*NUM_INPUTS-1:0] test = 0;
 output reg[4*NUM_INPUTS-1:0] leds = 0;
 output reg[12*NUM_INPUTS-1:0] cross_idx = 0;
@@ -82,7 +82,7 @@ always@(posedge clk) begin
 	end else if (cmd[3:0] == ENABLE_TEST) begin
 		test[current_line*4+:4] <= cmd[7:4];
 	end else if (cmd[3:0] == SET_VOLTAGE) begin
-		voltage_pwm[current_line*4+:4] <= cmd[7:4];
+		voltage_pwm[current_line*8+cmd[7:6]*2+:2] <= cmd[5:4];
 	end
 end
 

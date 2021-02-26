@@ -48,9 +48,6 @@
     </Implementation>
     <Implementation title="xc8" dir="xc8" description="xc8" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
-        <Source name="boards/xc8.v" type="Verilog" type_short="Verilog">
-            <Options top_module="xc_firmware"/>
-        </Source>
         <Source name="source/main.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
@@ -84,7 +81,19 @@
         <Source name="boards/pc03.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
+        <Source name="boards/xc8.v" type="Verilog" type_short="Verilog">
+            <Options top_module="xc_firmware"/>
+        </Source>
+        <Source name="source/adc.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="boards/lcmxo3.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+        <Source name="boards/lcmxo3l.lpf" type="Logic Preference" type_short="LPF" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="xc8/xc-firmware_xc8.xcf" type="Programming Project File" type_short="Programming">

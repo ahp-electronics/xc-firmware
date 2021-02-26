@@ -33,7 +33,6 @@ module main (
 parameter CLK_FREQUENCY = 50000000;
 parameter PLL_MULTIPLIER = 1;
 parameter PLL_DIVIDER = 1;
-parameter PLL_FREQUENCY = CLK_FREQUENCY*PLL_MULTIPLIER/PLL_DIVIDER;
 parameter MUX_LINES = 1;
 parameter NUM_LINES = 1;
 parameter DELAY_SIZE = 1;
@@ -45,12 +44,14 @@ parameter LAG_AUTO = 1;
 parameter LAG_CROSS = 1;
 parameter BAUD_RATE = 57600;
 parameter SHIFT = 1;
+parameter WORD_WIDTH = 16;
 
 parameter SECOND = 1000000000;
+parameter PLL_FREQUENCY = CLK_FREQUENCY*PLL_MULTIPLIER/PLL_DIVIDER;
 parameter MAX_LAG = (LAG_AUTO>LAG_CROSS?LAG_AUTO:LAG_CROSS);
 parameter HAS_LIVE_AUTO = (LAG_AUTO>1);
 parameter HAS_LIVE_CROSS = (LAG_CROSS>1);
-parameter TICK_FREQUENCY = (PLL_FREQUENCY/(1+MUX_LINES));
+parameter TICK_FREQUENCY = (PLL_FREQUENCY/(1+MUX_LINES))/(1<<WORD_WIDTH);
 parameter NUM_INPUTS = NUM_LINES*MUX_LINES;
 parameter[127:0] UNIT = (SECOND<<63)/TICK_FREQUENCY;
 parameter[39:0] TICK = 40'd1000000000000/TICK_FREQUENCY;
@@ -64,7 +65,7 @@ parameter PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE;
 
 parameter MAX_LAG_AUTO = DELAY_SIZE+LAG_AUTO-1;
 parameter MAX_LAG_CROSS = DELAY_SIZE+LAG_CROSS-1;
-parameter BAUD_TIME = (SECOND/BAUD_RATE)>>SHIFT;
+parameter BAUD_TIME = (SECOND/BAUD_RATE);
 
 parameter MAX_COUNT=(1<<RESOLUTION);
 parameter TOTAL_NIBBLES=PACKET_SIZE/4;
@@ -74,13 +75,14 @@ output wire TX;
 input wire RX;
 
 input wire[NUM_LINES-1:0] line_in;
-output reg[NUM_LINES*3-1:0] line_out;
+output reg[NUM_LINES*4-1:0] line_out;
 output reg[MUX_LINES-1:0] mux_out;
 
 wire[NUM_INPUTS-1:0] in_delayed;
 wire[NUM_INPUTS-1:0] pulse_in;
 wire[NUM_INPUTS-1:0] in;
-
+wire[WORD_WIDTH-1:0] adc_data[0:NUM_INPUTS-1];
+wire[NUM_INPUTS-1:0] adc_done;
 input wire clock;
 output wire clki;
 wire sampling_clk;
@@ -101,7 +103,7 @@ wire tx_done;
 reg[PACKET_SIZE-1:0] tx_data;
 wire[PAYLOAD_SIZE-1:0] pulses;
 
-wire[NUM_INPUTS-1:0] delay_lines [0:DELAY_SIZE+MAX_LAG-1];
+wire[NUM_INPUTS*WORD_WIDTH-1:0] delay_lines [0:DELAY_SIZE+MAX_LAG-1];
 
 reg[11:0] cross [0:NUM_INPUTS-1];
 reg[11:0] auto [0:NUM_INPUTS-1];
@@ -111,7 +113,7 @@ reg[NUM_INPUTS-1:0] signal_in;
 reg[7:0] mux_line = 0;
 reg[7:0] k;
 
-wire[NUM_INPUTS*(DELAY_SIZE+MAX_LAG)-1:0] delays;
+wire[(DELAY_SIZE+MAX_LAG)*WORD_WIDTH-1:0] delays[0:NUM_INPUTS-1];
 
 wire integrating;
 wire[7:0] current_line;
@@ -120,13 +122,13 @@ wire[3:0] clock_divider;
 
 wire[3:0] leds[0:NUM_INPUTS-1];
 wire[3:0] test[0:NUM_INPUTS-1];
-wire[3:0] voltage_pwm[0:NUM_INPUTS-1];
+wire[8:0] voltage_pwm[0:NUM_INPUTS-1];
 wire[11:0] cross_tmp [0:NUM_INPUTS-1];
 wire[11:0] auto_tmp [0:NUM_INPUTS-1];
 
 wire[4*NUM_INPUTS-1:0] leds_a;
 wire[4*NUM_INPUTS-1:0] test_a;
-wire[4*NUM_INPUTS-1:0] voltage_pwm_a;
+wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
 wire[12*NUM_INPUTS-1:0] cross_tmp_a;
 wire[12*NUM_INPUTS-1:0] auto_tmp_a;
 
@@ -135,10 +137,9 @@ wire[7:0] RXREG;
 
 assign integration_clk = tx_done;
 
-fifo #(.RESOLUTION(NUM_INPUTS), .DELAY_SIZE(DELAY_SIZE+MAX_LAG)) delay_line(clk, pulse_in, delays);
 pll #(.MULTIPLIER(PLL_MULTIPLIER), .DIVIDER(PLL_DIVIDER)) pll_block (clock, clki, pll_clk);
 dff reset_delay(clk, integration_clk, reset_delayed);
-dff #(.RESOLUTION(NUM_INPUTS)) input_delay(pll_clk, in, in_delayed);
+dff #(.WORD_WIDTH(NUM_INPUTS)) input_delay(pll_clk, in, in_delayed);
 
 indicators #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(5000), .CHANNELS(NUM_INPUTS), .RESOLUTION(8)) indicators_block(
 	pwm_out,
@@ -155,7 +156,7 @@ CLK_GEN #(.CLK_FREQUENCY(PLL_FREQUENCY), .RESOLUTION(128)) divider_block(
 );
 
 CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) uart_clock_block(
-	BAUD_TIME>>baud_rate,
+	BAUD_TIME>>(baud_rate+1),
 	uart_clk,
 	clki,
 	,
@@ -163,8 +164,8 @@ CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) uart_clock_block(
 );
 
 CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) pwm_clock_block(
-	62500,
-	pwm_clk,
+	106250,
+	voltage_clk,
 	clki,
 	,
 	enable&HAS_PSU
@@ -174,7 +175,7 @@ TX_WORD #(.SHIFT(SHIFT), .RESOLUTION(PACKET_SIZE)) tx_block(
 	TX,
 	tx_data,
 	uart_clk,
-	, 
+	,
 	tx_done,
 	integrating
 );
@@ -202,12 +203,13 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LED_FLAGS(HAS_LED_FLAGS)) parser (
 
 always@(*) begin
 	mux_out <= 1<<mux_line;
-	signal_in[mux_line*NUM_LINES+:NUM_LINES] <= line_in;
-	if(HAS_LED_FLAGS) begin
-		line_out[0+:NUM_LINES] <= pwm_out[mux_line*NUM_LINES+:NUM_LINES]&~overflow[mux_line*NUM_LINES+:NUM_LINES];
-		for(k=0; k<NUM_INPUTS; k=k+1) begin
-			line_out[NUM_LINES+k*2] = leds[k][0]&(test[k][0] ? pll_clk : 1);
-			line_out[NUM_LINES+k*2+1] = leds[k][1]&(HAS_PSU ? ~voltage[k] : 1);
+	for(k=0; k<NUM_LINES; k=k+1) begin
+		signal_in[mux_line*NUM_LINES+k] <= line_in[k];
+		if(HAS_LED_FLAGS) begin
+			line_out[k] <= pwm_out[mux_line*NUM_LINES+k]&~overflow[mux_line*NUM_LINES+k];
+			line_out[NUM_LINES+k] <= adc_done[mux_line*NUM_LINES+k];
+			line_out[NUM_LINES*2+k*2] <= leds[mux_line*NUM_LINES+k][0]&(test[mux_line*NUM_LINES+k][0] ? pll_clk : 1);
+			line_out[NUM_LINES*2+k*2+1] <= (HAS_PSU ? voltage[mux_line*NUM_LINES+k] : leds[mux_line*NUM_LINES+k][1]);
 		end
 	end
 end
@@ -225,11 +227,11 @@ always@(posedge integration_clk) begin
 	cross[current_line] <= test[current_line][2] ? ((cross[current_line]+1) < MAX_LAG_CROSS ? cross[current_line]+1 : MAX_LAG_CROSS-1) : (cross_tmp [current_line] < MAX_LAG_CROSS ? cross_tmp [current_line] : MAX_LAG_CROSS-1);
 	tx_data[0+:PAYLOAD_SIZE] <= pulses;
 	tx_data[PAYLOAD_SIZE+:16] <= TICK;
-	tx_data[PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR << 3)|(HAS_LED_FLAGS<<2)|(HAS_LIVE_CROSS<<1)|HAS_LIVE_AUTO;
-	tx_data[PAYLOAD_SIZE+16+4+:16] <= MAX_LAG;
-	tx_data[PAYLOAD_SIZE+16+4+16+:12] <= DELAY_SIZE;
-	tx_data[PAYLOAD_SIZE+16+4+16+12+:8] <= NUM_INPUTS-1;
-	tx_data[PAYLOAD_SIZE+16+4+16+12+8+:8] <= RESOLUTION;
+	tx_data[PAYLOAD_SIZE+16+:8] <= (HAS_CROSSCORRELATOR << 3)|(HAS_LED_FLAGS<<2)|(HAS_LIVE_CROSS<<1)|HAS_LIVE_AUTO;
+	tx_data[PAYLOAD_SIZE+16+8+:12] <= MAX_LAG;
+	tx_data[PAYLOAD_SIZE+16+8+12+:12] <= DELAY_SIZE;
+	tx_data[PAYLOAD_SIZE+16+8+12+12+:8] <= NUM_INPUTS-1;
+	tx_data[PAYLOAD_SIZE+16+8+12+12+8+:8] <= RESOLUTION;
 end
 
 generate
@@ -241,48 +243,53 @@ generate
 	genvar x;
 	genvar y;
 	genvar z;
-	for(x = 0; x < DELAY_SIZE+MAX_LAG; x=x+512)
-		for(j = x; j < x + 512 && j < DELAY_SIZE+MAX_LAG; j=j+1)
-			assign delay_lines[j] = delays[j*NUM_INPUTS+:NUM_INPUTS];
 
 	for (a=0; a<NUM_INPUTS; a=a+1) begin : correlators_initial_block
 		assign leds[a] = leds_a[a*4+:4];
 		assign test[a] = test_a[a*4+:4];
-		assign voltage_pwm[a] = voltage_pwm_a[a*4+:4];
+		assign voltage_pwm[a][7:0] = voltage_pwm_a[a*8+:8];
 		assign cross_tmp[a] = cross_tmp_a[a*12+:12];
 		assign auto_tmp[a] = auto_tmp_a[a*12+:12];
 		
+		for(x = 0; x < DELAY_SIZE+MAX_LAG; x=x+512)
+			for(j = x; j < x + 512 && j < DELAY_SIZE+MAX_LAG; j=j+1)
+				assign delay_lines[j][a*WORD_WIDTH+:WORD_WIDTH] = delays[a][j*WORD_WIDTH+:WORD_WIDTH];
+				
 		if(HAS_LED_FLAGS) begin
 			assign in[a] = leds[a][2]^signal_in[a];
 			assign pulse_in[a] = (leds[a][3] ? 1 : ~in_delayed[a]) & in[a];
 		end else begin
 			assign pulse_in[a] = signal_in[a];
 		end
+		
+		fifo #(.WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(DELAY_SIZE+MAX_LAG)) delay_line(clk, adc_data[a], delays[a]);
+		ADC #(.WORD_WIDTH(WORD_WIDTH)) adc(pulse_in[a], adc_data[a], adc_done[a], , clk, enable);
+		
 		if(HAS_PSU) begin
-			PWM #(.RESOLUTION(4)) pwm(
+			PWM #(.RESOLUTION(9)) voltage_drivers(
 				voltage_pwm[a],
 				voltage[a],
-				,
-				pwm_clk,
+				,					         
+				voltage_clk,
 				enable
 			);
 		end
-		COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
+		COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) counters_block (
 			~0,
 			pulses[(CORRELATIONS_SIZE+NUM_INPUTS*LAG_AUTO+NUM_INPUTS-1-a)*RESOLUTION+:RESOLUTION],
 			,
-			delay_lines[0][a],
+			delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
 			pll_clk,
 			reset_delayed
 		);
 		for(z=0; z < MAX_LAG*2; z=z+512) begin : jitter_block
 			for(y=z; y < z+512 && y < MAX_LAG*2; y=y+1) begin : jitter_inner_block
 				if(y<LAG_AUTO) begin
-					COUNTER #(.RESOLUTION(RESOLUTION)) spectra_block (
+					COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) spectra_block (
 						~0,
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION+:RESOLUTION],
 						,
-						delay_lines[0][a]*delay_lines[auto[a]+y][a],
+						delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH]*delay_lines[auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
 						clk,
 						reset_delayed
 					);
@@ -290,11 +297,11 @@ generate
 				if(HAS_CROSSCORRELATOR) begin
 					if(y!=LAG_CROSS&&y<CORRELATIONS_HEAD_TAIL_SIZE) begin
 						for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
-							COUNTER #(.RESOLUTION(RESOLUTION)) counters_block (
+							COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) counters_block (
 								~0,
 								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>LAG_CROSS?y-1:y)-1)*RESOLUTION+:RESOLUTION],
 								,
-								delay_lines[cross[a]+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a]*delay_lines[cross[b]+(y>LAG_CROSS?y-LAG_CROSS:0)][b],
+								delay_lines[cross[a]+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH]*delay_lines[cross[b]+(y>LAG_CROSS?y-LAG_CROSS:0)][b*WORD_WIDTH+:WORD_WIDTH],
 								clk,
 								reset_delayed
 							);
@@ -302,7 +309,7 @@ generate
 					end
 				end
 			end
-		end
+		end 
 	end
 endgenerate
 

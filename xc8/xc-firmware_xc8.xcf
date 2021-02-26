@@ -3,90 +3,35 @@
 <ispXCF version="3.11.0">
 	<Comment></Comment>
 	<Chain>
-		<Comm>Slave SPI</Comm>
+		<Comm>JTAG</Comm>
 		<Device>
 			<SelectedProg value="TRUE"/>
 			<Pos>1</Pos>
-			<Vendor>WinBond</Vendor>
-			<Family>ECP5U</Family>
-			<Name>LFE5U-45F</Name>
+			<Vendor>Lattice</Vendor>
+			<Family>MachXO3LF</Family>
+			<Name>LCMXO3LF-6900C</Name>
+			<IDCode>0x612bd043</IDCode>
 			<Package>All</Package>
+			<PON>LCMXO3LF-6900C</PON>
 			<Bypass>
 				<InstrLen>8</InstrLen>
 				<InstrVal>11111111</InstrVal>
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<File>/home/plato/dev/github/xc-firmware/xc8/xc-firmware_xc8.bit</File>
-			<FileTime>02/10/21 01:06:48</FileTime>
-			<JedecChecksum>N/A</JedecChecksum>
-			<Operation>SPI Flash Erase,Program,Verify</Operation>
+			<File>/home/plato/dev/github/xc-firmware/xc8/xc-firmware_xc8.jed</File>
+			<FileTime>02/17/21 16:23:16</FileTime>
+			<JedecChecksum>0x7C87</JedecChecksum>
+			<Operation>FLASH Erase,Program,Verify</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
+				<IOState>HighZ</IOState>
+				<PreloadLength>664</PreloadLength>
+				<IOVectorData>0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</IOVectorData>
+				<SVFProcessor>SVF Processor</SVFProcessor>
 				<Usercode>0x00000000</Usercode>
-				<AccessMode>SPI Flash Background Programming</AccessMode>
+				<AccessMode>FLASH</AccessMode>
 			</Option>
-			<FPGALoader>
-			<CPLDDevice>
-				<Device>
-					<Pos>1</Pos>
-					<Vendor>Lattice</Vendor>
-					<Family>ECP5U</Family>
-					<Name>LFE5U-45F</Name>
-					<IDCode>0x41112043</IDCode>
-					<Package>All</Package>
-					<PON>LFE5U-45F</PON>
-					<Bypass>
-						<InstrLen>8</InstrLen>
-						<InstrVal>11111111</InstrVal>
-						<BScanLen>1</BScanLen>
-						<BScanVal>0</BScanVal>
-					</Bypass>
-					<MaskFile>/opt/lattice/diamond/data/vmdata/database/xpga/ecp5/LFE5U-45F.msk</MaskFile>
-					<Operation>Bypass</Operation>
-					<Option>
-						<SVFVendor>JTAG STANDARD</SVFVendor>
-						<IOState>HighZ</IOState>
-						<PreloadLength>510</PreloadLength>
-						<IOVectorData>0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</IOVectorData>
-						<AccessMode>JTAG</AccessMode>
-					</Option>
-				</Device>
-			</CPLDDevice>
-			<FlashDevice>
-				<Device>
-					<Pos>1</Pos>
-					<Vendor>WinBond</Vendor>
-					<Family>SPI Serial Flash</Family>
-					<Name>W25Q128JV</Name>
-					<IDCode>0x17</IDCode>
-					<Package>8-pin SOIC</Package>
-					<Operation>SPI Flash Erase,Program,Verify</Operation>
-					<File>/home/plato/dev/github/xc-firmware/xc8/xc-firmware_xc8.bit</File>
-					<AddressBase>0x00000000</AddressBase>
-					<EndAddress>0x000F0000</EndAddress>
-					<DeviceSize>128</DeviceSize>
-					<DataSize>1032632</DataSize>
-					<NumberOfDevices>1</NumberOfDevices>
-					<ReInitialize value="FALSE"/>
-				</Device>
-			</FlashDevice>
-			<FPGADevice>
-				<Device>
-					<Pos>1</Pos>
-					<Name></Name>
-					<File>/home/plato/dev/github/xc-firmware/xc8/xc-firmware_xc8.bit</File>
-					<LocalChainList>
-						<LocalDevice index="-99"
-							name="Unknown"
-							file="/home/plato/dev/github/xc-firmware/xc8/xc-firmware_xc8.bit"/>
-					</LocalChainList>
-					<Option>
-						<SVFVendor>JTAG STANDARD</SVFVendor>
-					</Option>
-				</Device>
-			</FPGADevice>
-			</FPGALoader>
 		</Device>
 	</Chain>
 	<ProjectOptions>
