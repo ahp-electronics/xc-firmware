@@ -1,6 +1,6 @@
 # XC8 Intensity correlator firmware
 
-#### This repository contains code of the XC8 series correlators
+#### This repository contains code of the XC series correlators
 
 ![AHP XC8 cross-correlator](https://raw.githubusercontent.com/ahp-electronics/pictures/master/XC8_small.png "XC8")
 
