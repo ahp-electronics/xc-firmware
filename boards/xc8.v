@@ -67,23 +67,31 @@ assign jp1[15] = line_out[0];
 assign jp1[13] = line_out[1];
 assign jp1[11] = line_out[2];
 assign jp1[9] = line_out[3];
-assign jp1[6] = line_out[8];
-assign jp1[7] = line_out[9];
-assign jp1[4] = line_out[10];
-assign jp1[5] = line_out[11];
-assign jp1[2] = line_out[12];
-assign jp1[3] = line_out[13];
-assign jp1[0] = line_out[14];
-assign jp1[1] = line_out[15];
+assign jp1[6] = line_out[16];
+assign jp1[7] = line_out[17];
+assign jp1[4] = line_out[18];
+assign jp1[5] = line_out[19];
+assign jp1[2] = line_out[20];
+assign jp1[3] = line_out[21];
+assign jp1[0] = line_out[22];
+assign jp1[1] = line_out[23];
 
-assign jp2[0] = mux_out[0];
-assign jp2[1] = mux_out[1];
-assign jp2[2] = mux_out[2];
-assign jp2[3] = mux_out[3];
-assign jp2[4] = mux_out[4];
-assign jp2[5] = mux_out[5];
-assign jp2[6] = mux_out[6];
-assign jp2[7] = mux_out[7];
+assign line_in[4] = jp2[14];
+assign line_in[5] = jp2[12];
+assign line_in[6] = jp2[10];
+assign line_in[7] = jp2[8];
+assign jp2[15] = line_out[4];
+assign jp2[13] = line_out[5];
+assign jp2[11] = line_out[6];
+assign jp2[9] = line_out[7];
+assign jp2[6] = line_out[24];
+assign jp2[7] = line_out[25];
+assign jp2[4] = line_out[26];
+assign jp2[5] = line_out[27];
+assign jp2[2] = line_out[28];
+assign jp2[3] = line_out[29];
+assign jp2[0] = line_out[30];
+assign jp2[1] = line_out[31];
 
 main #(.WORD_WIDTH(WORD_WIDTH), .CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CROSSCORRELATOR(HAS_CROSSCORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .LAG_AUTO(LAG_AUTO), .LAG_CROSS(LAG_CROSS)) main_block(
 	TX,

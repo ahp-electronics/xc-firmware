@@ -125,7 +125,6 @@ wire[3:0] test[0:NUM_INPUTS-1];
 wire[8:0] voltage_pwm[0:NUM_INPUTS-1];
 wire[11:0] cross_tmp [0:NUM_INPUTS-1];
 wire[11:0] auto_tmp [0:NUM_INPUTS-1];
-
 wire[4*NUM_INPUTS-1:0] leds_a;
 wire[4*NUM_INPUTS-1:0] test_a;
 wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
@@ -201,7 +200,7 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LED_FLAGS(HAS_LED_FLAGS)) parser (
 	RXIF
 );
 
-always@(*) begin
+always@(posedge pll_clk) begin
 	mux_out <= 1<<mux_line;
 	for(k=0; k<NUM_LINES; k=k+1) begin
 		signal_in[mux_line*NUM_LINES+k] <= line_in[k];
@@ -212,9 +211,6 @@ always@(*) begin
 			line_out[NUM_LINES*2+k*2+1] <= (HAS_PSU ? voltage[mux_line*NUM_LINES+k] : leds[mux_line*NUM_LINES+k][1]);
 		end
 	end
-end
-	
-always@(posedge pll_clk) begin
 	if(mux_line < MUX_LINES-1) begin
 		mux_line <= mux_line+1;
 	end else begin
@@ -275,9 +271,9 @@ generate
 			);
 		end
 		COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) counters_block (
-			~0,
+			~64'd0,
 			pulses[(CORRELATIONS_SIZE+NUM_INPUTS*LAG_AUTO+NUM_INPUTS-1-a)*RESOLUTION+:RESOLUTION],
-			,
+			overflow[a],
 			delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
 			pll_clk,
 			reset_delayed
