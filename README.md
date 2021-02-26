@@ -1,4 +1,4 @@
-# XC8 Intensity correlator firmware
+# XC Intensity correlator firmware
 
 #### This repository contains code of the XC series correlators
 
