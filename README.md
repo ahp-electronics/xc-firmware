@@ -4,6 +4,26 @@
 
 ![AHP XC8 cross-correlator](https://raw.githubusercontent.com/ahp-electronics/pictures/master/XC8_small.png "XC8")
 
+
+Into the folder boards/ you'll find board and device specific files, device files contain some custom parameters that can characterize the device:
+
+```
+parameter CLK_FREQUENCY = 10000000;	//The crystal frequency
+parameter PLL_MULTIPLIER = 40;		//The PLL Multiplier value
+parameter PLL_DIVIDER = 1;		//The PLL Divider value
+parameter MUX_LINES = 8;		//Muxer lines
+parameter NUM_LINES = 4;		//Lines per each Muxer line
+parameter DELAY_SIZE = 160;		//The delay FIFO size
+parameter RESOLUTION = 24;		//Resolution (count capacity) of each correlation/intensity counter
+parameter HAS_LED_FLAGS = 1;		//Has this device output lines? (power switches or indicator or ramp generators sync?)
+parameter HAS_CROSSCORRELATOR = 1;	//Has this device crosscorrelation capability?
+parameter HAS_PSU = 0;			//Has this device a software PSU?
+parameter LAG_AUTO = 1;			//Lag lines size for live autocorrelation
+parameter LAG_CROSS = 1;		//Lag lines size for live crosscorrelation
+parameter BAUD_RATE = 57600;		//Communication port baud rate
+parameter WORD_WIDTH = 1;		//Word width (greater than 1 when using ADC - must be in sync with the ADC ramp generator)
+```
+
 The generated SVF file can be downloaded to the device using urJTAG http://urjtag.org/
 
 To use the correlator try the GUI: https://github.com/ahp-electronics/xc-gui
