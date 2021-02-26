@@ -5,7 +5,7 @@
 ![AHP XC8 cross-correlator](https://raw.githubusercontent.com/ahp-electronics/pictures/master/XC8_small.png "XC8")
 
 
-Into the folder boards/ you'll find board and device specific files, device files contain some custom parameters that can characterize the device:
+You'll find board and device specific files into the boards/ folder, device files contain some custom parameters that can characterize the device:
 
 ```
 parameter CLK_FREQUENCY = 10000000;	//The crystal frequency
