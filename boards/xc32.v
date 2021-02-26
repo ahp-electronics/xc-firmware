@@ -28,10 +28,10 @@ module xc_firmware (
 parameter CLK_FREQUENCY = 10000000;
 parameter PLL_MULTIPLIER = 40;
 parameter PLL_DIVIDER = 1;
-parameter MUX_LINES = 6;
+parameter MUX_LINES = 8;
 parameter NUM_LINES = 4;
-parameter DELAY_SIZE = 200; 
-parameter RESOLUTION = 24;
+parameter DELAY_SIZE = 160; 
+parameter RESOLUTION = 20;
 parameter HAS_PSU = 1;
 parameter HAS_LED_FLAGS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
@@ -39,6 +39,7 @@ parameter MAX_LAG = 1;
 parameter LAG_AUTO = 1;
 parameter LAG_CROSS = 1;
 parameter BAUD_RATE = 57600;
+parameter WORD_WIDTH = 1;
 
 wire TX;
 wire RX;
