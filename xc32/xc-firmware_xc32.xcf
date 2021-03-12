@@ -7,7 +7,7 @@
 		<Device>
 			<SelectedProg value="TRUE"/>
 			<Pos>1</Pos>
-			<Vendor>WinBond</Vendor>
+			<Vendor>Cypress</Vendor>
 			<Family>ECP5U</Family>
 			<Name>LFE5U-45F</Name>
 			<Package>All</Package>
@@ -19,7 +19,6 @@
 			</Bypass>
 			<File>/home/plato/dev/github/xc-firmware/xc32/xc-firmware_xc32.bit</File>
 			<FileTime>02/02/21 23:21:18</FileTime>
-			<JedecChecksum>N/A</JedecChecksum>
 			<Operation>SPI Flash Erase,Program,Verify</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -56,15 +55,15 @@
 			<FlashDevice>
 				<Device>
 					<Pos>1</Pos>
-					<Vendor>WinBond</Vendor>
+					<Vendor>Cypress</Vendor>
 					<Family>SPI Serial Flash</Family>
-					<Name>W25Q128JV</Name>
-					<IDCode>0x17</IDCode>
-					<Package>8-pin SOIC</Package>
+					<Name>S25FS128S</Name>
+					<IDCode>0x18</IDCode>
+					<Package>16-lead SOIC</Package>
 					<Operation>SPI Flash Erase,Program,Verify</Operation>
 					<File>/home/plato/dev/github/xc-firmware/xc32/xc-firmware_xc32.bit</File>
 					<AddressBase>0x00000000</AddressBase>
-					<EndAddress>0x000F0000</EndAddress>
+					<EndAddress>0x00FF0000</EndAddress>
 					<DeviceSize>128</DeviceSize>
 					<DataSize>1032633</DataSize>
 					<NumberOfDevices>1</NumberOfDevices>

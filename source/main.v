@@ -81,7 +81,7 @@ output reg[MUX_LINES-1:0] mux_out;
 wire[NUM_INPUTS-1:0] in_delayed;
 wire[NUM_INPUTS-1:0] pulse_in;
 wire[NUM_INPUTS-1:0] in;
-wire[WORD_WIDTH-1:0] adc_data[0:NUM_INPUTS-1];
+wire[WORD_WIDTH-1:0] adc_data[0:NUM_INPUTS];
 wire[NUM_INPUTS-1:0] adc_done;
 input wire clock;
 output wire clki;
@@ -91,7 +91,6 @@ wire plli_clk;
 wire clk;
 wire integration_clk;
 wire uart_clk;
-wire voltage_clk;
 wire reset_delayed;
  
 wire[NUM_INPUTS-1:0] pwm_out;
@@ -105,26 +104,26 @@ wire[PAYLOAD_SIZE-1:0] pulses;
 
 wire[NUM_INPUTS*WORD_WIDTH-1:0] delay_lines [0:DELAY_SIZE+MAX_LAG-1];
 
-reg[11:0] cross [0:NUM_INPUTS-1];
-reg[11:0] auto [0:NUM_INPUTS-1];
+reg[11:0] cross [0:NUM_INPUTS];
+reg[11:0] auto [0:NUM_INPUTS];
 
 reg[NUM_INPUTS-1:0] signal_in;
 
 reg[7:0] mux_line = 0;
 reg[7:0] k;
 
-wire[(DELAY_SIZE+MAX_LAG)*WORD_WIDTH-1:0] delays[0:NUM_INPUTS-1];
+wire[(DELAY_SIZE+MAX_LAG)*WORD_WIDTH-1:0] delays[0:NUM_INPUTS];
 
 wire integrating;
 wire[7:0] current_line;
 wire[3:0] baud_rate;
 wire[3:0] clock_divider;
 
-wire[3:0] leds[0:NUM_INPUTS-1];
-wire[3:0] test[0:NUM_INPUTS-1];
-wire[8:0] voltage_pwm[0:NUM_INPUTS-1];
-wire[11:0] cross_tmp [0:NUM_INPUTS-1];
-wire[11:0] auto_tmp [0:NUM_INPUTS-1];
+wire[3:0] leds[0:NUM_INPUTS];
+wire[3:0] test[0:NUM_INPUTS];
+wire[8:0] voltage_pwm[0:NUM_INPUTS];
+wire[11:0] cross_tmp [0:NUM_INPUTS];
+wire[11:0] auto_tmp [0:NUM_INPUTS];
 wire[4*NUM_INPUTS-1:0] leds_a;
 wire[4*NUM_INPUTS-1:0] test_a;
 wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
@@ -160,14 +159,6 @@ CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) uart_clock_block(
 	clki,
 	,
 	enable
-);
-
-CLK_GEN #(.CLK_FREQUENCY(CLK_FREQUENCY)) pwm_clock_block(
-	106250,
-	voltage_clk,
-	clki,
-	,
-	enable&HAS_PSU
 );
 
 TX_WORD #(.SHIFT(SHIFT), .RESOLUTION(PACKET_SIZE)) tx_block(
@@ -262,11 +253,10 @@ generate
 		ADC #(.WORD_WIDTH(WORD_WIDTH)) adc(pulse_in[a], adc_data[a], adc_done[a], , clk, enable);
 		
 		if(HAS_PSU) begin
-			PWM #(.RESOLUTION(9)) voltage_drivers(
+			sine #(.CYCLE_MS(10), .CLK_FREQUENCY(PLL_FREQUENCY)) psu(
 				voltage_pwm[a],
 				voltage[a],
-				,					         
-				voltage_clk,
+				pll_clk,
 				enable
 			);
 		end

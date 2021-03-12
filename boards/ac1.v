@@ -20,72 +20,51 @@
 `timescale 1 ns / 1 ps
 
 module xc_firmware (
+	clki,
 	jp1,
-	jp2,
-	clki
+	jp2
 	);
 
 parameter CLK_FREQUENCY = 10000000;
-parameter PLL_MULTIPLIER = 40;
+parameter PLL_MULTIPLIER = 1;
 parameter PLL_DIVIDER = 1;
-parameter MUX_LINES = 8;
-parameter NUM_LINES = 4;
-parameter DELAY_SIZE = 128;
+parameter MUX_LINES = 1;
+parameter NUM_LINES = 1;
+parameter DELAY_SIZE = 1;
 parameter RESOLUTION = 24;
+parameter HAS_PSU = 1;
 parameter HAS_LED_FLAGS = 1;
-parameter HAS_CROSSCORRELATOR = 1;
-parameter HAS_PSU = 0;
-parameter LAG_AUTO = 1;
+parameter HAS_CROSSCORRELATOR = 0;
+parameter LAG_AUTO = 100;
 parameter LAG_CROSS = 1;
 parameter BAUD_RATE = 57600;
-parameter SHIFT = 1;
 parameter WORD_WIDTH = 1;
+
+input wire clki;
+inout wire[19:0] jp1;
+inout wire[19:0] jp2;
 
 wire TX;
 wire RX;
 wire clko;
 wire enable;
 
+wire clk;
 wire[NUM_LINES-1:0] line_in;
 wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
-
-input wire clki;
-inout wire[19:0] jp1;
-inout wire[19:0] jp2;
 
 assign clko = jp2[16];
 assign jp2[18] = TX;
 assign enable = jp2[17];
 assign RX = jp2[19];
 
-assign line_in[0] = jp1[14];
-assign line_in[1] = jp1[12];
-assign line_in[2] = jp1[10];
-assign line_in[3] = jp1[8];
-assign jp1[15] = line_out[0];
-assign jp1[13] = line_out[1];
-assign jp1[11] = line_out[2];
-assign jp1[9] = line_out[3];
-assign jp1[6] = line_out[8];
-assign jp1[7] = line_out[9];
-assign jp1[4] = line_out[10];
-assign jp1[5] = line_out[11];
-assign jp1[2] = line_out[12];
-assign jp1[3] = line_out[13];
-assign jp1[0] = line_out[14];
-assign jp1[1] = line_out[15];
-
-assign jp2[0] = mux_out[0];
-assign jp2[1] = mux_out[1];
-assign jp2[2] = mux_out[2];
-assign jp2[3] = mux_out[3];
-assign jp2[4] = mux_out[4];
-assign jp2[5] = mux_out[5];
-assign jp2[6] = mux_out[6];
-assign jp2[7] = mux_out[7];
-
-main #(.WORD_WIDTH(WORD_WIDTH), .CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CROSSCORRELATOR(HAS_CROSSCORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .LAG_AUTO(LAG_AUTO), .LAG_CROSS(LAG_CROSS)) main_block(
+assign line_in[0] = jp1[0];
+assign jp1[1] = line_out[0];
+assign jp1[2] = line_out[1];
+assign jp1[3] = line_out[2];
+ 
+main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CROSSCORRELATOR(HAS_CROSSCORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .LAG_AUTO(LAG_AUTO), .LAG_CROSS(LAG_CROSS)) main_block(
 	TX,
 	RX,
 	line_in,
