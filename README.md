@@ -1,11 +1,11 @@
-# XC8 Intensity correlator firmware
+# XC Intensity correlator firmware
 
-#### This repository contains code of the XC8 series correlators
+#### This repository contains code of the XC series correlators
 
 ![AHP XC8 cross-correlator](https://raw.githubusercontent.com/ahp-electronics/pictures/master/XC8_small.png "XC8")
 
 
-Into the folder boards/ you'll find board and device specific files, device files contain some custom parameters that can characterize the device:
+You'll find board and device specific files into the boards/ folder, device files contain some custom parameters that can characterize the device:
 
 ```
 parameter CLK_FREQUENCY = 10000000;	//The crystal frequency
@@ -55,4 +55,4 @@ Each packet starts with a header with payload length indication, it is possible 
 + bytes +lines#: autocorrelations count of each line by the selected autocorrelation line delayed by crosscorrelation lag zero
 + bytes +baselines#: crosscorrelations count of pulses of each line with others by the selected delay amount
 
-###### The sampling rate is the same as the packet rate, the bandwidth is determined by the clock tau and the the clock tau multiplier by two
+The sampling rate is the same as the packet rate, the bandwidth is determined by the clock tau, the number of mux lines, the power of two of the ADC word width and the the clock tau multiplier power of two.
