@@ -18,8 +18,7 @@ parameter RESOLUTION = 24;		//Resolution (count capacity) of each correlation/in
 parameter HAS_LED_FLAGS = 1;		//Has this device output lines? (power switches or indicator or ramp generators sync?)
 parameter HAS_CROSSCORRELATOR = 1;	//Has this device crosscorrelation capability?
 parameter HAS_PSU = 0;			//Has this device a software PSU?
-parameter LAG_AUTO = 1;			//Lag lines size for live autocorrelation
-parameter LAG_CROSS = 1;		//Lag lines size for live crosscorrelation
+parameter MAX_LAG = 1;		//Lag lines size for live correlation
 parameter BAUD_RATE = 57600;		//Communication port baud rate
 parameter WORD_WIDTH = 1;		//Word width (greater than 1 when using ADC - must be in sync with the ADC ramp generator)
 ```
