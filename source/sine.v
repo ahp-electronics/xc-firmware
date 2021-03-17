@@ -26,11 +26,12 @@ module sine (
 	enable
 	);
 parameter CLK_FREQUENCY = 10000000;
-parameter CYCLE_MS = 10;
+parameter PWM_FREQUENCY = 100000;
+parameter SIN_FREQUENCY = 1000;
 parameter RESOLUTION = 8;
 
-parameter DIVIDER = CLK_FREQUENCY/2000000;
-parameter CYCLE = (CYCLE_MS*1000)>>RESOLUTION;
+parameter DIVIDER = CLK_FREQUENCY/(PWM_FREQUENCY<<RESOLUTION);
+parameter CYCLE = PWM_FREQUENCY/SIN_FREQUENCY;
 reg[7:0] sine[0:255];
 
 initial begin
@@ -311,9 +312,10 @@ always@(posedge clk) begin
 end
 
 always@(posedge pwm_clk) begin
-	if(enable) begin
+	if(enable)
 		index2 <= index2+1;
-	end
+	else
+		index2 <= 0;
 	if(index2 >= CYCLE) begin
 		pwm_idx <= pwm_idx+1;
 		index2 <= 0;
@@ -321,7 +323,7 @@ always@(posedge pwm_clk) begin
 end
 
 PWM #(.RESOLUTION(RESOLUTION)) pwm(
-	(((sine[pwm_idx]<<8)>>RESOLUTION)*max_value)>>RESOLUTION,
+	((sine[pwm_idx]*max_value)>>8),
 	pwm_out,
 	overflow,
 	pwm_clk,

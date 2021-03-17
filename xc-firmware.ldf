@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6BG256C" default_implementation="xc32">
+<BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6BG256C" default_implementation="xc8">
     <Options/>
     <Implementation title="ac1" dir="ac1" description="xc32" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
@@ -42,10 +42,13 @@
         <Source name="source/adc.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
+        <Source name="source/sine.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="ac1/xc-firmware_ac1.xcf" type="Programming Project File" type_short="Programming">
+            <Options/>
+        </Source>
+        <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
     </Implementation>
@@ -136,12 +139,6 @@
             <Options top_module="xc_firmware"/>
         </Source>
         <Source name="source/adc.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="boards/lcmxo3.lpf" type="Logic Preference" type_short="LPF" excluded="TRUE">
-            <Options/>
-        </Source>
-        <Source name="boards/lcmxo3l.lpf" type="Logic Preference" type_short="LPF" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">

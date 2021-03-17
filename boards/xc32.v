@@ -26,6 +26,8 @@ module xc_firmware (
 	);
 
 parameter CLK_FREQUENCY = 10000000;
+parameter PWM_FREQUENCY = 100000;
+parameter SIN_FREQUENCY = 100;
 parameter PLL_MULTIPLIER = 40;
 parameter PLL_DIVIDER = 1;
 parameter MUX_LINES = 8;
@@ -35,29 +37,39 @@ parameter RESOLUTION = 24;
 parameter HAS_LED_FLAGS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
-parameter LAG_AUTO = 1;
-parameter LAG_CROSS = 1;
+parameter MAX_LAG = 1;
 parameter BAUD_RATE = 57600;
 parameter SHIFT = 1;
 parameter WORD_WIDTH = 1;
-
-wire TX;
-wire RX;
-wire clko;
-wire enable;
-
-wire[NUM_LINES-1:0] line_in;
-wire[NUM_LINES*4-1:0] line_out;
-wire[MUX_LINES-1:0] mux_out;
 
 input wire clki;
 inout wire[19:0] jp1;
 inout wire[19:0] jp2;
 
-assign clko = jp2[16];
-assign jp2[18] = TX;
+wire TX;
+wire RX;
+wire clko;
+wire enable;
+wire clke;
+wire clk;
+wire integration_clk;
+wire sampling_clk;
+wire external_clock;
+wire integrating;
+
+assign clke = jp1[16];
+assign jp1[17] = clko;
+assign jp1[18] = integration_clk;
+assign jp1[19] = sampling_clk;
+
+assign jp2[16] = integrating;
 assign enable = jp2[17];
+assign jp2[18] = TX;
 assign RX = jp2[19];
+
+wire[NUM_LINES-1:0] line_in;
+wire[NUM_LINES*4-1:0] line_out;
+wire[MUX_LINES-1:0] mux_out;
 
 assign line_in[0] = jp1[14];
 assign line_in[1] = jp1[12];
@@ -85,7 +97,7 @@ assign jp2[5] = mux_out[5];
 assign jp2[6] = mux_out[6];
 assign jp2[7] = mux_out[7];
 
-main #(.WORD_WIDTH(WORD_WIDTH), .CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CROSSCORRELATOR(HAS_CROSSCORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .LAG_AUTO(LAG_AUTO), .LAG_CROSS(LAG_CROSS)) main_block(
+main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PWM_FREQUENCY(PWM_FREQUENCY), .SIN_FREQUENCY(SIN_FREQUENCY), .PLL_MULTIPLIER(PLL_MULTIPLIER), .PLL_DIVIDER(PLL_DIVIDER), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CROSSCORRELATOR(HAS_CROSSCORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .MAX_LAG(MAX_LAG)) main_block(
 	TX,
 	RX,
 	line_in,
@@ -93,7 +105,12 @@ main #(.WORD_WIDTH(WORD_WIDTH), .CLK_FREQUENCY(CLK_FREQUENCY), .PLL_MULTIPLIER(P
 	mux_out,
 	clki,
 	clko,
-	1'b1
+	clke,
+	integration_clk,
+	sampling_clk,
+	external_clock,
+	integrating,
+	enable
 );
 
 endmodule
