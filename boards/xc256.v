@@ -28,8 +28,8 @@ module xc_firmware (
 parameter CLK_FREQUENCY = 10000000;
 parameter PWM_FREQUENCY = 100000;
 parameter SIN_FREQUENCY = 100;
-parameter PLL_MULTIPLIER = 40;
-parameter PLL_DIVIDER = 1;
+parameter PLL_MULTIPLIER = 16;
+parameter PLL_DIVIDER = 5;
 parameter MUX_LINES = 16;
 parameter NUM_LINES = 16;
 parameter DELAY_SIZE = 128;
