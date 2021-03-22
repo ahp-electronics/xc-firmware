@@ -4,4 +4,4 @@
 *.xls
 fp-info-cache
 *.html
-xc*/
+?c*/

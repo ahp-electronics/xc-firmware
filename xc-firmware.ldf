@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6BG256C" default_implementation="xc8">
+<BaliProject version="3.2" title="xc-firmware" device="LFE5U-85F-6MG285C" default_implementation="xc256">
     <Options/>
-    <Implementation title="ac1" dir="ac1" description="xc32" synthesis="synplify" default_strategy="AHP XC">
+    <Implementation title="ac1" dir="ac1" description="ac1" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
         <Source name="boards/ac1.v" type="Verilog" type_short="Verilog">
             <Options top_module="xc_firmware"/>
@@ -52,9 +52,9 @@
             <Options/>
         </Source>
     </Implementation>
-    <Implementation title="xc32" dir="xc32" description="xc32" synthesis="synplify" default_strategy="AHP XC">
+    <Implementation title="xc256" dir="xc256" description="xc256" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
-        <Source name="boards/xc32.v" type="Verilog" type_short="Verilog">
+        <Source name="boards/xc256.v" type="Verilog" type_short="Verilog">
             <Options top_module="xc_firmware"/>
         </Source>
         <Source name="boards/pc03.v" type="Verilog" type_short="Verilog">
@@ -89,6 +89,54 @@
         </Source>
         <Source name="source/cmd_parser.v" type="Verilog" type_short="Verilog">
             <Options/>
+        </Source>
+        <Source name="source/adc.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+        <Source name="xc256/xc-firmware_xc256.xcf" type="Programming Project File" type_short="Programming">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Implementation title="xc32" dir="xc32" description="xc32" synthesis="synplify" default_strategy="AHP XC">
+        <Options def_top="xc_firmware"/>
+        <Source name="source/main.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/uart_rx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/uart_tx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/tx_word.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/counter.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/dff.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/clock_divider.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/pwm.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/indicators.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/cmd_parser.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="boards/pc03.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="boards/xc32.v" type="Verilog" type_short="Verilog">
+            <Options top_module="xc_firmware"/>
         </Source>
         <Source name="source/adc.v" type="Verilog" type_short="Verilog">
             <Options/>
