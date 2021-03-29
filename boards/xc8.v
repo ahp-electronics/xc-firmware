@@ -50,7 +50,6 @@ wire RX;
 wire clko;
 wire enable;
 wire clke;
-wire clk;
 wire integration_clk;
 wire sampling_clk;
 wire external_clock;

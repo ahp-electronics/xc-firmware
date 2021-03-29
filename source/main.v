@@ -225,7 +225,7 @@ always@(posedge integration_clk) begin
 	cross[current_line] <= test[current_line][2] ? ((cross[current_line]+1) < MAX_LAG_CROSS ? cross[current_line]+1 : MAX_LAG_CROSS-1) : (cross_tmp [current_line] < MAX_LAG_CROSS ? cross_tmp [current_line] : MAX_LAG_CROSS-1);
 	tx_data[0+:PAYLOAD_SIZE] <= pulses;
 	tx_data[PAYLOAD_SIZE+:16] <= TICK;
-	tx_data[PAYLOAD_SIZE+16+:8] <= (HAS_CROSSCORRELATOR << 3)|(HAS_LED_FLAGS<<2)|(HAS_LIVE_CROSS<<1)|HAS_LIVE_AUTO;
+	tx_data[PAYLOAD_SIZE+16+:8] <= ((MAX_LAG > 1)<<5)|(HAS_PSU << 4)|(HAS_CROSSCORRELATOR << 3)|(HAS_LED_FLAGS<<2)|(HAS_LIVE_CROSS<<1)|HAS_LIVE_AUTO;
 	tx_data[PAYLOAD_SIZE+16+8+:12] <= MAX_LAG;
 	tx_data[PAYLOAD_SIZE+16+8+12+:12] <= DELAY_SIZE;
 	tx_data[PAYLOAD_SIZE+16+8+12+12+:8] <= NUM_INPUTS-1;
