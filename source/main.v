@@ -98,7 +98,7 @@ output wire sampling_clk;
 wire pll_clk;
 wire plli_clk;
 wire clk;
-wire sysclk;
+reg sysclk;
 wire uart_clk;
 wire reset_delayed;
  
@@ -119,7 +119,6 @@ reg[11:0] auto [0:NUM_INPUTS];
 reg[NUM_INPUTS-1:0] signal_in;
 
 reg[7:0] mux_line = 0;
-reg[7:0] k;
 
 wire[(DELAY_SIZE+MAX_LAG)*WORD_WIDTH-1:0] delays[0:NUM_INPUTS];
 wire integrate;
@@ -148,7 +147,6 @@ wire[7:0] RXREG;
 assign integrating = strobe | integrate;
 assign integration_clk = tx_done;
 
-assign sysclk = (external_clock ? clke : clock);
 pll #(.MULTIPLIER(PLL_MULTIPLIER), .DIVIDER(PLL_DIVIDER)) pll_block (sysclk, clki, pll_clk);
 dff reset_delay(clk, integration_clk, reset_delayed);
 dff #(.WORD_WIDTH(NUM_INPUTS)) input_delay(pll_clk, in, in_delayed);
@@ -206,17 +204,15 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LED_FLAGS(HAS_LED_FLAGS)) parser (
 	RXIF
 );
 
+always@(*) begin
+	if(external_clock)
+		sysclk <= clke;
+	else
+		sysclk <= clock;
+end
+
 always@(posedge pll_clk) begin
 	mux_out <= 1<<mux_line;
-	for(k=0; k<NUM_LINES; k=k+1) begin
-		signal_in[mux_line*NUM_LINES+k] <= line_in[k];
-		if(HAS_LED_FLAGS) begin
-			line_out[k] <= pwm_out[mux_line*NUM_LINES+k]&~overflow[mux_line*NUM_LINES+k];
-			line_out[NUM_LINES+k] <= adc_done[mux_line*NUM_LINES+k];
-			line_out[NUM_LINES*2+k*2] <= leds[mux_line*NUM_LINES+k][0]&(test[mux_line*NUM_LINES+k][0] ? pll_clk : 1);
-			line_out[NUM_LINES*2+k*2+1] <= (HAS_PSU ? voltage[mux_line*NUM_LINES+k] : leds[mux_line*NUM_LINES+k][1]);
-		end
-	end
 	if(mux_line < MUX_LINES-1) begin
 		mux_line <= mux_line+1;
 	end else begin
@@ -239,12 +235,23 @@ end
 generate
 	genvar a;
 	genvar b;
-	genvar c;
-	genvar d;
 	genvar j;
 	genvar x;
 	genvar y;
 	genvar z;
+	genvar k;
+
+	for(k=0; k<NUM_LINES; k=k+1) begin
+		always@(posedge pll_clk) begin
+			signal_in[mux_line*NUM_LINES+k] <= line_in[k];
+			if(HAS_LED_FLAGS) begin
+				line_out[k] <= pwm_out[mux_line*NUM_LINES+k]&~overflow[mux_line*NUM_LINES+k];
+				line_out[NUM_LINES+k] <= adc_done[mux_line*NUM_LINES+k];
+				line_out[NUM_LINES*2+k*2] <= leds[mux_line*NUM_LINES+k][0]&(test[mux_line*NUM_LINES+k][0] ? pll_clk : 1);
+				line_out[NUM_LINES*2+k*2+1] <= (HAS_PSU ? voltage[mux_line*NUM_LINES+k] : leds[mux_line*NUM_LINES+k][1]);
+			end
+		end
+	end
 
 	for (a=0; a<NUM_INPUTS; a=a+1) begin : correlators_initial_block
 		assign leds[a] = leds_a[a*4+:4];
@@ -259,7 +266,7 @@ generate
 				
 		if(HAS_LED_FLAGS) begin
 			assign in[a] = leds[a][2]^signal_in[a];
-			assign pulse_in[a] = (leds[a][3] ? 1 : ~in_delayed[a]) & in[a];
+			assign pulse_in[a] = (leds[a][3] | ~in_delayed[a]) & in[a];
 		end else begin
 			assign pulse_in[a] = signal_in[a];
 		end
