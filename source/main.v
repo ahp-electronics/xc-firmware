@@ -203,12 +203,13 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LED_FLAGS(HAS_LED_FLAGS)) parser (
 	external_clock,
 	RXIF
 );
-
+ 
 always@(*) begin
 	if(external_clock)
 		sysclk <= clke;
 	else
 		sysclk <= clock;
+	signal_in[mux_line*NUM_LINES+:NUM_LINES] <= line_in;
 end
 
 always@(posedge pll_clk) begin
@@ -242,13 +243,15 @@ generate
 	genvar k;
 
 	for(k=0; k<NUM_LINES; k=k+1) begin
-		always@(posedge pll_clk) begin
-			signal_in[mux_line*NUM_LINES+k] <= line_in[k];
+		always@(*) begin
 			if(HAS_LED_FLAGS) begin
 				line_out[k] <= pwm_out[mux_line*NUM_LINES+k]&~overflow[mux_line*NUM_LINES+k];
 				line_out[NUM_LINES+k] <= adc_done[mux_line*NUM_LINES+k];
 				line_out[NUM_LINES*2+k*2] <= leds[mux_line*NUM_LINES+k][0]&(test[mux_line*NUM_LINES+k][0] ? pll_clk : 1);
-				line_out[NUM_LINES*2+k*2+1] <= (HAS_PSU ? voltage[mux_line*NUM_LINES+k] : leds[mux_line*NUM_LINES+k][1]);
+				if(HAS_PSU)
+					line_out[NUM_LINES*2+k*2+1] <= voltage[mux_line*NUM_LINES+k];
+				else
+					line_out[NUM_LINES*2+k*2+1] <= leds[mux_line*NUM_LINES+k][1];
 			end
 		end
 	end

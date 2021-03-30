@@ -22,20 +22,20 @@
 module xc_firmware (
 	clki,
 	jp1,
-	jp2
+	jp2 
 	);
-
+  
 parameter CLK_FREQUENCY = 10000000;
 parameter PWM_FREQUENCY = 100000;
 parameter SIN_FREQUENCY = 100;
 parameter PLL_MULTIPLIER = 40;
 parameter PLL_DIVIDER = 1;
-parameter MUX_LINES = 1;
-parameter NUM_LINES = 8;
-parameter DELAY_SIZE = 128;
+parameter MUX_LINES = 1; 
+parameter NUM_LINES = 1;
+parameter DELAY_SIZE = 1;
 parameter MAX_LAG = 1;
-parameter RESOLUTION = 24;
-parameter HAS_PSU = 0;
+parameter RESOLUTION = 4;
+parameter HAS_PSU = 0; 
 parameter HAS_LED_FLAGS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter BAUD_RATE = 57600;

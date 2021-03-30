@@ -1,0 +1,15 @@
+#-- top module name
+set_option -top_module xc_firmware
+
+#-- set result format/file last
+project -result_file {REPOSITORY/IMPLEMENTATION/xc-firmware_IMPLEMENTATION.edi}
+
+#-- error message log file
+project -log_file {xc-firmware_IMPLEMENTATION.srf}
+
+#-- set any command lines input by customer
+
+
+#-- run Synplify with 'arrange HDL file'
+project -run -clean
+
