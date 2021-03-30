@@ -8,12 +8,14 @@ board=pc03
 
 all: synthesize translate map placeroute export program
 
-synthesize:
+prepare:
 	bash -c "cat $(PWD)/boards/synplify.tcl.header | sed -e 's:BOARD:$(board):g' | sed -e 's:CHIP:$(chip):g' | sed -e 's:DEVICE:$(device):g' | sed -e 's:IMPLEMENTATION:$(implementation):g' | sed -e 's:PACKAGE:$(package):g' | sed -e 's:REPOSITORY:$(PWD):g' > xc-firmware_$(implementation)_synplify.tcl"
 	find /home/plato/dev/github/xc-firmware/source/ -type f -name "*.v" -exec echo add_file -verilog \{{}\} >> $(PWD)/$(implementation)/xc-firmware_$(implementation)_synplify.tcl \;
 	echo add_file -verilog {$(PWD)/boards/$(implementation).v} >> "$(PWD)/$(implementation)/xc-firmware_$(implementation)_synplify.tcl"
 	echo add_file -verilog {$(PWD)/boards/$(board).v} >> "$(PWD)/$(implementation)/xc-firmware_$(implementation)_synplify.tcl"
 	bash -c "cat $(PWD)/boards/synplify.tcl.footer | sed -e 's:BOARD:$(board):g' | sed -e 's:CHIP:$(chip):g' | sed -e 's:DEVICE:$(device):g' | sed -e 's:IMPLEMENTATION:$(implementation):g' | sed -e 's:PACKAGE:$(package):g' | sed -e 's:REPOSITORY:$(PWD):g' >> xc-firmware_$(implementation)_synplify.tcl"
+
+synthesize: prepare
 	synpwrap -msg -prj "$(PWD)/$(implementation)/xc-firmware_$(implementation)_synplify.tcl" -log "$(PWD)/$(implementation)/xc-firmware_$(implementation).srf"
 
 translate: synthesize
@@ -29,10 +31,10 @@ placeroute: map
 export: placeroute
 	tmcheck -par "$(PWD)/$(implementation)/xc-firmware_$(implementation).par" -nocheck
 	bitgen -w "$(PWD)/$(implementation)/xc-firmware_$(implementation).ncd" -f "$(PWD)/$(implementation)/xc-firmware_$(implementation).t2b" -e -s "xc-firmware.sec" -k "xc-firmware.bek" "$(PWD)/$(implementation)/xc-firmware_$(implementation).prf"
-	ddtcmd -oft -svfchain -revd -of "$(PWD)/$(implementation)/xc-firmware_$(implementation).svf" -if "$(PWD)/$(implementation)/xc-firmware_$(implementation).xcf"
 
 program: export
+	ddtcmd -oft -svfchain -revd -of "$(PWD)/$(implementation)/xc-firmware_$(implementation).svf" -if "$(PWD)/$(implementation)/xc-firmware_$(implementation).xcf"
 	program_jtag $(PWD)/$(implementation)/xc-firmware_$(implementation).svf
 
 clean:
-	bash -c "tmpfile='`cat $(PWD)/$(implementation)/xc-firmware_$(implementation).xcf`'; rm -r $(PWD)/$(implementation)/*; ln -s $(PWD)/boards/Makefile $(PWD)/$(implementation)/Makefile"
+	bash -c "tmpfile='`cat $(PWD)/$(implementation)/xc-firmware_$(implementation).xcf`'; rm -r $(PWD)/$(implementation)/*; ln -s $(PWD)/boards/Makefile $(PWD)/$(implementation)/Makefile; echo $tmpfile > $(PWD)/$(implementation)/xc-firmware_$(implementation).xcf"

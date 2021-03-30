@@ -50,7 +50,7 @@ parameter HAS_PSU = 1;
 parameter MAX_LAG = 1;
 parameter BAUD_RATE = 57600;
 parameter SHIFT = 1;
-parameter WORD_WIDTH = 16;
+parameter WORD_WIDTH = 1;
 
 parameter SECOND = 1000000000;
 parameter PLL_FREQUENCY = CLK_FREQUENCY*PLL_MULTIPLIER/PLL_DIVIDER;
@@ -273,10 +273,14 @@ generate
 		end else begin
 			assign pulse_in[a] = signal_in[a];
 		end
-		
+		 
 		fifo #(.WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(DELAY_SIZE+MAX_LAG)) delay_line(clk, adc_data[a], delays[a]);
-		ADC #(.WORD_WIDTH(WORD_WIDTH)) adc(pulse_in[a], adc_data[a], adc_done[a], , clk, enable);
-		
+
+		if(WORD_WIDTH>1)
+			ADC #(.WORD_WIDTH(WORD_WIDTH)) adc(pulse_in[a], adc_data[a], adc_done[a], , clk, enable);
+		else
+			assign adc_data[a] = pulse_in[a];
+
 		if(HAS_PSU) begin
 			sine #(.RESOLUTION(8), .PWM_FREQUENCY(PWM_FREQUENCY), .SIN_FREQUENCY(SIN_FREQUENCY), .CLK_FREQUENCY(PLL_FREQUENCY)) psu(
 				voltage_pwm[a],
