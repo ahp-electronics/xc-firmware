@@ -28,7 +28,7 @@ module CLK_GEN
 		enable
 	);
 	parameter[63:0] CLK_FREQUENCY = 64'd420000000;
-	parameter[63:0] SECOND = 64'd2000000000;
+	parameter[63:0] SECOND = 64'd1000000000;
 	parameter[63:0] UNIT = SECOND/CLK_FREQUENCY;
 	parameter[63:0] RESOLUTION = 32;
 	
@@ -44,13 +44,13 @@ module CLK_GEN
 	always @(posedge clk)
 	begin
 		if(enable) begin
+			nanoseconds <= nanoseconds+UNIT;
 			if(nanoseconds >= ns) begin
 				clk_out <= ~clk_out;
 				nanoseconds <= 0;
 				overflow <= 1;
 			end else begin
 				overflow <= 0;
-				nanoseconds <= nanoseconds+UNIT;
 			end
 		end else begin
 			overflow <= 0;

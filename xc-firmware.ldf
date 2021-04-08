@@ -45,58 +45,16 @@
         <Source name="source/sine.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="ac1/xc-firmware_ac1.xcf" type="Programming Project File" type_short="Programming">
+        <Source name="ac1/xc-firmware_ac1_eraseall.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="ac1/xc-firmware_ac1_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="ac1/xc-firmware_ac1_verify.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
-            <Options/>
-        </Source>
-    </Implementation>
-    <Implementation title="xc256" dir="xc256" description="xc256" synthesis="synplify" default_strategy="AHP XC">
-        <Options def_top="xc_firmware"/>
-        <Source name="boards/xc256.v" type="Verilog" type_short="Verilog">
-            <Options top_module="xc_firmware"/>
-        </Source>
-        <Source name="boards/pc03.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/main.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/uart_rx.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/uart_tx.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/tx_word.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/counter.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/dff.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/clock_divider.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/pwm.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/indicators.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/cmd_parser.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/adc.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
-            <Options/>
-        </Source>
-        <Source name="xc256/xc-firmware_xc256.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
     </Implementation>
@@ -144,7 +102,121 @@
         <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
-        <Source name="xc32/xc-firmware_xc32.xcf" type="Programming Project File" type_short="Programming">
+        <Source name="xc32/xc-firmware_xc32_eraseall.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="xc32/xc-firmware_xc32_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="xc32/xc-firmware_xc32_verify.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Implementation title="xc4" dir="xc4" description="xc4" synthesis="synplify" default_strategy="AHP XC">
+        <Options def_top="xc_firmware"/>
+        <Source name="source/main.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/uart_rx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/uart_tx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/tx_word.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/counter.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/dff.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/clock_divider.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/pwm.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/indicators.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/cmd_parser.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="boards/pc03.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="boards/xc4.v" type="Verilog" type_short="Verilog">
+            <Options top_module="xc_firmware"/>
+        </Source>
+        <Source name="source/adc.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+        <Source name="xc4/xc-firmware_xc4_eraseall.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="xc4/xc-firmware_xc4_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="xc4/xc-firmware_xc4_verify.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Implementation title="xc64" dir="xc64" description="xc64" synthesis="synplify" default_strategy="AHP XC">
+        <Options def_top="xc_firmware"/>
+        <Source name="boards/xc64.v" type="Verilog" type_short="Verilog">
+            <Options top_module="xc_firmware"/>
+        </Source>
+        <Source name="boards/pc03.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/main.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/uart_rx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/uart_tx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/tx_word.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/counter.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/dff.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/clock_divider.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/pwm.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/indicators.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/cmd_parser.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/adc.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+        <Source name="xc64/xc-firmware_xc64_eraseall.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="xc64/xc-firmware_xc64_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="xc64/xc-firmware_xc64_verify.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
             <Options/>
         </Source>
     </Implementation>
@@ -192,7 +264,13 @@
         <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
-        <Source name="xc8/xc-firmware_xc8.xcf" type="Programming Project File" type_short="Programming">
+        <Source name="xc8/xc-firmware_xc8_eraseall.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="xc8/xc-firmware_xc8_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="xc8/xc-firmware_xc8_verify.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
             <Options/>
         </Source>
     </Implementation>

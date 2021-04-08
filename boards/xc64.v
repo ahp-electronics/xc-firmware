@@ -20,29 +20,29 @@
 `timescale 1 ns / 1 ps
 
 module xc_firmware (
-	sysclk,
 	jp1,
-	jp2
+	jp2,
+	sysclk
 	);
 
-parameter CLK_FREQUENCY = 1000000;
+parameter CLK_FREQUENCY = 10000000;
 parameter PWM_FREQUENCY = 100000;
-parameter SIN_FREQUENCY = 1000;
-parameter BAUD_RATE = 1000000;
-parameter MUX_LINES = 1;
-parameter NUM_LINES = 1;
-parameter DELAY_SIZE = 1024;
+parameter SIN_FREQUENCY = 100;
+parameter MUX_LINES = 16;
+parameter NUM_LINES = 4;
+parameter DELAY_SIZE = 1;
+parameter MAX_LAG = 1;
 parameter RESOLUTION = 4;
-parameter HAS_PSU = 1;
+parameter HAS_PSU = 0;
 parameter HAS_LED_FLAGS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
+parameter BAUD_RATE = 57600;
 parameter WORD_WIDTH = 1;
-parameter MAX_CPS = 2500000;
 
 input wire sysclk;
 inout wire[19:0] jp1;
 inout wire[19:0] jp2;
-
+ 
 wire TX;
 wire RX;
 wire refclk;
@@ -58,8 +58,8 @@ assign jp1[17] = refclk;
 assign jp1[18] = intclk;
 assign jp1[19] = smpclk;
 
-assign jp2[16] = strobe;
-assign jp2[17] = 0;
+assign strobe = jp2[16];
+assign jp2[17] = 1'd0;
 assign jp2[18] = TX;
 assign RX = jp2[19];
 
@@ -67,12 +67,25 @@ wire[NUM_LINES-1:0] line_in;
 wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 
-assign line_in[0] = jp1[0];
-assign jp1[1] = line_out[0];
-assign jp1[2] = line_out[1];
-assign jp1[3] = line_out[2];
- 
-main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PWM_FREQUENCY(PWM_FREQUENCY), .SIN_FREQUENCY(SIN_FREQUENCY), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CROSSCORRELATOR(HAS_CROSSCORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .MAX_CPS(MAX_CPS)) main_block(
+assign line_in[0] = jp1[15];
+assign line_in[1] = jp1[13];
+assign line_in[2] = jp1[11];
+assign line_in[3] = jp1[9];
+assign jp1[14] = line_out[0];
+assign jp1[12] = line_out[1];
+assign jp1[10] = line_out[2];
+assign jp1[8] = line_out[3];
+assign jp1[7] = line_out[16];
+assign jp1[6] = line_out[17];
+assign jp1[5] = line_out[18];
+assign jp1[4] = line_out[19];
+assign jp1[3] = line_out[20];
+assign jp1[2] = line_out[21];
+assign jp1[1] = line_out[22];
+assign jp1[0] = line_out[23];
+assign jp2[15:0] = mux_out;
+
+main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PWM_FREQUENCY(PWM_FREQUENCY), .NUM_LINES(NUM_LINES), .MUX_LINES(MUX_LINES), .HAS_CROSSCORRELATOR(HAS_CROSSCORRELATOR), .HAS_LED_FLAGS(HAS_LED_FLAGS), .HAS_PSU(HAS_PSU), .RESOLUTION(RESOLUTION), .BAUD_RATE(BAUD_RATE), .DELAY_SIZE(DELAY_SIZE), .MAX_LAG(MAX_LAG)) main_block(
 	TX,
 	RX,
 	line_in,
@@ -85,7 +98,7 @@ main #(.CLK_FREQUENCY(CLK_FREQUENCY), .PWM_FREQUENCY(PWM_FREQUENCY), .SIN_FREQUE
 	smpclk,
 	external_clock,
 	strobe,
-	1
+	1'd1
 );
 
 endmodule

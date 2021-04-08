@@ -31,6 +31,7 @@ module CMD_PARSER(
 	current_line,
 	integrating,
 	external_clock,
+	pll_counter,
 	clk
 );
 
@@ -61,6 +62,7 @@ output reg[3:0] baud_rate = 0;
 output reg[7:0] current_line = 0;
 output reg integrating = 0;
 output reg external_clock = 0;
+output reg pll_counter = 0;
 always@(posedge clk) begin
 	if (cmd[3:0] == CLEAR) begin
 		cross_idx[current_line*12+:12] <= 0;
@@ -68,6 +70,7 @@ always@(posedge clk) begin
 	end else if (cmd[3:0] == ENABLE_CAPTURE) begin
 		integrating <= cmd[4];
 		external_clock <= cmd[5];
+		pll_counter <= cmd[6];
 	end else if (cmd[3:0] == SET_LINE) begin
 		current_line[cmd[7:6]*2+:2] <= cmd[5:4];
 	end else if (cmd[3:0] == SET_LEDS && HAS_LED_FLAGS) begin
