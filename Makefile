@@ -18,14 +18,14 @@ verify:
 	ddtcmd -oft -svfchain -revd -of "$(PWD)/$(implementation)/xc-firmware_$(implementation)_verify.svf" -if "$(PWD)/$(implementation)/xc-firmware_$(implementation)_verify.xcf"
 	verify_jtag $(PWD)/$(implementation)/xc-firmware_$(implementation)_verify.svf
 
-ac1:
+AC1:
 	$(MAKE) implementation=ac1
 
-xc8:
+XC8:
 	$(MAKE) implementation=xc8
 
-xc32:
+XC32:
 	$(MAKE) implementation=xc32
 
-xc64:
+XC64:
 	$(MAKE) implementation=xc64
