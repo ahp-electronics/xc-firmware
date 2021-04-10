@@ -33,26 +33,20 @@ module COUNTER (
 	output reg [RESOLUTION-1:0] counter_out;
 	output wire overflow;
 	input wire[WORD_WIDTH-1:0] signal;
-	input wire clk;
 	input wire reset;
+	input wire clk;
 	assign overflow = (counter_out == counter_max);
 	reg[WORD_WIDTH-1:0] tmp_signal;
-	reg locked;
 	reg _reset;
 	genvar d;
-	always @(posedge clk) begin
+	always @(*) begin
 		if(~_reset) begin
 			if(signal != tmp_signal) begin
-				locked <= 0;
 				tmp_signal <= signal;
-			end
-			if (counter_out < counter_max && !locked) begin
 				counter_out <= counter_out + signal;
-				locked <= 1;
 			end
 		end else begin
 			counter_out <= 0;
-			locked <= 0;
 		end
 	end
 	always @(*) begin

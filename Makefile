@@ -1,7 +1,7 @@
 
 implementation=xc8
 
-all: erase program verify
+all: erase program
 
 erase:
 	sed -e 's/IMPLEMENTATION/$(implementation)/g' "$(PWD)/boards/xc-firmware_eraseall.xcf" > "$(PWD)/$(implementation)/xc-firmware_$(implementation)_eraseall.xcf"

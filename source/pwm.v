@@ -21,29 +21,25 @@
 
 module PWM (
 		PWM_CW,
-		PWM_out,
-		overflow,					         
+		PWM_out,				         
 		clk,
 		enable
 	); 
 	parameter RESOLUTION = 10;
 	
+	parameter MAX_CW = (1<<RESOLUTION)-1;
 	input wire[RESOLUTION-1:0] PWM_CW;
 	output reg PWM_out;				         
 	input wire clk;
 	input wire enable;
 	
-	wire [RESOLUTION-1:0] counter_out;
-	output wire overflow;
+	reg [RESOLUTION-1:0] counter_out;
 
-	COUNTER #(.RESOLUTION(RESOLUTION)) counter(
-		~0,
-		counter_out,
-		overflow,
-		1'd1,
-		clk,
-		overflow|~enable
-	);
+	always @ (posedge clk)
+	begin
+		counter_out <= counter_out+1;
+	end
+	
 	always @ (*)
 	begin
 		if(enable) begin

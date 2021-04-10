@@ -5,21 +5,7 @@
 
 
 `timescale 1 ns / 1 ps
-module pll (clki, clko, clkop);
-	
-    input wire clki;
-    output wire clkop;
-	output wire clko;
-	
-	wire pll_clk;
-	reg [7:0] clock_pulse = 0;
-	
-	plli plli_block (clki, pll_clk);
-	assign clkop = pll_clk;
-	assign clko = clki;
-endmodule
-
-module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
+module pll (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
     input wire CLKI;
     output wire CLKOP;
 
@@ -44,7 +30,7 @@ module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
     defparam PLLInst_0.CLKOS_FPHASE = 0 ;
     defparam PLLInst_0.CLKOS_CPHASE = 0 ;
     defparam PLLInst_0.CLKOP_FPHASE = 0 ;
-    defparam PLLInst_0.CLKOP_CPHASE = 0 ;
+    defparam PLLInst_0.CLKOP_CPHASE = 1 ;
     defparam PLLInst_0.PLL_LOCK_MODE = 0 ;
     defparam PLLInst_0.CLKOS_TRIM_DELAY = 0 ;
     defparam PLLInst_0.CLKOS_TRIM_POL = "FALLING" ;
@@ -61,7 +47,7 @@ module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
     defparam PLLInst_0.CLKOS3_DIV = 1 ;
     defparam PLLInst_0.CLKOS2_DIV = 1 ;
     defparam PLLInst_0.CLKOS_DIV = 1 ;
-    defparam PLLInst_0.CLKOP_DIV = 1 ;
+    defparam PLLInst_0.CLKOP_DIV = 2 ;
     defparam PLLInst_0.CLKFB_DIV = 40 ;
     defparam PLLInst_0.CLKI_DIV = 1 ;
     defparam PLLInst_0.FEEDBK_PATH = "CLKOP" ;
@@ -73,8 +59,8 @@ module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
         .LOCK(LOCK), .INTLOCK(), .REFCLK(REFCLK), .CLKINTFB())
              /* synthesis FREQUENCY_PIN_CLKOP="400.000000" */
              /* synthesis FREQUENCY_PIN_CLKI="10.000000" */
-             /* synthesis ICP_CURRENT="16" */
-             /* synthesis LPF_RESISTOR="8" */;
+             /* synthesis ICP_CURRENT="7" */
+             /* synthesis LPF_RESISTOR="16" */;
 
     assign CLKOP = CLKOP_t;
 
@@ -82,8 +68,8 @@ module plli (CLKI, CLKOP)/* synthesis NGD_DRC_MASK=1 */;
     // exemplar begin
     // exemplar attribute PLLInst_0 FREQUENCY_PIN_CLKOP 400.000000
     // exemplar attribute PLLInst_0 FREQUENCY_PIN_CLKI 10.000000
-    // exemplar attribute PLLInst_0 ICP_CURRENT 16
-    // exemplar attribute PLLInst_0 LPF_RESISTOR 8
+    // exemplar attribute PLLInst_0 ICP_CURRENT 7
+    // exemplar attribute PLLInst_0 LPF_RESISTOR 16
     // exemplar end
-
+	
 endmodule

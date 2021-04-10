@@ -31,14 +31,14 @@ parameter RESOLUTION = 8;
 
 parameter MAX_VALUE = (1<<RESOLUTION)-1;
 parameter DIVIDER = CLK_FREQUENCY/2000000;
-parameter CYCLE = (CYCLE_MS*1000)>>RESOLUTION;
+parameter CYCLE = (CYCLE_MS<<9)>>RESOLUTION;
+parameter OFFSET = 1<<(RESOLUTION-2);
 
 input wire clk;
 output wire[CHANNELS-1:0] pwm_out;
 input wire enable;
 reg pwm_clk;
-wire overflow;
-reg[RESOLUTION:0] pwm_idx = 16;
+reg[RESOLUTION:0] pwm_idx = OFFSET;
 reg[31:0] index1;
 reg[31:0] index2;
 wire[RESOLUTION-1:0] pwm_value[0:CHANNELS];
@@ -56,7 +56,7 @@ always@(posedge pwm_clk) begin
 	if(enable)
 		index2 <= index2+1;
 	if(index2 >= CYCLE) begin
-		pwm_idx <= pwm_idx+1;
+		pwm_idx <= pwm_idx-1;
 		index2 <= 0;
 	end
 end
@@ -64,12 +64,11 @@ end
 generate
 	genvar i;
 	for(i = 0; i < CHANNELS; i=i+1) begin
-		assign idx_value[i] = (pwm_idx+(((MAX_VALUE<<1)-2)/CHANNELS)*i)%((MAX_VALUE<<1)-2);
+		assign idx_value[i] = (pwm_idx+OFFSET*i)%((MAX_VALUE<<1)-2);
 		assign pwm_value[i] = (idx_value[i] > MAX_VALUE) ? ((MAX_VALUE<<1)-2)-idx_value[i] : idx_value[i];
 		PWM #(.RESOLUTION(RESOLUTION)) pwm(
 			pwm_value[i],
-			pwm_out[CHANNELS-1-i],
-			overflow,
+			pwm_out[i],
 			pwm_clk,
 			1'b1
 		);
