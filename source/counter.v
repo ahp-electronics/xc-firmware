@@ -39,7 +39,7 @@ module COUNTER (
 	reg[WORD_WIDTH-1:0] tmp_signal;
 	reg _reset;
 	genvar d;
-	always @(*) begin
+	always @(posedge clk) begin
 		if(~_reset) begin
 			if(signal != tmp_signal) begin
 				tmp_signal <= signal;

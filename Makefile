@@ -4,9 +4,9 @@ implementation=xc8
 all: erase program
 
 erase:
-	sed -e 's/IMPLEMENTATION/$(implementation)/g' "$(PWD)/boards/xc-firmware_eraseall.xcf" > "$(PWD)/$(implementation)/xc-firmware_$(implementation)_eraseall.xcf"
-	ddtcmd -oft -svfchain -revd -of "$(PWD)/$(implementation)/xc-firmware_$(implementation)_eraseall.svf" -if "$(PWD)/$(implementation)/xc-firmware_$(implementation)_eraseall.xcf"
-	program_jtag $(PWD)/$(implementation)/xc-firmware_$(implementation)_eraseall.svf
+	sed -e 's/IMPLEMENTATION/$(implementation)/g' "$(PWD)/boards/xc-firmware_erase.xcf" > "$(PWD)/$(implementation)/xc-firmware_$(implementation)_erase.xcf"
+	ddtcmd -oft -svfchain -revd -of "$(PWD)/$(implementation)/xc-firmware_$(implementation)_erase.svf" -if "$(PWD)/$(implementation)/xc-firmware_$(implementation)_erase.xcf"
+	program_jtag $(PWD)/$(implementation)/xc-firmware_$(implementation)_erase.svf
 
 program:
 	sed -e 's/IMPLEMENTATION/$(implementation)/g' "$(PWD)/boards/xc-firmware_program.xcf" > "$(PWD)/$(implementation)/xc-firmware_$(implementation)_program.xcf"

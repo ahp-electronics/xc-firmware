@@ -158,9 +158,9 @@ indicators #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(10000), .CHANNELS(NUM_INPU
 
 CLK_GEN #(.CLK_FREQUENCY(PLL_FREQUENCY), .RESOLUTION(128)) divider_block(
 	UNIT<<clock_divider,
-	clk,
-	pllclk,
 	smpclk,
+	pllclk,
+	,
 	enable
 );
 
@@ -242,6 +242,8 @@ generate
 	genvar k;
 
 	for(k=0; k<NUM_LINES; k=k+1) begin
+		if(WORD_WIDTH>1)
+			ADC #(.WORD_WIDTH(WORD_WIDTH)) adc(pulse_in[mux_line*NUM_LINES+k], adc_data[mux_line*NUM_LINES+k], adc_done[mux_line*NUM_LINES+k], , mux_out[mux_line], enable);
 		always@(*) begin
 			if(HAS_LED_FLAGS) begin
 					line_out[k] <= pwm_out[mux_line*NUM_LINES+k]&~overflow[mux_line*NUM_LINES+k];
@@ -249,7 +251,7 @@ generate
 				if(!test[mux_line*NUM_LINES+k][3])
 					line_out[NUM_LINES*2+k*2] <= leds[mux_line*NUM_LINES+k][0]^(test[mux_line*NUM_LINES+k][0] & pllclk);
 				else
-					line_out[NUM_LINES*2+k*2] <= leds[mux_line*NUM_LINES+k][0]&(adc_data[a][0] ^ pllclk);
+					line_out[NUM_LINES*2+k*2] <= leds[mux_line*NUM_LINES+k][0]&(adc_data[a][0] ^ smpclk);
 				if(HAS_PSU)
 					line_out[NUM_LINES*2+k*2+1] <= voltage[mux_line*NUM_LINES+k];
 				else
@@ -269,6 +271,9 @@ generate
 			for(j = x; j < x + 512 && j < DELAY_SIZE+MAX_LAG; j=j+1)
 				assign delay_lines[j][a*WORD_WIDTH+:WORD_WIDTH] = delays[a][j*WORD_WIDTH+:WORD_WIDTH];
 				
+		if(WORD_WIDTH==1)
+			assign adc_data[a] = pulse_in[a];
+		
 		if(HAS_LED_FLAGS) begin
 			assign in[a] = leds[a][2]^signal_in[a];
 			assign pulse_in[a] = ~(leds[a][3] & in_delayed[a]) & in[a];
@@ -276,12 +281,7 @@ generate
 			assign pulse_in[a] = signal_in[a];
 		end
 		 
-		fifo #(.WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(DELAY_SIZE+MAX_LAG)) delay_line(clk, adc_data[a], delays[a]);
-
-		if(WORD_WIDTH>1)
-			ADC #(.WORD_WIDTH(WORD_WIDTH)) adc(pulse_in[a], adc_data[a], adc_done[a], , clk, enable);
-		else
-			assign adc_data[a] = pulse_in[a];
+		fifo #(.WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(DELAY_SIZE+MAX_LAG)) delay_line(smpclk, adc_data[a], delays[a]);
 
 		if(HAS_PSU) begin
 			sine #(.RESOLUTION(8), .PWM_FREQUENCY(PWM_FREQUENCY), .SIN_FREQUENCY(SIN_FREQUENCY), .CLK_FREQUENCY(PLL_FREQUENCY)) psu(
@@ -296,8 +296,8 @@ generate
 			pulses[(CORRELATIONS_SIZE+NUM_INPUTS*LAG_AUTO+NUM_INPUTS-1-a)*RESOLUTION+:RESOLUTION],
 			overflow[a],
 			delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
-			pllclk,
-			reset_delayed
+			smpclk,
+			reset_delayed&enable
 		);
 		for(z=0; z < MAX_LAG*2; z=z+512) begin : jitter_block
 			for(y=z; y < z+512 && y < MAX_LAG*2; y=y+1) begin : jitter_inner_block
@@ -307,8 +307,8 @@ generate
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION+:RESOLUTION],
 						,
 						delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH]&delay_lines[auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
-						pllclk,
-						reset_delayed
+						smpclk,
+						reset_delayed&enable
 					);
 				end
 				if(HAS_CROSSCORRELATOR) begin
@@ -319,8 +319,8 @@ generate
 								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>LAG_CROSS?y-1:y)-1)*RESOLUTION+:RESOLUTION],
 								,
 								delay_lines[cross[a]+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH]&delay_lines[cross[b]+(y>LAG_CROSS?y-LAG_CROSS:0)][b*WORD_WIDTH+:WORD_WIDTH],
-								pllclk,
-								reset_delayed
+								smpclk,
+								reset_delayed&enable
 							);
 						end
 					end

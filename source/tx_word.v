@@ -51,7 +51,7 @@ uart_tx #(.SHIFT(SHIFT)) tx_block(
 	TXIF,
 	enable,
 	clk
-);
+); 
 	
 always@(posedge TXIF or negedge enable) begin
 	if(!enable) begin
