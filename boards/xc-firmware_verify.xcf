@@ -7,7 +7,7 @@
 		<Device>
 			<SelectedProg value="TRUE"/>
 			<Pos>1</Pos>
-			<Vendor>Cypress</Vendor>
+			<Vendor>WinBond</Vendor>
 			<Family>ECP5U</Family>
 			<Name>LFE5U-45F</Name>
 			<Package>All</Package>
@@ -58,10 +58,10 @@
 			<FlashDevice>
 				<Device>
 					<Pos>1</Pos>
-					<Vendor>Cypress</Vendor>
+					<Vendor>WinBond</Vendor>
 					<Family>SPI Serial Flash</Family>
-					<Name>S25FL128S</Name>
-					<IDCode>0x18</IDCode>
+					<Name>W25Q128JV</Name>
+					<IDCode>0x17</IDCode>
 					<Package>8-lead SOIC</Package>
 					<Operation>SPI Flash Verify Only</Operation>
 					<File>IMPLEMENTATION/xc-firmware_IMPLEMENTATION.bit</File>
