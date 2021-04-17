@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6BG256C" default_implementation="xc8">
     <Options/>
-    <Implementation title="ac1" dir="ac1" description="ac1" synthesis="synplify" default_strategy="AHP XC">
+    <Implementation title="ac1" dir="build/ac1" description="ac1" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
         <Source name="boards/ac1.v" type="Verilog" type_short="Verilog">
             <Options top_module="xc_firmware"/>
@@ -58,7 +58,7 @@
             <Options/>
         </Source>
     </Implementation>
-    <Implementation title="xc32" dir="xc32" description="xc32" synthesis="synplify" default_strategy="AHP XC">
+    <Implementation title="xc32" dir="build/xc32" description="xc32" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
         <Source name="source/main.v" type="Verilog" type_short="Verilog">
             <Options/>
@@ -112,7 +112,7 @@
             <Options/>
         </Source>
     </Implementation>
-    <Implementation title="xc4" dir="xc4" description="xc4" synthesis="synplify" default_strategy="AHP XC">
+    <Implementation title="xc4" dir="build/xc4" description="xc4" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
         <Source name="source/main.v" type="Verilog" type_short="Verilog">
             <Options/>
@@ -166,7 +166,7 @@
             <Options/>
         </Source>
     </Implementation>
-    <Implementation title="xc64" dir="xc64" description="xc64" synthesis="synplify" default_strategy="AHP XC">
+    <Implementation title="xc64" dir="build/xc64" description="xc64" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
         <Source name="boards/xc64.v" type="Verilog" type_short="Verilog">
             <Options top_module="xc_firmware"/>
@@ -220,7 +220,7 @@
             <Options/>
         </Source>
     </Implementation>
-    <Implementation title="xc8" dir="xc8" description="xc8" synthesis="synplify" default_strategy="AHP XC">
+    <Implementation title="xc8" dir="build/xc8" description="xc8" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
         <Source name="source/main.v" type="Verilog" type_short="Verilog">
             <Options/>
@@ -261,16 +261,13 @@
         <Source name="source/adc.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="boards/fast_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+            <Options/>
+        </Source>
         <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
-        <Source name="xc8/xc-firmware_xc8_eraseall.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
-            <Options/>
-        </Source>
-        <Source name="xc8/xc-firmware_xc8_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
-            <Options/>
-        </Source>
-        <Source name="xc8/xc-firmware_xc8_verify.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
+        <Source name="build/xc8/xc8.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
     </Implementation>

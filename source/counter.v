@@ -24,6 +24,7 @@ module COUNTER (
 		counter_out,
 		overflow,
 		signal,
+		cumulative,
 		clk,
 		reset
 	);
@@ -35,15 +36,25 @@ module COUNTER (
 	input wire[WORD_WIDTH-1:0] signal;
 	input wire reset;
 	input wire clk;
+	input wire cumulative;
 	assign overflow = (counter_out == counter_max);
 	reg[WORD_WIDTH-1:0] tmp_signal;
+	reg new_state;
 	reg _reset;
 	genvar d;
 	always @(posedge clk) begin
 		if(~_reset) begin
-			if(signal != tmp_signal) begin
-				tmp_signal <= signal;
+			if(cumulative)
 				counter_out <= counter_out + signal;
+			else begin
+				if(signal != tmp_signal)
+					new_state <= 1;
+				if(new_state) begin
+					tmp_signal = signal;
+					counter_out <= counter_out + signal;
+				end
+				if(signal == tmp_signal)
+					new_state <= 0;
 			end
 		end else begin
 			counter_out <= 0;

@@ -28,42 +28,35 @@ module uart_tx(
 );
 
 parameter SHIFT=0;
-parameter WORD_WIDTH=8;
 parameter STOP_BITS=1;
 
 output reg tx;
-input wire [WORD_WIDTH-1:0] din;
+input wire [7:0] din;
 output reg tx_done;
 input wire tx_start;
 input wire clk;
 
-reg [5+SHIFT:0] bit_count = (WORD_WIDTH+STOP_BITS)<<SHIFT;
+wire[3:0] current_bit;
+reg [3+SHIFT:0] bit_count = (8+STOP_BITS)<<SHIFT;
+assign current_bit = bit_count[SHIFT+:4];
 
 always@(posedge clk) begin
-	case(bit_count[SHIFT+:5])
-		WORD_WIDTH+STOP_BITS:
-		begin
-			tx_done <= 0;
-			if(tx_start) begin 
-				bit_count <= 0;
-				tx <= 0;
-			end else begin
-				tx <= 1;
-			end
-		end
-		WORD_WIDTH:
-		begin
-			tx_done <= 1;
+	if(current_bit < 8) begin
+		tx_done <= 0;
+		tx <= din[current_bit];
+		bit_count <= bit_count+1;
+	end else if(current_bit < 8+STOP_BITS) begin
+		tx <= 1;
+		bit_count <= bit_count+1;
+	end else begin
+		tx_done <= 1;
+		if(tx_start) begin 
+			bit_count <= 0;
+			tx <= 0;
+		end else begin 
 			tx <= 1;
-			bit_count <= bit_count+1;
 		end
-		default:
-		begin
-			tx_done <= 0;
-			tx <= din[bit_count[SHIFT+:5]];
-			bit_count <= bit_count+1;
-		end
-	endcase
+	end
 end
 
 endmodule

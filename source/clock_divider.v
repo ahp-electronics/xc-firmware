@@ -21,36 +21,33 @@
 
 module CLK_GEN 
 	(
-		ns,
+		div,
 		clk_out,
 		clk,
 		overflow,
 		enable
 	);
-	parameter[63:0] CLK_FREQUENCY = 64'd420000000;
-	parameter[63:0] SECOND = 64'd2000000000;
-	parameter[63:0] UNIT = SECOND/CLK_FREQUENCY;
-	parameter[63:0] RESOLUTION = 32;
+	parameter RESOLUTION = 32;
 	
-	input wire [RESOLUTION-1:0] ns;
+	input wire [RESOLUTION-1:0] div;
 	output reg clk_out;
 	input wire clk;
 	input wire enable;
 	
 	output reg overflow;
+	reg tmp_clk;
+	reg new_state;
 
-	reg [63:0] nanoseconds;
+	reg [RESOLUTION-1:0] cycles;
 	
 	always @(posedge clk)
 	begin
 		if(enable) begin
-			nanoseconds <= nanoseconds+UNIT;
-			if(nanoseconds >= ns) begin
+			if(cycles < (div>>1))
+				cycles <= cycles+1;
+			else begin
 				clk_out <= ~clk_out;
-				nanoseconds <= 0;
-				overflow <= 1;
-			end else begin
-				overflow <= 0;
+				cycles <= 0;
 			end
 		end else begin
 			overflow <= 0;
