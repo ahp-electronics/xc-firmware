@@ -50,7 +50,7 @@ Each packet starts with a header with payload length indication, it is possible 
 + bytes 7-10: hexadecimal live delay channels quantity
 + bytes 11: hexadecimal flags [bits: 0=live autocorrelator, 1=live crosscorrelator, 2=leds available, 3=cross-correlator]
 + bytes 12-15: hexadecimal value of the clock tau in picoseconds
-+ bytes +lines#: pulses count of each line delayed by crosscorrelation lag zero
++ bytes +lines#: pulses count of each line within the integration time
 + bytes +lines#: autocorrelations count of each line by the selected autocorrelation line delayed by crosscorrelation lag zero
 + bytes +baselines#: crosscorrelations count of pulses of each line with others by the selected delay amount
 
