@@ -34,6 +34,7 @@ module main (
 	enable
 );
 
+parameter PLL_FREQUENCY = 400000000;
 parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
@@ -50,7 +51,6 @@ parameter WORD_WIDTH = 1;
 
 localparam SHIFT = 1;
 localparam SECOND = 1000000000;
-localparam PLL_FREQUENCY = 400000000;
 localparam MAX_LAG = (LAG_AUTO>LAG_CROSS?LAG_AUTO:LAG_CROSS);
 localparam HAS_LIVE_AUTO = (LAG_AUTO>1);
 localparam HAS_LIVE_CROSS = (LAG_CROSS>1);
@@ -87,6 +87,7 @@ output wire intclk;
 output wire smpclk;
 input wire strobe;
 
+wire fullwave;
 wire external_clock;
 wire integrating;
 
@@ -192,6 +193,7 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LED_FLAGS(HAS_LED_FLAGS)) parser (
 	baud_rate,
 	current_line,
 	integrate,
+	fullwave,
 	external_clock,
 	RXIF
 );
@@ -214,8 +216,16 @@ always@(posedge pllclk) begin
 end
 
 always@(posedge intclk) begin
-	auto[current_line] <= test[current_line][1] ? ((auto[current_line]+1) < MAX_LAG_AUTO ? auto[current_line]+1 : MAX_LAG_AUTO-1) : (auto_tmp [current_line] < MAX_LAG_AUTO ? auto_tmp [current_line] : MAX_LAG_AUTO-1);
-	cross[current_line] <= test[current_line][2] ? ((cross[current_line]+1) < MAX_LAG_CROSS ? cross[current_line]+1 : MAX_LAG_CROSS-1) : (cross_tmp [current_line] < MAX_LAG_CROSS ? cross_tmp [current_line] : MAX_LAG_CROSS-1);
+	if(test[current_line][1])
+		if(auto[current_line] < MAX_LAG_AUTO-1)
+			auto[current_line] <= auto[current_line]+1;
+	else
+		auto[current_line] <= auto_tmp [current_line];
+	if(test[current_line][2])
+		if(cross[current_line] < MAX_LAG_CROSS-1)
+			cross[current_line] <= cross[current_line]+1;
+	else
+		cross[current_line] <= cross_tmp [current_line];
 	tx_data[0+:PAYLOAD_SIZE] <= pulses;
 	tx_data[PAYLOAD_SIZE+:16] <= TICK;
 	tx_data[PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LED_FLAGS<<1)|(HAS_PSU << 2);

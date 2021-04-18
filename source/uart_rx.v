@@ -27,7 +27,7 @@ module uart_rx(
 );
 
 parameter SHIFT=1;
-parameter STOP_BITS=1;
+parameter STOP_BITS=2;
 
 input wire rx;
 output reg [7:0] dout;

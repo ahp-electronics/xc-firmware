@@ -30,6 +30,7 @@ module CMD_PARSER(
 	baud_rate,
 	current_line,
 	integrating,
+	fullwave,
 	external_clock,
 	clk
 );
@@ -60,6 +61,7 @@ output reg[3:0] clock_divider = 0;
 output reg[3:0] baud_rate = 0;
 output reg[7:0] current_line = 0;
 output reg integrating = 0;
+output reg fullwave = 0;
 output reg external_clock = 0;
 always@(posedge clk) begin
 	if (cmd[3:0] == CLEAR) begin
@@ -68,6 +70,7 @@ always@(posedge clk) begin
 	end else if (cmd[3:0] == ENABLE_CAPTURE) begin
 		integrating <= cmd[4];
 		external_clock <= cmd[5];
+		fullwave <= cmd[6];
 	end else if (cmd[3:0] == SET_LINE) begin
 		current_line[cmd[7:6]*2+:2] <= cmd[5:4];
 	end else if (cmd[3:0] == SET_LEDS && HAS_LED_FLAGS) begin

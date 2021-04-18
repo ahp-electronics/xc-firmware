@@ -28,7 +28,7 @@ module uart_tx(
 );
 
 parameter SHIFT=0;
-parameter STOP_BITS=1;
+parameter STOP_BITS=2;
 
 output reg tx;
 input wire [7:0] din;
