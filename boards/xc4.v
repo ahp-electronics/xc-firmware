@@ -25,6 +25,7 @@ module xc_firmware (
 	jp2 
 	);
   
+parameter PLL_FREQUENCY = 400000000;
 parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
@@ -42,7 +43,7 @@ parameter WORD_WIDTH = 1;
 input wire sysclk;
 inout wire[19:0] jp1;
 inout wire[19:0] jp2;
- 
+
 wire TX;
 wire RX;
 wire refclk;
@@ -50,7 +51,6 @@ wire enable;
 wire extclk;
 wire intclk;
 wire smpclk;
-wire external_clock;
 wire strobe;
 
 assign extclk = jp1[16];
@@ -99,18 +99,18 @@ main #(
 .WORD_WIDTH(WORD_WIDTH),
 .BAUD_RATE(BAUD_RATE)
 ) main_block(
-	TX,
-	RX,
-	line_in,
-	line_out,
-	mux_out,
-	sysclk,
-	refclk,
-	extclk,
-	intclk,
-	smpclk,
-	strobe,
-	1'd1
+        TX,
+        RX,
+        line_in,
+        line_out,
+        mux_out,
+        sysclk,
+        refclk,
+        extclk,
+        intclk,
+        smpclk,
+        strobe,
+        1'd1
 );
 
 endmodule

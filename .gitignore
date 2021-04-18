@@ -4,4 +4,6 @@
 *.xls
 fp-info-cache
 *.html
-?c*/
+build/
+output/
+clarity/
