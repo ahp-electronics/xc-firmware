@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6BG256C" default_implementation="xc8">
+<BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6BG256C" default_implementation="xc32">
     <Options/>
     <Implementation title="ac1" dir="build/ac1" description="ac1" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
@@ -59,7 +59,7 @@
         </Source>
     </Implementation>
     <Implementation title="xc32" dir="build/xc32" description="xc32" synthesis="synplify" default_strategy="AHP XC">
-        <Options def_top="xc_firmware"/>
+        <Options/>
         <Source name="source/main.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
@@ -100,15 +100,6 @@
             <Options/>
         </Source>
         <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
-            <Options/>
-        </Source>
-        <Source name="xc32/xc-firmware_xc32_eraseall.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
-            <Options/>
-        </Source>
-        <Source name="xc32/xc-firmware_xc32_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
-            <Options/>
-        </Source>
-        <Source name="xc32/xc-firmware_xc32_verify.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
             <Options/>
         </Source>
     </Implementation>

@@ -34,12 +34,10 @@ module CLK_GEN
 	input wire clk;
 	input wire enable;
 	
-	output reg overflow;
-	reg tmp_clk;
-	reg new_state;
+	output wire overflow;
 
 	reg [RESOLUTION-1:0] cycles;
-	
+	assign overflow = cycles == (div>>1);
 	always @(posedge clk)
 	begin
 		if(enable) begin
@@ -50,7 +48,6 @@ module CLK_GEN
 				cycles <= 0;
 			end
 		end else begin
-			overflow <= 0;
 			clk_out <= 0;
 		end
 	end
