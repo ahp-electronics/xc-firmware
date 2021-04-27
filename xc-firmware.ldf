@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6BG256C" default_implementation="xc32">
+<BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6BG256C" default_implementation="xc8">
     <Options/>
     <Implementation title="ac1" dir="build/ac1" description="ac1" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
@@ -59,15 +59,15 @@
         </Source>
     </Implementation>
     <Implementation title="xc32" dir="build/xc32" description="xc32" synthesis="synplify" default_strategy="AHP XC">
-        <Options/>
+        <Options def_top="xc_firmware"/>
         <Source name="source/main.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="source/uart_rx.v" type="Verilog" type_short="Verilog">
-            <Options/>
+            <Options top_module="uart_rx"/>
         </Source>
         <Source name="source/uart_tx.v" type="Verilog" type_short="Verilog">
-            <Options/>
+            <Options top_module="uart_tx"/>
         </Source>
         <Source name="source/tx_word.v" type="Verilog" type_short="Verilog">
             <Options/>
@@ -158,7 +158,7 @@
         </Source>
     </Implementation>
     <Implementation title="xc64" dir="build/xc64" description="xc64" synthesis="synplify" default_strategy="AHP XC">
-        <Options def_top="xc_firmware"/>
+        <Options def_top="xc_firmware" top="xc_firmware"/>
         <Source name="boards/xc64.v" type="Verilog" type_short="Verilog">
             <Options top_module="xc_firmware"/>
         </Source>
@@ -166,12 +166,6 @@
             <Options/>
         </Source>
         <Source name="source/main.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/uart_rx.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/uart_tx.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="source/tx_word.v" type="Verilog" type_short="Verilog">
@@ -198,6 +192,12 @@
         <Source name="source/adc.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="source/spi_slave.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/uart.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
         </Source>
@@ -214,12 +214,6 @@
     <Implementation title="xc8" dir="build/xc8" description="xc8" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="xc_firmware"/>
         <Source name="source/main.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/uart_rx.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="source/uart_tx.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="source/tx_word.v" type="Verilog" type_short="Verilog">
@@ -250,6 +244,9 @@
             <Options top_module="xc_firmware"/>
         </Source>
         <Source name="source/adc.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/uart.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="boards/fast_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">

@@ -36,7 +36,7 @@ module CMD_PARSER(
 );
 
 parameter NUM_INPUTS=8;
-parameter HAS_LED_FLAGS=0;
+parameter HAS_LEDS=0;
 
 parameter[3:0]
 	CLEAR = 0,
@@ -73,7 +73,7 @@ always@(posedge clk) begin
 		fullwave <= cmd[6];
 	end else if (cmd[3:0] == SET_LINE) begin
 		current_line[cmd[7:6]*2+:2] <= cmd[5:4];
-	end else if (cmd[3:0] == SET_LEDS && HAS_LED_FLAGS) begin
+	end else if (cmd[3:0] == SET_LEDS && HAS_LEDS) begin
 		leds[current_line*4+:4] <= cmd[7:4];
 	end else if (cmd[3:0] == SET_BAUD_RATE) begin
 		baud_rate <= cmd[7:4];

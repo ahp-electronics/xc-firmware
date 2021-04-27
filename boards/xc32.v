@@ -34,12 +34,13 @@ parameter DELAY_SIZE = 150;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
 parameter RESOLUTION = 16;
-parameter HAS_LED_FLAGS = 1;
+parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
 parameter HAS_CUMULATIVE_ONLY = 1;
 parameter BAUD_RATE = 500000;
 parameter WORD_WIDTH = 1;
+parameter USE_UART = 0;
 
 input wire sysclk;
 inout wire[19:0] jp1;
@@ -59,8 +60,8 @@ assign jp1[17] = refclk;
 assign jp1[18] = intclk;
 assign jp1[19] = smpclk;
 
-assign strobe = jp2[16];
-assign jp2[17] = 1'd0;
+assign enable = jp2[16];
+assign spiclk = jp2[17];
 assign jp2[18] = TX;
 assign RX = jp2[19];
 
@@ -68,22 +69,22 @@ wire[NUM_LINES-1:0] line_in;
 wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 
-assign line_in[0] = jp1[14];
-assign line_in[1] = jp1[12];
-assign line_in[2] = jp1[10];
-assign line_in[3] = jp1[8];
-assign jp1[15] = line_out[0];
-assign jp1[13] = line_out[1];
-assign jp1[11] = line_out[2];
-assign jp1[9] = line_out[3];
-assign jp1[6] = line_out[8];
-assign jp1[4] = line_out[9];
-assign jp1[2] = line_out[10];
-assign jp1[0] = line_out[11];
-assign jp1[7] = line_out[12];
-assign jp1[5] = line_out[13];
-assign jp1[3] = line_out[14];
-assign jp1[1] = line_out[15];
+assign line_in[0] = jp1[15];
+assign line_in[1] = jp1[13];
+assign line_in[2] = jp1[11];
+assign line_in[3] = jp1[9];
+assign jp1[14] = line_out[0];
+assign jp1[12] = line_out[1];
+assign jp1[10] = line_out[2];
+assign jp1[8] = line_out[3];
+assign jp1[6] = line_out[16];
+assign jp1[4] = line_out[17];
+assign jp1[2] = line_out[18];
+assign jp1[0] = line_out[19];
+assign jp1[7] = line_out[24];
+assign jp1[5] = line_out[25];
+assign jp1[3] = line_out[26];
+assign jp1[1] = line_out[27];
 
 assign jp2[0] = mux_out[0];
 assign jp2[1] = mux_out[1];
@@ -101,14 +102,15 @@ main #(
 .MUX_LINES(MUX_LINES),
 .NUM_LINES(NUM_LINES),
 .DELAY_SIZE(DELAY_SIZE),
-.HAS_LED_FLAGS(HAS_LED_FLAGS),
+.HAS_LEDS(HAS_LEDS),
 .HAS_CROSSCORRELATOR(HAS_CROSSCORRELATOR),
 .HAS_PSU(HAS_PSU),
 .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY),
 .LAG_CROSS(LAG_CROSS),
 .LAG_AUTO(LAG_AUTO),
 .WORD_WIDTH(WORD_WIDTH),
-.BAUD_RATE(BAUD_RATE)
+.BAUD_RATE(BAUD_RATE),
+.USE_UART(USE_UART)
 ) main_block(
         TX,
         RX,
@@ -120,8 +122,9 @@ main #(
         extclk,
         intclk,
         smpclk,
+        spiclk,
         strobe,
-        1'd1
+        enable
 );
 
 endmodule

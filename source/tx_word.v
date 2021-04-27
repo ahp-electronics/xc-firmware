@@ -20,10 +20,9 @@
 `timescale 1 ns / 1 ps
 
 module TX_WORD(
-	TX,
+	TXREG,
+	TXIF,
 	tx_data,
-	clk,
-	stb,
 	tx_done,
 	enable
 	);
@@ -32,26 +31,15 @@ parameter SHIFT=4;
 parameter RESOLUTION=32;
 parameter TOTAL_NIBBLES=RESOLUTION/4;
 
-output wire TX;
+input wire TXIF;
+output reg [7:0] TXREG;
 input wire [RESOLUTION-1:0] tx_data;
-input wire enable;
-input wire stb;
 output wire tx_done;
-input wire clk;
+input wire enable;
 
 reg done;
 assign tx_done = done;
 reg signed [31:0] tidx;
-wire TXIF;
-reg [7:0] TXREG;
-
-uart_tx #(.SHIFT(SHIFT)) tx_block(
-	TX,
-	TXREG,
-	TXIF,
-	enable,
-	clk
-); 
 	
 always@(posedge TXIF or negedge enable) begin
 	if(!enable) begin

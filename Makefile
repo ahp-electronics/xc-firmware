@@ -17,3 +17,6 @@ test:
 
 xc8:
 	implementation=xc8 make
+
+xc32:
+	implementation=xc32 make

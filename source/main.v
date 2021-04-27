@@ -30,6 +30,7 @@ module main (
 	extclk,
 	intclk,
 	smpclk,
+	spiclk,
 	strobe,
 	enable
 );
@@ -43,12 +44,13 @@ parameter DELAY_SIZE = 1;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
 parameter RESOLUTION = 24;
-parameter HAS_LED_FLAGS = 1;
+parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
 parameter HAS_CUMULATIVE_ONLY = 0;
 parameter BAUD_RATE = 57600;
 parameter WORD_WIDTH = 1;
+parameter USE_UART = 1;
 
 localparam SHIFT = 1;
 localparam SECOND = 1000000000;
@@ -58,6 +60,7 @@ localparam HAS_LIVE_CROSS = (LAG_CROSS>1);
 localparam TICK_FREQUENCY = (PLL_FREQUENCY>>WORD_WIDTH)/MUX_LINES;
 localparam NUM_INPUTS = NUM_LINES*MUX_LINES;
 localparam TICK_CYCLES = PLL_FREQUENCY/TICK_FREQUENCY;
+localparam ETH_CYCLES = PLL_FREQUENCY/100000000;
 localparam[15:0] TICK = 40'd1000000000000/TICK_FREQUENCY;
 localparam NUM_BASELINES = NUM_INPUTS*(NUM_INPUTS-1)/2;
 localparam CORRELATIONS_HEAD_TAIL_SIZE = LAG_CROSS*2-1;
@@ -75,6 +78,7 @@ localparam MAX_COUNT=(1<<RESOLUTION)-1;
 localparam TOTAL_NIBBLES=PACKET_SIZE/4;
 
 input wire enable;
+input wire spiclk;
 output wire TX;
 input wire RX;
 
@@ -121,6 +125,8 @@ reg[7:0] mux_line = 0;
 
 wire[(DELAY_SIZE+MAX_LAG)*WORD_WIDTH-1:0] delays[0:NUM_INPUTS];
 wire integrate;
+reg enable_tx;
+wire in_capture;
 
 wire[7:0] current_line;
 wire[3:0] baud_rate;
@@ -137,10 +143,14 @@ wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
 wire[12*NUM_INPUTS-1:0] cross_tmp_a;
 wire[12*NUM_INPUTS-1:0] auto_tmp_a;
 
+wire spi_done;
 wire RXIF;
 wire[7:0] RXREG;
+wire TXIF;
+wire[7:0] TXREG;
 
 assign integrating = strobe | integrate;
+assign in_capture = enable_tx | integrating;
 assign intclk = tx_done;
 
 pll pll_block (refclk, pllclk);
@@ -149,7 +159,7 @@ dff reset_delay(smpclk, intclk, reset_delayed);
 indicators #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(NUM_INPUTS*1000), .CHANNELS(NUM_INPUTS), .RESOLUTION(8)) indicators_block(
 	pwm_out,
 	sysclk,
-	integrating
+	in_capture
 );
 
 CLK_GEN sampling_clock_block(
@@ -160,31 +170,45 @@ CLK_GEN sampling_clock_block(
 	enable
 );
 
-CLK_GEN uart_clock_block(
-	BAUD_CYCLES>>baud_rate,
-	uart_clk,
-	sysclk,
-	,
-	enable
-);
+if(USE_UART) begin
+	uart_transceiver uart_block(
+		~enable,
+		sysclk,
+		RX,
+		TX,
+		BAUD_CYCLES>>baud_rate,
+		RXREG,
+		RXIF,
+		TXREG,
+		in_capture,
+		TXIF
+	);
+end else begin
+	spi_slave spi_block(
+		enable,
+		in_capture,
+		TXREG,
+		0,
+		~enable,
+		spiclk,
+		RX,
+		TX,
+		spi_done,
+		RXREG
+	);
+	assign RXIF = spi_done;
+	assign TXIF = spi_done;
+end
 
-TX_WORD #(.SHIFT(SHIFT), .RESOLUTION(PACKET_SIZE)) tx_block(
-	TX,
+TX_WORD #(.SHIFT(SHIFT), .RESOLUTION(PACKET_SIZE)) packet_generator(
+	TXREG,
+	TXIF,
 	tx_data,
-	uart_clk,
-	,
 	tx_done,
-	integrating
+	in_capture
 );
 
-uart_rx #(.SHIFT(SHIFT)) rx_block(
-	RX,
-	RXREG,
-	RXIF,
-	uart_clk
-);
-
-CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LED_FLAGS(HAS_LED_FLAGS)) parser (
+CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 	RXREG,
 	voltage_pwm_a,
 	test_a,
@@ -209,7 +233,7 @@ end
 
 always@(posedge pllclk) begin
 	signal_in[mux_line*NUM_LINES+:NUM_LINES] <= line_in;
-	if(HAS_LED_FLAGS) begin
+	if(HAS_LEDS) begin
 		line_out[0+:NUM_LINES] <= lineout[mux_line*NUM_LINES+:NUM_LINES];
 		line_out[NUM_LINES+:NUM_LINES] <= lineout[NUM_INPUTS+mux_line*NUM_LINES+:NUM_LINES];
 		line_out[NUM_LINES*2+:NUM_LINES] <= lineout[NUM_INPUTS*2+mux_line*NUM_LINES+:NUM_LINES];
@@ -224,6 +248,7 @@ always@(posedge pllclk) begin
 end
 
 always@(posedge intclk) begin
+	enable_tx <= integrating;
 	if(test[current_line][1]) begin
 		if(auto[current_line] < MAX_LAG_AUTO-1)
 			auto[current_line] <= auto[current_line]+1;
@@ -236,7 +261,7 @@ always@(posedge intclk) begin
 		cross[current_line] <= cross_tmp [current_line];
 	tx_data[0+:PAYLOAD_SIZE] <= pulses;
 	tx_data[PAYLOAD_SIZE+:16] <= TICK;
-	tx_data[PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LED_FLAGS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
+	tx_data[PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
 	tx_data[PAYLOAD_SIZE+16+4+:8] <= LAG_CROSS-1;
 	tx_data[PAYLOAD_SIZE+16+4+8+:8] <= LAG_AUTO-1;
 	tx_data[PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
@@ -268,13 +293,13 @@ generate
 		else
 			assign adc_data[a] = pulse_in[a];
 		
-		if(HAS_LED_FLAGS) begin
+		if(HAS_LEDS) begin
 			assign pulse_in[a] = leds[a][2]^signal_in[a];
 		end else begin
 			assign pulse_in[a] = signal_in[a];
 		end
 		
-		if(HAS_LED_FLAGS) begin
+		if(HAS_LEDS) begin
 			assign lineout[a] = pwm_out[a]&~overflow[a];
 			assign lineout[NUM_INPUTS+a] = adc_done[a];
 			assign lineout[NUM_INPUTS*2+a] = ~test[a][3] ? leds[a][0]^(test[a][0] & pllclk) : leds[a][0]&(delay_lines[0][a*WORD_WIDTH] ^ smpclk);
