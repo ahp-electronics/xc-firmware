@@ -125,8 +125,8 @@ reg[7:0] mux_line = 0;
 
 wire[(DELAY_SIZE+MAX_LAG)*WORD_WIDTH-1:0] delays[0:NUM_INPUTS];
 wire integrate;
-reg enable_tx;
 wire in_capture;
+reg enable_tx;
 
 wire[7:0] current_line;
 wire[3:0] baud_rate;
@@ -171,17 +171,25 @@ CLK_GEN sampling_clock_block(
 );
 
 if(USE_UART) begin
-	uart_transceiver uart_block(
-		~enable,
-		sysclk,
-		RX,
-		TX,
+	CLK_GEN uart_clock_block(
 		BAUD_CYCLES>>baud_rate,
+		uart_clk,
+		sysclk,
+		,
+		enable
+	);
+	uart_tx #(.SHIFT(SHIFT)) uart_tx_block(
+		TX,
+		TXREG,
+		TXIF,
+		in_capture,
+		uart_clk
+	);
+	uart_rx #(.SHIFT(SHIFT)) uart_rx_block(
+		RX,
 		RXREG,
 		RXIF,
-		TXREG,
-		in_capture,
-		TXIF
+		uart_clk
 	);
 end else begin
 	spi_slave spi_block(
@@ -225,13 +233,6 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 );
 
 always@(*) begin
-	if(external_clock)
-		refclk <= extclk;
-	else
-		refclk <= sysclk;
-end
-
-always@(posedge pllclk) begin
 	signal_in[mux_line*NUM_LINES+:NUM_LINES] <= line_in;
 	if(HAS_LEDS) begin
 		line_out[0+:NUM_LINES] <= lineout[mux_line*NUM_LINES+:NUM_LINES];
@@ -239,6 +240,13 @@ always@(posedge pllclk) begin
 		line_out[NUM_LINES*2+:NUM_LINES] <= lineout[NUM_INPUTS*2+mux_line*NUM_LINES+:NUM_LINES];
 		line_out[NUM_LINES*3+:NUM_LINES] <= lineout[NUM_INPUTS*3+mux_line*NUM_LINES+:NUM_LINES];
 	end
+	if(external_clock)
+		refclk <= extclk;
+	else
+		refclk <= sysclk;
+end
+
+always@(posedge pllclk) begin
 	mux_out <= 1<<mux_line;
 	if(mux_line < MUX_LINES-1) begin
 		mux_line <= mux_line+1;

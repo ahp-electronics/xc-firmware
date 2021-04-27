@@ -246,7 +246,13 @@
         <Source name="source/adc.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="source/uart.v" type="Verilog" type_short="Verilog">
+        <Source name="source/uart_tx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/uart_rx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="source/spi_slave.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="boards/fast_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">

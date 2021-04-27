@@ -16,7 +16,7 @@ test:
 	./flash.sh $(project) $(implementation) fast_program
 
 xc8:
-	implementation=xc8 make
+	make implementation=xc8
 
 xc32:
-	implementation=xc32 make
+	make implementation=xc32
