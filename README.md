@@ -54,4 +54,4 @@ Each packet starts with a header with payload length indication, it is possible 
 + bytes +lines#: autocorrelations count of each line by the selected autocorrelation line delayed by crosscorrelation lag zero
 + bytes +baselines#: crosscorrelations count of pulses of each line with others by the selected delay amount
 
-The sampling rate is the same as the packet rate, the bandwidth is determined by the clock tau, the number of mux lines, the power of two of the ADC word width and the the clock tau multiplier power of two.
+The packet rate is determined by the baud rate and the packet size, the sampling rate is determined by the clock tau multiplied by the number of mux lines, divided by the clock tau multiplier plus one power of two.
