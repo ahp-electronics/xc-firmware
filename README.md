@@ -15,10 +15,10 @@ parameter MUX_LINES = 8;		//Muxer lines
 parameter NUM_LINES = 4;		//Lines per each Muxer line
 parameter DELAY_SIZE = 160;		//The delay FIFO size
 parameter RESOLUTION = 24;		//Resolution (count capacity) of each correlation/intensity counter
-parameter HAS_LEDS = 1;		//Has this device output lines? (power switches or indicator or ramp generators sync?)
+parameter HAS_LEDS = 1;			//Has this device output lines? (power switches or indicator or ramp generators sync?)
 parameter HAS_CROSSCORRELATOR = 1;	//Has this device crosscorrelation capability?
 parameter HAS_PSU = 0;			//Has this device a software PSU?
-parameter MAX_LAG = 1;		//Lag lines size for live correlation
+parameter MAX_LAG = 1;			//Lag lines size for live correlation
 parameter BAUD_RATE = 57600;		//Communication port baud rate
 parameter WORD_WIDTH = 1;		//Word width (greater than 1 when using ADC - must be in sync with the ADC ramp generator)
 ```
