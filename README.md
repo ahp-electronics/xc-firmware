@@ -31,14 +31,14 @@ The project runs at 10MHz and uses 57600 baud/second UART communication with the
 
 There is a set of commands to start integrations:
 
-+ 0x1d: Start integration by enabling UART transmission
-+ 0x0d: Stop integration by disabling UART transmission
++ 0x0d: Set integration parameters: bit 4 => enable capture, bit 5 => use external clock
 + 0x01: select active line: bits [7:6] => indexer, bits [5:4] => value
 + 0x02: activate leds or power lines using bits [5:4], invert pulse reading with bit 6, single clock cycle pulse width with bit 7
-+ 0x03: baudrate 57600 << bits [7:4]
++ 0x03: baudrate 57600 left-shifted by bits [7:4]
 + 0x04: bits [1:0] => indexer, bits [6:4] => delay value. If bit 7 is 0, then delay for cross-correlations is set, if bit 4 is 1, then delay for autocorrelations is set.
-+ 0x08: sampling clock tau = clock tau << bits [7:4]
++ 0x08: sampling clock tau = clock tau left-shifted by bits [7:4]
 + 0x09: power voltage = bits [7:4]
++ 0x0c: Set tests: bit 5 => enable pll oscillator signal on led 0, bit 5 => enable autocorrelation scan, bit 6 => enable crosscorrelation scan, bit 7 => BCM encoder on led 0 (pulse XOR by sampling clock)
 
 The count of pulses and correlation comes with an ASCII packet string ended with a 0x0d character
 
