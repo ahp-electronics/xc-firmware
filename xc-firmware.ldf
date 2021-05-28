@@ -42,9 +42,6 @@
         <Source name="source/adc.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="source/sine.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
         <Source name="ac1/xc-firmware_ac1_eraseall.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
             <Options/>
         </Source>
@@ -64,10 +61,10 @@
             <Options/>
         </Source>
         <Source name="source/uart_rx.v" type="Verilog" type_short="Verilog">
-            <Options top_module="uart_rx"/>
+            <Options/>
         </Source>
         <Source name="source/uart_tx.v" type="Verilog" type_short="Verilog">
-            <Options top_module="uart_tx"/>
+            <Options/>
         </Source>
         <Source name="source/tx_word.v" type="Verilog" type_short="Verilog">
             <Options/>
@@ -95,9 +92,6 @@
         </Source>
         <Source name="boards/xc32.v" type="Verilog" type_short="Verilog">
             <Options top_module="xc_firmware"/>
-        </Source>
-        <Source name="source/adc.v" type="Verilog" type_short="Verilog">
-            <Options/>
         </Source>
         <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
             <Options/>
@@ -212,7 +206,7 @@
         </Source>
     </Implementation>
     <Implementation title="xc8" dir="build/xc8" description="xc8" synthesis="synplify" default_strategy="AHP XC">
-        <Options def_top="xc_firmware"/>
+        <Options def_top="ADC"/>
         <Source name="source/main.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
@@ -244,7 +238,7 @@
             <Options top_module="xc_firmware"/>
         </Source>
         <Source name="source/adc.v" type="Verilog" type_short="Verilog">
-            <Options/>
+            <Options top_module="ADC"/>
         </Source>
         <Source name="source/uart_tx.v" type="Verilog" type_short="Verilog">
             <Options/>
@@ -255,13 +249,7 @@
         <Source name="source/spi_slave.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="boards/fast_program.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
-            <Options/>
-        </Source>
         <Source name="boards/pc03.lpf" type="Logic Preference" type_short="LPF">
-            <Options/>
-        </Source>
-        <Source name="build/xc8/xc8.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>
     </Implementation>

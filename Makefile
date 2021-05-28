@@ -1,22 +1,19 @@
-project=xc-firmware
-implementation=xc8
 
-all: erase program
+CHIP=ecp5u
+BOARD=pc03
+INCLUDES=-Isources/ -I/opt/lattice/diamond/ispfpga/verilog/data/$(CHIP)/
 
-erase:
-	./flash.sh $(project) $(implementation) erase
+%:
+	iverilog -tblif -o$@.edif boards/$(@).v boards/$(BOARD).v $(SOURCES) $(INCLUDES)
 
-program:
-	./flash.sh $(project) $(implementation) program
+%_erase:
+	./flash.sh $@
 
-verify:
-	./flash.sh $(project) $(implementation) verify
+%_program:
+	./flash.sh $@
 
-test:
-	./flash.sh $(project) $(implementation) fast_program
+%_verify:
+	./flash.sh $@
 
-xc8:
-	make implementation=xc8
-
-xc32:
-	make implementation=xc32
+%_test:
+	./flash.sh $@

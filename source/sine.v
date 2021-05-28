@@ -325,7 +325,6 @@ end
 PWM #(.RESOLUTION(RESOLUTION)) pwm(
 	((sine[pwm_idx]*max_value)>>8),
 	pwm_out,
-	overflow,
 	pwm_clk,
 	1'b1
 );

@@ -25,19 +25,23 @@ module xc_firmware (
 	jp2
 	);
 
+parameter PLL_FREQUENCY = 400000000;
 parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
 parameter NUM_LINES = 1;
-parameter DELAY_SIZE = 4095;
+parameter DELAY_SIZE = 2048;
 parameter LAG_CROSS = 1;
-parameter LAG_AUTO = 128;
+parameter LAG_AUTO = 200;
 parameter RESOLUTION = 24;
-parameter HAS_LED_FLAGS = 1;
+parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 0;
 parameter HAS_PSU = 0;
-parameter BAUD_RATE = 57600;
+parameter HAS_CUMULATIVE_ONLY = 1;
+parameter BAUD_RATE = 500000;
 parameter WORD_WIDTH = 1;
+parameter USE_UART = 1;
+parameter BINARY = 1;
 
 input wire sysclk;
 inout wire[19:0] jp1;
@@ -50,6 +54,7 @@ wire enable;
 wire extclk;
 wire intclk;
 wire smpclk;
+wire spiclk;
 wire external_clock;
 wire strobe;
 
@@ -73,19 +78,23 @@ assign jp1[2] = line_out[1];
 assign jp1[3] = line_out[2];
 
 main #(
+.PLL_FREQUENCY(PLL_FREQUENCY),
 .CLK_FREQUENCY(CLK_FREQUENCY),
 .SIN_FREQUENCY(SIN_FREQUENCY),
-.RESOLUTION(RESOLUTION),
 .MUX_LINES(MUX_LINES),
 .NUM_LINES(NUM_LINES),
 .DELAY_SIZE(DELAY_SIZE),
-.HAS_LED_FLAGS(HAS_LED_FLAGS),
-.HAS_CROSSCORRELATOR(HAS_CROSSCORRELATOR),
-.HAS_PSU(HAS_PSU),
 .LAG_CROSS(LAG_CROSS),
 .LAG_AUTO(LAG_AUTO),
+.RESOLUTION(RESOLUTION),
+.HAS_LEDS(HAS_LEDS),
+.HAS_CROSSCORRELATOR(HAS_CROSSCORRELATOR),
+.HAS_PSU(HAS_PSU),
+.HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY),
+.BAUD_RATE(BAUD_RATE),
 .WORD_WIDTH(WORD_WIDTH),
-.BAUD_RATE(BAUD_RATE)
+.USE_UART(USE_UART),
+.BINARY(BINARY)
 ) main_block(
 	TX,
 	RX,
@@ -97,6 +106,7 @@ main #(
 	extclk,
 	intclk,
 	smpclk,
+	spiclk,
 	strobe,
 	1'd1
 );

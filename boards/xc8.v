@@ -65,7 +65,7 @@ assign jp2[17] = 1'd0;
 assign jp2[18] = TX;
 assign RX = jp2[19];
 
-wire[NUM_LINES-1:0] line_in;
+wire[NUM_LINES*WORD_WIDTH-1:0] line_in;
 wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 

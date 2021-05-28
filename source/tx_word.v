@@ -26,10 +26,11 @@ module TX_WORD(
 	tx_done,
 	enable
 	);
-
-parameter SHIFT=4;
+parameter BINARY = 0;
 parameter RESOLUTION=32;
-parameter TOTAL_NIBBLES=RESOLUTION/4;
+
+localparam WORD_WIDTH=4+4*BINARY;
+localparam TOTAL_NIBBLES=RESOLUTION/WORD_WIDTH;
 
 input wire TXIF;
 output reg [7:0] TXREG;
@@ -47,10 +48,14 @@ always@(posedge TXIF or negedge enable) begin
 		tidx <= TOTAL_NIBBLES-1;
 		done <= 0;
 	end else if(tidx>=0) begin
-		if(tx_data[tidx*4+:4] > 4'h9)
-			TXREG <= 8'h3f + tx_data[tidx*4+:3];
-		else
-			TXREG <= 8'h30 + tx_data[tidx*4+:4];
+		if(BINARY)
+			TXREG <= tx_data[tidx*8+:8];
+		else begin
+			if(tx_data[tidx*4+:4] > 4'h9)
+				TXREG <= 8'h3f + tx_data[tidx*4+:3];
+			else
+				TXREG <= 8'h30 + tx_data[tidx*4+:4];
+		end
 		tidx <= tidx-1;
 		done <= 0;
 	end else begin
