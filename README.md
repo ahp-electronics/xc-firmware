@@ -15,10 +15,10 @@ parameter MUX_LINES = 8;		//Muxer lines
 parameter NUM_LINES = 4;		//Lines per each Muxer line
 parameter DELAY_SIZE = 160;		//The delay FIFO size
 parameter RESOLUTION = 24;		//Resolution (count capacity) of each correlation/intensity counter
-parameter HAS_LED_FLAGS = 1;		//Has this device output lines? (power switches or indicator or ramp generators sync?)
+parameter HAS_LEDS = 1;			//Has this device output lines? (power switches or indicator or ramp generators sync?)
 parameter HAS_CROSSCORRELATOR = 1;	//Has this device crosscorrelation capability?
 parameter HAS_PSU = 0;			//Has this device a software PSU?
-parameter MAX_LAG = 1;		//Lag lines size for live correlation
+parameter MAX_LAG = 1;			//Lag lines size for live correlation
 parameter BAUD_RATE = 57600;		//Communication port baud rate
 parameter WORD_WIDTH = 1;		//Word width (greater than 1 when using ADC - must be in sync with the ADC ramp generator)
 ```
@@ -31,14 +31,14 @@ The project runs at 10MHz and uses 57600 baud/second UART communication with the
 
 There is a set of commands to start integrations:
 
-+ 0x1d: Start integration by enabling UART transmission
-+ 0x0d: Stop integration by disabling UART transmission
++ 0x0d: Set integration parameters: bit 4 => enable capture, bit 5 => use external clock
 + 0x01: select active line: bits [7:6] => indexer, bits [5:4] => value
 + 0x02: activate leds or power lines using bits [5:4], invert pulse reading with bit 6, single clock cycle pulse width with bit 7
-+ 0x03: baudrate 57600 << bits [7:4]
++ 0x03: baudrate 57600 left-shifted by bits [7:4]
 + 0x04: bits [1:0] => indexer, bits [6:4] => delay value. If bit 7 is 0, then delay for cross-correlations is set, if bit 4 is 1, then delay for autocorrelations is set.
-+ 0x08: sampling clock tau = clock tau << bits [7:4]
++ 0x08: sampling clock tau = clock tau left-shifted by bits [7:4]
 + 0x09: power voltage = bits [7:4]
++ 0x0c: Set tests: bit 5 => enable pll oscillator signal on led 0, bit 5 => enable autocorrelation scan, bit 6 => enable crosscorrelation scan, bit 7 => BCM encoder on led 0 (pulse XOR by sampling clock)
 
 The count of pulses and correlation comes with an ASCII packet string ended with a 0x0d character
 
@@ -54,4 +54,4 @@ Each packet starts with a header with payload length indication, it is possible 
 + bytes +lines#: autocorrelations count of each line by the selected autocorrelation line delayed by crosscorrelation lag zero
 + bytes +baselines#: crosscorrelations count of pulses of each line with others by the selected delay amount
 
-The sampling rate is the same as the packet rate, the bandwidth is determined by the clock tau, the number of mux lines, the power of two of the ADC word width and the the clock tau multiplier power of two.
+The packet rate is determined by the baud rate and the packet size, the sampling rate is determined by the clock tau multiplied by the number of mux lines, divided by the clock tau multiplier plus one power of two.
