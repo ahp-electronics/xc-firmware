@@ -1,4 +1,4 @@
-# XC Intensity correlator firmware
+# XC Quantum correlators firmware
 
 #### This repository contains code of the XC series correlators
 
@@ -8,19 +8,22 @@
 You'll find board and device specific files into the boards/ folder, device files contain some custom parameters that can characterize the device:
 
 ```
+parameter PLL_FREQUENCY = 400000000;	//The pll frequency
 parameter CLK_FREQUENCY = 10000000;	//The crystal frequency
-parameter PLL_MULTIPLIER = 40;		//The PLL Multiplier value
-parameter PLL_DIVIDER = 1;		//The PLL Divider value
-parameter MUX_LINES = 8;		//Muxer lines
-parameter NUM_LINES = 4;		//Lines per each Muxer line
-parameter DELAY_SIZE = 160;		//The delay FIFO size
+parameter SIN_FREQUENCY = 50;		//The internal optional PSU frequency
+parameter MUX_LINES = 1;		//Muxer lines
+parameter NUM_LINES = 8;		//Lines per each Muxer line
+parameter DELAY_SIZE = 2048;		//The delay FIFO size
+parameter LAG_CROSS = 1;		//Lag lines size for live crosscorrelation
+parameter LAG_AUTO = 1;			//Lag lines size for live autocorrelation
 parameter RESOLUTION = 24;		//Resolution (count capacity) of each correlation/intensity counter
 parameter HAS_LEDS = 1;			//Has this device output lines? (power switches or indicator or ramp generators sync?)
 parameter HAS_CROSSCORRELATOR = 1;	//Has this device crosscorrelation capability?
 parameter HAS_PSU = 0;			//Has this device a software PSU?
-parameter MAX_LAG = 1;			//Lag lines size for live correlation
+parameter HAS_CUMULATIVE_ONLY = 0;	//Has this device not on-edge counting?
 parameter BAUD_RATE = 57600;		//Communication port baud rate
 parameter WORD_WIDTH = 1;		//Word width (greater than 1 when using ADC - must be in sync with the ADC ramp generator)
+parameter USE_UART = 1;			//Use UART or SPI communication?
 ```
 
 The generated SVF file can be downloaded to the device using urJTAG http://urjtag.org/
