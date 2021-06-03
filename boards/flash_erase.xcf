@@ -17,7 +17,7 @@
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<File>build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
+			<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
 			<FileTime>04/01/21 02:43:13</FileTime>
 			<Operation>SPI Flash Erase All</Operation>
 			<Option>
@@ -40,7 +40,7 @@
 						<BScanLen>1</BScanLen>
 						<BScanVal>0</BScanVal>
 					</Bypass>
-					<MaskFile>/opt/lattice/diamond/data/vmdata/database/xpga/ecp5/LFE5U-45F.msk</MaskFile>
+					<MaskFile>PWD/tools/data/vmdata/database/xpga/ecp5/LFE5U-45F.msk</MaskFile>
 					<Operation>Bypass</Operation>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -60,7 +60,7 @@
 					<IDCode>0x17</IDCode>
 					<Package>8-pin SOIC</Package>
 					<Operation>SPI Flash Erase All</Operation>
-					<File>build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
+					<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
 					<AddressBase>0x00000000</AddressBase>
 					<EndAddress>0x000F0000</EndAddress>
 					<DeviceSize>128</DeviceSize>
@@ -73,7 +73,7 @@
 				<Device>
 					<Pos>1</Pos>
 					<Name></Name>
-					<File>build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
+					<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
 					<LocalChainList>
 						<LocalDevice index="-99"
 							name="Unknown"

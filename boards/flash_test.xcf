@@ -19,7 +19,7 @@
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<File>build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
+			<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
 			<FileTime>04/17/21 02:50:59</FileTime>
 			<JedecChecksum>N/A</JedecChecksum>
 			<Operation>Fast Program</Operation>
