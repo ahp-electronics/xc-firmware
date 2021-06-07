@@ -1,0 +1,6 @@
+[submodule "libahp-xc"]
+	path = libahp-xc
+	url = github:ahp-electronics/libahp-xc
+[submodule "xc-gui"]
+	path = xc-gui
+	url = github:ahp-electronics/xc-gui

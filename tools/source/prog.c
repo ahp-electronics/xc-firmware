@@ -10,8 +10,6 @@ int main(int argc, char **argv)
 	int opt;
 	char *svf, *driver;
 	svf = driver = NULL;
-	if (argc < 1)
-		return ENOENT;
 	while ((opt = getopt(argc, argv, "f:d:v")) != -1) {
 		switch (opt) {
                case 'f':
@@ -28,19 +26,21 @@ int main(int argc, char **argv)
 	}
 	if(svf != NULL && driver != NULL)
 		return program_jtag(svf, driver);
-	return 0;
+	return EINVAL;
 }
 
 int program_jtag(const char *svf_file, const char *drivername)
 {
-	int ret = 1;
+    int ret = ENODEV;
     urj_chain_t *chain;
     const urj_cable_driver_t *driver;
-	chain = urj_tap_chain_alloc ();
-	driver = urj_tap_cable_find (drivername);
-    urj_tap_cable_usb_connect (chain, driver, NULL);
-	int ndevs = urj_tap_detect(chain, 8);
+    chain = urj_tap_chain_alloc ();
+    driver = urj_tap_cable_find (drivername);
+    urj_cable_t *cable = urj_tap_cable_usb_connect (chain, driver, NULL);
+    urj_tap_cable_set_frequency (cable, 24000000);
+    int ndevs = urj_tap_detect(chain, 8);
     if(ndevs == URJ_STATUS_OK) {
+		ret = ENOENT;
 		FILE *svf = fopen(svf_file, "r");
 		if(svf != NULL) {
 			urj_svf_run (chain, svf, 0, 0);
