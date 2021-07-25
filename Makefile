@@ -1,19 +1,18 @@
-
 CHIP=ecp5u
 BOARD=pc03
-INCLUDES=-Isources/ -I/opt/lattice/diamond/ispfpga/verilog/data/$(CHIP)/
+INCLUDES=-Isources/ -Itools/ispfpga/verilog/data/$(CHIP)/
 
 %:
-	iverilog -tblif -o$@.edif boards/$(@).v boards/$(BOARD).v $(SOURCES) $(INCLUDES)
+	./flash.sh build $@
 
 %_erase:
-	./flash.sh $@
+	./flash.sh program $@
 
 %_program:
-	./flash.sh $@
+	./flash.sh program $@
 
 %_verify:
-	./flash.sh $@
+	./flash.sh program $@
 
 %_test:
-	./flash.sh $@
+	./flash.sh program $@

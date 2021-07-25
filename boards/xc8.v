@@ -19,7 +19,7 @@
 
 `timescale 1 ns / 1 ps
 
-module xc_firmware (
+module xc8 (
 	sysclk,
 	jp1,
 	jp2 
@@ -30,7 +30,7 @@ parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
 parameter NUM_LINES = 8;
-parameter DELAY_SIZE = 2048;
+parameter DELAY_SIZE = 1024;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
 parameter RESOLUTION = 24;

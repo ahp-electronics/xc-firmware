@@ -19,7 +19,7 @@
 
 `timescale 1 ns / 1 ps
 
-module xc_firmware (
+module ac1 (
 	sysclk,
 	jp1,
 	jp2

@@ -67,7 +67,8 @@ localparam CORRELATIONS_HEAD_TAIL_SIZE = LAG_CROSS*2-1;
 localparam CORRELATIONS_SIZE = (HAS_CROSSCORRELATOR*NUM_BASELINES*CORRELATIONS_HEAD_TAIL_SIZE);
 localparam PAYLOAD_SIZE = (CORRELATIONS_SIZE+SPECTRA_SIZE+NUM_INPUTS)*RESOLUTION;
 localparam HEADER_SIZE = 64;
-localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE;
+localparam FOOTER_SIZE = 64;
+localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+FOOTER_SIZE;
 
 localparam MAX_LAG_AUTO = DELAY_SIZE+LAG_AUTO-1;
 localparam MAX_LAG_CROSS = DELAY_SIZE+LAG_CROSS-1;
@@ -115,7 +116,7 @@ wire tx_done;
 reg[PACKET_SIZE-1:0] tx_data;
 wire[PAYLOAD_SIZE-1:0] pulses;
 
-wire[NUM_INPUTS*WORD_WIDTH-1:0] delay_lines [0:DELAY_SIZE+MAX_LAG];
+wire[NUM_INPUTS*WORD_WIDTH-1:0] delay_lines [0:DELAY_SIZE*2+MAX_LAG];
 
 reg[11:0] cross [0:NUM_INPUTS];
 reg[11:0] auto [0:NUM_INPUTS];
@@ -143,6 +144,7 @@ wire[4*NUM_INPUTS-1:0] test_a;
 wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
 wire[12*NUM_INPUTS-1:0] cross_tmp_a;
 wire[12*NUM_INPUTS-1:0] auto_tmp_a;
+wire[63:0] timestamp;
 
 wire spi_done;
 wire RXIF;
@@ -170,6 +172,16 @@ CLK_GEN sampling_clock_block(
 	pllclk,
 	smpclk_pulse,
 	enable
+);
+
+COUNTER timestamp_block(
+	315360000000000,
+	timestamp,
+	,
+	1,
+	1'd0,
+	sysclk,
+	~integrating
 );
 
 if(USE_UART) begin
@@ -269,14 +281,15 @@ always@(posedge intclk) begin
 			cross[current_line] <= cross[current_line]+1;
 	end else
 		cross[current_line] <= cross_tmp [current_line];
-	tx_data[0+:PAYLOAD_SIZE] <= pulses;
-	tx_data[PAYLOAD_SIZE+:16] <= TICK;
-	tx_data[PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
-	tx_data[PAYLOAD_SIZE+16+4+:8] <= LAG_CROSS-1;
-	tx_data[PAYLOAD_SIZE+16+4+8+:8] <= LAG_AUTO-1;
-	tx_data[PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
-	tx_data[PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
-	tx_data[PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
+	tx_data[0+:FOOTER_SIZE] <= timestamp;
+	tx_data[FOOTER_SIZE+:PAYLOAD_SIZE] <= pulses;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:16] <= TICK;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+:8] <= LAG_CROSS-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+:8] <= LAG_AUTO-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
 end
 
 generate
@@ -319,7 +332,7 @@ generate
 			~0,
 			pulses[(CORRELATIONS_SIZE+NUM_INPUTS*LAG_AUTO+NUM_INPUTS-1-a)*RESOLUTION+:RESOLUTION],
 			overflow[a],
-			delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
+			delay_lines[cross[a]+(LAG_CROSS/2)][a*WORD_WIDTH+:WORD_WIDTH],
 			leds[a][3],
 			smpclk,
 			reset_delayed
@@ -331,7 +344,7 @@ generate
 						~0,
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION+:RESOLUTION],
 						,
-						delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH]*delay_lines[auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
+						delay_lines[cross[a]+(LAG_CROSS/2)][a*WORD_WIDTH+:WORD_WIDTH]*delay_lines[cross[a]+(LAG_CROSS/2)+auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
 						leds[a][3],
 						smpclk,
 						reset_delayed
