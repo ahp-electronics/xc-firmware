@@ -32,6 +32,7 @@ module CMD_PARSER(
 	integrating,
 	fullwave,
 	external_clock,
+	timestamp_reset,
 	clk
 );
 
@@ -63,6 +64,7 @@ output reg[7:0] current_line = 0;
 output reg integrating = 0;
 output reg fullwave = 0;
 output reg external_clock = 0;
+output reg timestamp_reset = 1;
 always@(posedge clk) begin
 	if (cmd[3:0] == CLEAR) begin
 		cross_idx[current_line*12+:12] <= 0;
@@ -71,6 +73,7 @@ always@(posedge clk) begin
 		integrating <= cmd[4];
 		external_clock <= cmd[5];
 		fullwave <= cmd[6];
+		timestamp_reset <= cmd[7];
 	end else if (cmd[3:0] == SET_LINE) begin
 		current_line[cmd[7:6]*2+:2] <= cmd[5:4];
 	end else if (cmd[3:0] == SET_LEDS && HAS_LEDS) begin

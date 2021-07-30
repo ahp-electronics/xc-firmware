@@ -102,4 +102,5 @@ build() {
 
 environment $@
 mkdir -p build/${implementation}
+mkdir -p output/
 $1

@@ -145,6 +145,8 @@ wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
 wire[12*NUM_INPUTS-1:0] cross_tmp_a;
 wire[12*NUM_INPUTS-1:0] auto_tmp_a;
 wire[63:0] timestamp;
+wire timestamp_reset;
+wire timestamp_overflow;
 
 wire spi_done;
 wire RXIF;
@@ -175,13 +177,13 @@ CLK_GEN sampling_clock_block(
 );
 
 COUNTER timestamp_block(
-	315360000000000,
+	~(64'd0),
 	timestamp,
-	,
-	1,
-	1'd0,
+	timestamp_overflow,
+	1'd1,
+	1'd1,
 	sysclk,
-	~integrating
+	timestamp_reset|timestamp_overflow
 );
 
 if(USE_UART) begin
@@ -243,6 +245,7 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 	integrate,
 	fullwave,
 	external_clock,
+	timestamp_reset,
 	RXIF
 );
 
