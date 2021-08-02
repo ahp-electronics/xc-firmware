@@ -17,9 +17,9 @@
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
-			<FileTime>04/01/21 02:43:13</FileTime>
-			<Operation>SPI Flash Erase,Program</Operation>
+			<File>/home/plato/dev/github/xc-firmware/build/xc8/xc-firmware_xc8.bit</File>
+			<FileTime>07/31/21 10:45:51</FileTime>
+			<Operation>SPI Flash Erase,Program,Verify</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
 				<Usercode>0x00000000</Usercode>
@@ -41,7 +41,7 @@
 						<BScanLen>1</BScanLen>
 						<BScanVal>0</BScanVal>
 					</Bypass>
-					<MaskFile>PWD/tools/data/vmdata/database/xpga/ecp5/LFE5U-45F.msk</MaskFile>
+					<MaskFile>/opt/lattice/diamond/data/vmdata/database/xpga/ecp5/LFE5U-45F.msk</MaskFile>
 					<Operation>Bypass</Operation>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -60,10 +60,10 @@
 					<Name>W25Q128JV</Name>
 					<IDCode>0x17</IDCode>
 					<Package>8-pin SOIC</Package>
-					<Operation>SPI Flash Erase,Program</Operation>
-					<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
+					<Operation>SPI Flash Erase,Program,Verify</Operation>
+					<File>/home/plato/dev/github/xc-firmware/build/xc8/xc-firmware_xc8.bit</File>
 					<AddressBase>0x00000000</AddressBase>
-					<EndAddress>0x000F0000</EndAddress>
+					<EndAddress>0x00FF0000</EndAddress>
 					<DeviceSize>128</DeviceSize>
 					<DataSize>1032632</DataSize>
 					<NumberOfDevices>1</NumberOfDevices>
@@ -74,11 +74,11 @@
 				<Device>
 					<Pos>1</Pos>
 					<Name></Name>
-					<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
+					<File>/home/plato/dev/github/xc-firmware/build/xc8/xc-firmware_xc8.bit</File>
 					<LocalChainList>
 						<LocalDevice index="-99"
 							name="Unknown"
-							file="build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit"/>
+							file="/home/plato/dev/github/xc-firmware/build/xc8/xc-firmware_xc8.bit"/>
 					</LocalChainList>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>

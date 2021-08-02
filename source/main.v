@@ -182,7 +182,7 @@ COUNTER timestamp_block(
 	timestamp_overflow,
 	1'd1,
 	1'd1,
-	sysclk,
+	refclk,
 	timestamp_reset|timestamp_overflow
 );
 

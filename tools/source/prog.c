@@ -38,8 +38,9 @@ int program_jtag(const char *svf_file, const char *drivername)
     const urj_cable_driver_t *driver;
 	chain = urj_tap_chain_alloc ();
 	driver = urj_tap_cable_find (drivername);
-    urj_tap_cable_usb_connect (chain, driver, NULL);
-	int ndevs = urj_tap_detect(chain, 8);
+    urj_cable_t *cable = urj_tap_cable_usb_connect (chain, driver, NULL);
+    urj_tap_cable_set_frequency (cable, 24000000);
+	int ndevs = urj_tap_detect(chain, 32);
     if(ndevs == URJ_STATUS_OK) {
 		FILE *svf = fopen(svf_file, "r");
 		if(svf != NULL) {

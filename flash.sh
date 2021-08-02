@@ -12,7 +12,6 @@ environment() {
 	export includes="${TOOLSDIR}/ispfpga/verilog/data/ecp5u/VHI.v ${TOOLSDIR}/ispfpga/verilog/data/ecp5u/VLO.v"
 	export project=$(grep '<BaliProject' project.ldf | cut -d '"' -f 4)
 	export implementation=$(echo $2 | cut -d '_' -f 1)
-	[ -n $implementation ] && export implementation=$(grep '<BaliProject' project.ldf | cut -d '"' -f 8)
 	export target=$(echo $2 | cut -d '_' -f 2)
 }
 
@@ -30,6 +29,8 @@ program() {
 }
 
 synthesize() {
+rm -rf build/${implementation}
+mkdir -p build/${implementation}
 	echo "set_option -technology ECP5U
 set_option -part LFE5U_45F
 set_option -package BG256C
@@ -57,6 +58,7 @@ set_option -include_path {${PWD}}
 echo \"add_file -verilog {${PWD}/${file}}\"
 done
 `
+`echo \"add_file -verilog {${PWD}/boards/${implementation}.v}\"`
 set_option -top_module ${implementation}
 project -result_file {${PWD}/build/${implementation}/${project}_${implementation}.edi}
 project -log_file {${project}_${implementation}.srf}
@@ -101,6 +103,6 @@ build() {
 }
 
 environment $@
-mkdir -p build/${implementation}
+rm -rf output/flash_${implementation}_${target}.svf
 mkdir -p output/
 $1
