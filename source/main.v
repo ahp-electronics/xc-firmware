@@ -95,7 +95,6 @@ input wire strobe;
 
 wire smpclk_full;
 wire smpclk_pulse;
-wire fullwave;
 wire external_clock;
 wire integrating;
 
@@ -160,7 +159,6 @@ assign intclk = tx_done;
 
 pll pll_block (refclk, pllclk);
 dff reset_delay(smpclk, intclk, reset_delayed);
-dff sample_delay(smpclk_full, smpclk_pulse, smpclk);
 
 indicators #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(NUM_INPUTS*1000), .CHANNELS(NUM_INPUTS), .RESOLUTION(8)) indicators_block(
 	pwm_out,
@@ -170,7 +168,7 @@ indicators #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(NUM_INPUTS*1000), .CHANNEL
 
 CLK_GEN sampling_clock_block(
 	TICK_CYCLES<<clock_divider,
-	smpclk_full,
+	smpclk,
 	pllclk,
 	smpclk_pulse,
 	enable
@@ -243,7 +241,6 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 	baud_rate,
 	current_line,
 	integrate,
-	fullwave,
 	external_clock,
 	timestamp_reset,
 	RXIF

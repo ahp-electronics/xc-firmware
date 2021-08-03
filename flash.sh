@@ -90,7 +90,7 @@ route() {
 
 generate() {
 	pushd build/${implementation}
-	bitgen -w ${project}_${implementation}.ncd -f ${project}_${implementation}.t2b -e -s ${project}.sec -k ${project}.bek
+	bitgen -w ${project}_${implementation}.ncd -f ${project}_${implementation}.t2b -e -s ${project}.sec -k ${project}.bek ${project}_${implementation}.prf
 	popd
 }
 
