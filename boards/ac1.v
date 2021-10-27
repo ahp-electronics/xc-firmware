@@ -37,11 +37,11 @@ parameter RESOLUTION = 24;
 parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 0;
 parameter HAS_PSU = 0;
-parameter HAS_CUMULATIVE_ONLY = 1;
+parameter HAS_CUMULATIVE_ONLY = 0;
 parameter BAUD_RATE = 500000;
 parameter WORD_WIDTH = 1;
 parameter USE_UART = 1;
-parameter BINARY = 1;
+parameter BINARY = 0;
 
 input wire sysclk;
 inout wire[19:0] jp1;

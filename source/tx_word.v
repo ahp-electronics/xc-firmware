@@ -41,7 +41,7 @@ input wire enable;
 reg done;
 assign tx_done = done;
 reg signed [31:0] tidx;
-	
+
 always@(posedge TXIF or negedge enable) begin
 	if(!enable) begin
 		TXREG <= 8'h0d;
