@@ -25,7 +25,7 @@ program() {
 	> "${tmpfile}"
 	ddtcmd -oft -svfchain -revd -of "${svf}" -if "${tmpfile}"
 	rm "${tmpfile}"
-	program_jtag -f"${svf}" -d"UsbBlaster"
+	program_jtag -f"${svf}" -d"UsbBlaster" || true
 }
 
 synthesize() {
