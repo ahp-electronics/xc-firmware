@@ -31,10 +31,10 @@ module COUNTER (
 	parameter RESOLUTION=64;
 	parameter WORD_WIDTH=1;
 	parameter HAS_CUMULATIVE_ONLY = 0;
-	input wire [RESOLUTION-1:0] counter_max;
-	output reg [RESOLUTION-1:0] counter_out;
+	input wire signed [RESOLUTION-2:0] counter_max;
+	output reg signed [RESOLUTION-1:0] counter_out;
 	output wire overflow;
-	input wire[WORD_WIDTH-1:0] signal;
+	input wire signed [WORD_WIDTH-1:0] signal;
 	input wire reset;
 	input wire clk;
 	input wire cumulative;
@@ -43,14 +43,12 @@ module COUNTER (
 	
 	always @(posedge clk) begin
 		if(~reset) begin
-			if(counter_out < counter_max-1) begin
+			if(counter_out < counter_max-1 && counter_out >= -counter_max) begin
 				if(cumulative | HAS_CUMULATIVE_ONLY) begin
-					if(signal)
-						counter_out <= counter_out + 1;
+					counter_out <= counter_out + signal;
 				end else if(signal != tmp_signal) begin
 					tmp_signal <= signal;
-					if(signal)
-						counter_out <= counter_out + 1;
+					counter_out <= counter_out + signal;
 				end
 			end
 		end else
