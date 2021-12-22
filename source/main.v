@@ -348,8 +348,8 @@ generate
 					COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_r (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+:RESOLUTION],
 						,
-						delay_lines[cross[a]][a*WORD_WIDTH+:WORD_WIDTH],
-						delay_lines[cross[a]+auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
+						delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
+						delay_lines[auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
 						leds[a][3],
 						smpclk,
 						center_correlation[a],
@@ -358,8 +358,8 @@ generate
 					COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_i (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 						,
-						delay_lines[cross[a]][a*WORD_WIDTH+:WORD_WIDTH],
-						~delay_lines[cross[a]+auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
+						delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
+						~delay_lines[auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
 						leds[a][3],
 						smpclk,
 						center_correlation[a],
