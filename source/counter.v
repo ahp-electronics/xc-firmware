@@ -20,21 +20,18 @@
 `timescale 1 ns / 1 ps
 
 module COUNTER (
-		counter_max,
-		counter_min,
 		counter_out,
 		overflow,
 		signal,
 		nsignal,
 		cumulative,
 		clk,
+		multiply,
 		reset
 	);
 	parameter RESOLUTION=64;
 	parameter WORD_WIDTH=1;
 	parameter HAS_CUMULATIVE_ONLY = 0;
-	input wire signed [RESOLUTION-1:0] counter_max;
-	input wire signed [RESOLUTION-1:0] counter_min;
 	output reg signed [RESOLUTION-1:0] counter_out;
 	output wire overflow;
 	input wire [WORD_WIDTH-1:0] signal;
@@ -42,17 +39,21 @@ module COUNTER (
 	input wire reset;
 	input wire clk;
 	input wire cumulative;
-	assign overflow = (counter_out == counter_max || counter_out == -counter_max);
+	input wire multiply;
+	assign overflow = (counter_out == ((1<<(RESOLUTION-1))|1) || counter_out == ~(1<<(RESOLUTION-1)));
 	reg [WORD_WIDTH-1:0] tmp_signal;
 	reg [WORD_WIDTH-1:0] tmp_nsignal;
 	
 	always @(posedge clk) begin
 		if(~reset) begin
-			if(counter_out + signal - nsignal <= counter_max && counter_out + signal - nsignal >= counter_min) begin
+			if(!overflow) begin
 				if((cumulative | HAS_CUMULATIVE_ONLY) || (signal != tmp_signal) || (nsignal != tmp_nsignal)) begin
 					tmp_signal <= signal;
 					tmp_nsignal <= nsignal;
-					counter_out <= counter_out + signal - nsignal;
+					if(multiply)
+						counter_out <= counter_out + signal * nsignal;
+					else
+						counter_out <= counter_out + signal - nsignal;
 				end
 			end
 		end else
