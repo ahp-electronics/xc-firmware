@@ -25,8 +25,8 @@ module COUNTER (
 		signal,
 		nsignal,
 		cumulative,
-		clk,
 		multiply,
+		clk,
 		reset
 	);
 	parameter RESOLUTION=64;
