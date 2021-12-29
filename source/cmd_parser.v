@@ -24,7 +24,9 @@ module CMD_PARSER(
 	voltage_pwm,
 	test,
 	cross_idx,
+	cross_len,
 	auto_idx,
+	auto_len,
 	leds,
 	clock_divider,
 	baud_rate,
@@ -32,7 +34,7 @@ module CMD_PARSER(
 	integrating,
 	external_clock,
 	timestamp_reset,
-	center_correlation,
+	extra_commands,
 	clk
 );
 
@@ -58,13 +60,15 @@ output reg[4*NUM_INPUTS-1:0] test = 0;
 output reg[4*NUM_INPUTS-1:0] leds = 0;
 output reg[12*NUM_INPUTS-1:0] cross_idx = 0;
 output reg[12*NUM_INPUTS-1:0] auto_idx = 0;
+output reg[12*NUM_INPUTS-1:0] cross_len = 0;
+output reg[12*NUM_INPUTS-1:0] auto_len = 0;
 output reg[3:0] clock_divider = 0;
 output reg[3:0] baud_rate = 0;
 output reg[7:0] current_line = 0;
 output reg integrating = 0;
 output reg external_clock = 0;
 output reg timestamp_reset = 1;
-output reg[NUM_INPUTS-1:0] center_correlation = 0;
+output reg extra_commands = 0;
 always@(posedge clk) begin
 	if (cmd[3:0] == CLEAR) begin
 		cross_idx[current_line*12+:12] <= 0;
@@ -73,7 +77,7 @@ always@(posedge clk) begin
 		integrating <= cmd[4];
 		external_clock <= cmd[5];
 		timestamp_reset <= cmd[6];
-		center_correlation[current_line] <= cmd[7];
+		extra_commands <= cmd[7];
 	end else if (cmd[3:0] == SET_LINE) begin
 		current_line[cmd[7:6]*2+:2] <= cmd[5:4];
 	end else if (cmd[3:0] == SET_LEDS && HAS_LEDS) begin
@@ -81,10 +85,17 @@ always@(posedge clk) begin
 	end else if (cmd[3:0] == SET_BAUD_RATE) begin
 		baud_rate <= cmd[7:4];
 	end else if ((cmd[3:0]&4'b1100) == SET_DELAY) begin
-		if (cmd[7])
-			auto_idx [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
-		else
-			cross_idx [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+		if(extra_commands) begin
+			if (cmd[7])
+				auto_len [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			else
+				cross_len [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+		end else begin
+			if (cmd[7])
+				auto_idx [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			else
+				cross_idx [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+		end
 	end else if (cmd[3:0] == SET_FREQ_DIV) begin
 		clock_divider <= cmd[7:4];
 	end else if (cmd[3:0] == ENABLE_TEST) begin
