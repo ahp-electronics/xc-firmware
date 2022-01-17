@@ -1,48 +1,9 @@
-////////////////////////////////////////////////////////////////////////////////
-////                                                                        ////
-//// Project Name: SPI (Verilog)                                            ////
-////                                                                        ////
-//// Module Name: spi_slave                                                ////
-////                                                                        ////
-////                                                                        ////
-////  This file is part of the Ethernet IP core project                     ////
-////  http://opencores.com/project,spi_verilog_master_slave                 ////
-////                                                                        ////
-////  Author(s):                                                            ////
-////      Santhosh G (santhg@opencores.org)                                 ////
-////                                                                        ////
-////  Refer to Readme.txt for more information                              ////
-////                                                                        ////
-////////////////////////////////////////////////////////////////////////////////
-////                                                                        ////
-//// Copyright (C) 2014, 2015 Authors                                       ////
-////                                                                        ////
-//// This source file may be used and distributed without                   ////
-//// restriction provided that this copyright statement is not              ////
-//// removed from the file and that any derivative work contains            ////
-//// the original copyright notice and the associated disclaimer.           ////
-////                                                                        ////
-//// This source file is free software; you can redistribute it             ////
-//// and/or modify it under the terms of the GNU Lesser General             ////
-//// Public License as published by the Free Software Foundation;           ////
-//// either version 2.1 of the License, or (at your option) any             ////
-//// later version.                                                         ////
-////                                                                        ////
-//// This source is distributed in the hope that it will be                 ////
-//// useful, but WITHOUT ANY WARRANTY; without even the implied             ////
-//// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR                ////
-//// PURPOSE.  See the GNU Lesser General Public License for more           ////
-//// details.                                                               ////
-////                                                                        ////
-//// You should have received a copy of the GNU Lesser General              ////
-//// Public License along with this source; if not, download it             ////
-//// from http://www.opencores.org/lgpl.shtml                               ////
-////                                                                        ////
-////////////////////////////////////////////////////////////////////////////////
-/* SPI MODE 3
-		CHANGE DATA (sdout) @ NEGEDGE SCK
-		read data (sdin) @posedge SCK
-*/		 
+/* Copyright (C) Ilia Platone - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Ilia Platone <info@iliaplatone.com>, January, 2017
+ */
+
 module spi_slave (rstb,ten,tdata,mlb,ss,sck,sdin, sdout,done,rdata);
   input rstb,ss,sck,sdin,ten,mlb;
   input [7:0] tdata;

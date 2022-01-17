@@ -1,21 +1,8 @@
-/*
-    AHP XC - a multiline spectrograph and cross-correlator
-    Copyright (C) 2020  Ilia Platone
-
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
-
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+/* Copyright (C) Ilia Platone - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Ilia Platone <info@iliaplatone.com>, January, 2017
+ */
 
 `timescale 1 ns / 1 ps
 
@@ -133,15 +120,15 @@ wire[7:0] current_line;
 wire[3:0] baud_rate;
 wire[3:0] clock_divider;
 
-wire[3:0] leds[0:NUM_INPUTS];
+wire[7:0] leds[0:NUM_INPUTS];
 wire[3:0] test[0:NUM_INPUTS];
 wire[8:0] voltage_pwm[0:NUM_INPUTS];
 wire[11:0] cross_tmp [0:NUM_INPUTS];
 wire[11:0] auto_tmp [0:NUM_INPUTS];
 wire[11:0] cross_len [0:NUM_INPUTS];
 wire[11:0] auto_len [0:NUM_INPUTS];
-wire[4*NUM_INPUTS-1:0] leds_a;
-wire[4*NUM_INPUTS-1:0] test_a;
+wire[8*NUM_INPUTS-1:0] leds_a;
+wire[8*NUM_INPUTS-1:0] test_a;
 wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
 wire[12*NUM_INPUTS-1:0] cross_tmp_a;
 wire[12*NUM_INPUTS-1:0] auto_tmp_a;
@@ -301,8 +288,8 @@ generate
 	genvar z;
 
 	for (a=0; a<NUM_INPUTS; a=a+1) begin : correlators_initial_block
-		assign leds[a] = leds_a[a*4+:4];
-		assign test[a] = test_a[a*4+:4];
+		assign leds[a] = leds_a[a*8+:8];
+		assign test[a] = test_a[a*8+:8];
 		assign voltage_pwm[a][7:0] = voltage_pwm_a[a*8+:8];
 		assign cross_tmp[a] = cross_tmp_a[a*12+:12];
 		assign auto_tmp[a] = auto_tmp_a[a*12+:12];
@@ -341,7 +328,7 @@ generate
 		if(HAS_LEDS) begin
 			assign lineout[a] = (pwm_out[a]|in_capture)&~overflow[a];
 			assign lineout[NUM_INPUTS+a] = adc_done[a];
-			assign lineout[NUM_INPUTS*2+a] = ~test[a][3] ? leds[a][0]^(test[a][0] & pllclk) : leds[a][0]&(delay_lines[0][a*WORD_WIDTH] ^ smpclk);
+			assign lineout[NUM_INPUTS*2+a] = ~test[a][3] ? leds[a][0] : leds[a][0]&(delay_lines[0][a*WORD_WIDTH] ^ smpclk);
 			assign lineout[NUM_INPUTS*3+a] = HAS_PSU ? voltage[a] : leds[a][1];
 		end
 		 
@@ -364,19 +351,19 @@ generate
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+:RESOLUTION],
 						,
 						delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
-						delay_lines[auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
+						delay_lines[((auto[a]+y)>>1)][a*WORD_WIDTH+:WORD_WIDTH],
 						leds[a][3],
-						~leds[a][3],
+						~leds[a][4],
 						smpclk,
 						reset_delayed
 					);
 					COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_i (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 						,
-						delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
-						~delay_lines[auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
+						delay_lines[((auto[a]+y)>>1)][a*WORD_WIDTH+:WORD_WIDTH],
+						delay_lines[auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
 						leds[a][3],
-						~leds[a][3],
+						~leds[a][4],
 						smpclk,
 						reset_delayed
 					);
@@ -389,19 +376,19 @@ generate
 					pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)-1)*RESOLUTION*2+:RESOLUTION],
 					,
 					delay_lines[cross[a]][a*WORD_WIDTH+:WORD_WIDTH],
-					delay_lines[cross[b]][b*WORD_WIDTH+:WORD_WIDTH],
+					delay_lines[(cross[b]>>1)][b*WORD_WIDTH+:WORD_WIDTH],
 					leds[a][3]&leds[b][3],
-					~(leds[a][3]&leds[b][3]),
+					~(leds[a][4]&leds[b][4]),
 					smpclk,
 					reset_delayed
 				);
 				COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) correlators_block_i (
 					pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 					,
-					delay_lines[cross[a]][a*WORD_WIDTH+:WORD_WIDTH],
-					~delay_lines[cross[b]][b*WORD_WIDTH+:WORD_WIDTH],
+					delay_lines[(cross[a]>>1)][a*WORD_WIDTH+:WORD_WIDTH],
+					delay_lines[cross[b]][b*WORD_WIDTH+:WORD_WIDTH],
 					leds[a][3]&leds[b][3],
-					~(leds[a][3]&leds[b][3]),
+					~(leds[a][4]&leds[b][4]),
 					smpclk,
 					reset_delayed
 				);
