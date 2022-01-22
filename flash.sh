@@ -15,17 +15,28 @@ environment() {
 	export target=$(echo $2 | cut -d '_' -f 2)
 }
 
-program() {
-	svf="${PWD}/output/flash_${implementation}_${target}.svf"
+svf() {
+	svf="${PWD}/output/flash_${implementation}_${1}.svf"
 	tmpfile="/tmp/$$.xcf"
-	echo $project ${implementation} $target
-	sed -e "s:IMPLEMENTATION:${implementation}:g" "${PWD}/boards/flash_${target}.xcf" | \
+	echo $project ${implementation} $1
+	sed -e "s:IMPLEMENTATION:${implementation}:g" "${PWD}/boards/flash_${1}.xcf" | \
 	sed -e "s:PWD:${PWD}:g" | \
 	sed -e "s:PROJECT:${project}:g" \
 	> "${tmpfile}"
 	ddtcmd -oft -svfchain -revd -of "${svf}" -if "${tmpfile}"
 	rm "${tmpfile}"
-	program_jtag -f"${svf}" -d"UsbBlaster" || true
+}
+
+program() {
+	targets="test erase program"
+	_svf="${PWD}/output/flash_${implementation}.svf"
+	rm ${PWD}/output/flash_${implementation}*.svf
+	echo "" > $svf
+	for t in $targets; do
+		svf $t
+		cat "${PWD}/output/flash_${implementation}_${t}.svf" >> $_svf
+	done
+	program_jtag -i"${_svf}" -d"UsbBlaster" -f24000000|| true
 }
 
 synthesize() {
@@ -54,10 +65,11 @@ set_option -fix_gated_and_generated_clocks 1
 set_option -update_models_cp 1
 set_option -resolve_multiple_driver 1
 set_option -include_path {${PWD}}
-` for file in ${sources}; do
+` for file in source/*.v; do
 echo \"add_file -verilog {${PWD}/${file}}\"
 done
 `
+`echo \"add_file -verilog {${PWD}/boards/pc03.v}\"`
 `echo \"add_file -verilog {${PWD}/boards/${implementation}.v}\"`
 set_option -top_module ${implementation}
 project -result_file {${PWD}/build/${implementation}/${project}_${implementation}.edi}
