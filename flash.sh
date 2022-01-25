@@ -33,6 +33,7 @@ program() {
 	rm ${PWD}/output/flash_${implementation}*.svf
 	echo "" > $svf
 	for t in $targets; do
+		rm "${PWD}/output/flash_${implementation}_${t}.svf"
 		svf $t
 		cat "${PWD}/output/flash_${implementation}_${t}.svf" >> $_svf
 	done

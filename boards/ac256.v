@@ -6,7 +6,7 @@
 
 `timescale 1 ns / 1 ps
 
-module ac1 (
+module ac256 (
 	sysclk,
 	jp1,
 	jp2
@@ -15,11 +15,11 @@ module ac1 (
 parameter PLL_FREQUENCY = 400000000;
 parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
-parameter MUX_LINES = 1;
-parameter NUM_LINES = 1;
-parameter DELAY_SIZE = 2048;
+parameter MUX_LINES = 16;
+parameter NUM_LINES = 6;
+parameter DELAY_SIZE = 512;
 parameter LAG_CROSS = 1;
-parameter LAG_AUTO = 200;
+parameter LAG_AUTO = 1;
 parameter RESOLUTION = 24;
 parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 0;
