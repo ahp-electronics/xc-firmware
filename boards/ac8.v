@@ -6,17 +6,17 @@
 
 `timescale 1 ns / 1 ps
 
-module ac1 (
-//	sysclk,
+module ac8 (
+	sysclk,
 	jp1,
 	jp2
 	);
 
 parameter PLL_FREQUENCY = 400000000;
-parameter CLK_FREQUENCY = 10000000;
+parameter CLK_FREQUENCY = 9999400;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
-parameter NUM_LINES = 1;
+parameter NUM_LINES = 8;
 parameter DELAY_SIZE = 2048;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
@@ -30,8 +30,7 @@ parameter WORD_WIDTH = 1;
 parameter USE_UART = 1;
 parameter BINARY = 0;
 
-//input 
-wire sysclk;
+input wire sysclk;
 inout wire[19:0] jp1;
 inout wire[19:0] jp2;
 
@@ -51,21 +50,48 @@ assign jp1[17] = refclk;
 assign jp1[18] = intclk;
 assign jp1[19] = smpclk;
 
-assign jp2[16] = strobe;
-assign jp2[17] = 0;
+assign strobe = jp2[16];
+assign jp2[17] = 1'd0;
 assign jp2[18] = TX;
 assign RX = jp2[19];
 
-wire[NUM_LINES-1:0] line_in;
+wire[NUM_LINES*WORD_WIDTH-1:0] line_in;
 wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 
-assign line_in[0] = jp1[0];
-assign jp1[1] = line_out[0];
-assign jp1[2] = line_out[1];
-assign jp1[3] = line_out[2];
-
-OSCG #(.DIV(82)) intosc(sysclk);
+assign line_in[0] = jp1[15];
+assign line_in[1] = jp1[13];
+assign line_in[2] = jp1[11];
+assign line_in[3] = jp1[9];
+assign jp1[14] = line_out[0];
+assign jp1[12] = line_out[1];
+assign jp1[10] = line_out[2];
+assign jp1[8] = line_out[3];
+assign jp1[6] = line_out[24];
+assign jp1[4] = line_out[25];
+assign jp1[2] = line_out[26];
+assign jp1[0] = line_out[27];
+assign jp1[7] = line_out[16];
+assign jp1[5] = line_out[17];
+assign jp1[3] = line_out[18];
+assign jp1[1] = line_out[19];
+ 
+assign line_in[4] = jp2[15];
+assign line_in[5] = jp2[13];
+assign line_in[6] = jp2[11];
+assign line_in[7] = jp2[9];
+assign jp2[14] = line_out[4];
+assign jp2[12] = line_out[5];
+assign jp2[10] = line_out[6];
+assign jp2[8] = line_out[7];
+assign jp2[6] = line_out[28];
+assign jp2[4] = line_out[29];
+assign jp2[2] = line_out[30];
+assign jp2[0] = line_out[31];
+assign jp2[7] = line_out[20];
+assign jp2[5] = line_out[21];
+assign jp2[3] = line_out[22];
+assign jp2[1] = line_out[23];
 
 main #(
 .PLL_FREQUENCY(PLL_FREQUENCY),
