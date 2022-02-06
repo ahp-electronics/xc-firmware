@@ -107,19 +107,19 @@ main #(
 .BAUD_RATE(BAUD_RATE),
 .USE_UART(USE_UART)
 ) main_block(
-	TX,
-	RX,
-	line_in,
-	line_out,
-	mux_out,
-	sysclk,
-	refclk,
-	extclk,
-	intclk,
-	smpclk,
-	,
-	strobe,
-	1'd1
+       TX,
+       RX,
+       line_in,
+       line_out,
+       mux_out,
+       sysclk,
+       refclk,
+       extclk,
+       intclk,
+       smpclk,
+       ,
+       strobe,
+       1'd1
 );
 
 endmodule

@@ -1,6 +1,8 @@
 #!/bin/bash
 
 environment() {
+	export frequency=$(echo $2 | cut -d '_' -f 4)
+	export targets="$(echo $2 | cut -d '_' -f 3 | tr -s ',' ' ')"
 	export TOOLSDIR=${PWD}/tools/
 	export FOUNDRY=${TOOLSDIR}/ispfpga
 	export TCL_LIBRARY=${TOOLSDIR}/tcltk/lib/tcl8.5
@@ -28,7 +30,6 @@ svf() {
 }
 
 program() {
-	targets="test erase program"
 	_svf="${PWD}/output/flash_${implementation}.svf"
 	rm ${PWD}/output/flash_${implementation}*.svf
 	echo "" > $svf
@@ -37,7 +38,9 @@ program() {
 		svf $t
 		cat "${PWD}/output/flash_${implementation}_${t}.svf" >> $_svf
 	done
-	program_jtag -i"${_svf}" -d"UsbBlaster" -f24000000|| true
+        sed -i "s/\(RUNTEST DRPAUSE\).*$/d" output/*.svf "${_svf}"
+	sed -i "s/\(FREQUENCY\).*$/\1\t$(($frequency/1000000)).00e+06 HZ ;/g" output/*.svf "${_svf}"
+	program_jtag -i"${_svf}" -d"UsbBlaster" -f$frequency|| true
 }
 
 synthesize() {
