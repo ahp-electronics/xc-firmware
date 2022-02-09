@@ -2,7 +2,7 @@
 
 #### This repository contains code of the XC series correlators
 
-![AHP XC8 cross-correlator](https://raw.githubusercontent.com/ahp-electronics/pictures/master/XC8_small.png "XC8")
+![AHP XC8 cross-correlator](https://github.com/ahp-electronics/pictures/blob/master/XC8_small.png "XC8")
 
 
 You'll find board and device specific files into the boards/ folder, device files contain some custom parameters that can characterize the device:
