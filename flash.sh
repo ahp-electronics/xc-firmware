@@ -1,8 +1,19 @@
 #!/bin/bash
 
 environment() {
-	export frequency=$(echo $2 | cut -d '_' -f 4)
-	export targets="$(echo $2 | cut -d '_' -f 3 | tr -s ',' ' ')"
+	export project="fpga_firmware"
+	export target=$1
+	export implementation="$(echo $2 | cut -d '_' -f 1)"
+	export targets="$(echo $2 | cut -d '_' -f 2 | tr -s ',' ' ')"
+	export programming_part="$(echo $2 | cut -d '_' -f 3)"
+	export technology="$(echo $programming_part | cut -d ',' -f 1)"
+	export chip="$(echo $programming_part | cut -d ',' -f 2)"
+	export part="$(echo $chip | cut -d '-' -f 1)"
+	export size="$(echo $chip | cut -d '-' -f 2)"
+	export footprint="$(echo $chip | cut -d '-' -f 3)"
+	export board="$(echo $2 | cut -d '_' -f 4)"
+	export programmer="$(echo $2 | cut -d '_' -f 5)"
+	export frequency="$(echo $2 | cut -d '_' -f 6)"
 	export TOOLSDIR=${PWD}/tools/
 	export FOUNDRY=${TOOLSDIR}/ispfpga
 	export TCL_LIBRARY=${TOOLSDIR}/tcltk/lib/tcl8.5
@@ -10,17 +21,24 @@ environment() {
 	export ISPDIR=${FOUNDRY}/bin/lin64/
 	export LD_LIBRARY_PATH=${TOOLSDIR}/bin/lin64/:${TOOLSDIR}/ispfpga/bin/lin64/
 	export PATH=${PATH}:${TOOLSDIR}/bin/lin64/:${TOOLSDIR}/ispfpga/bin/lin64/
-	export sources="$(grep .v project.ldf | grep Source | cut -d '"' -f 2 | tr -s '\n' ' ')"
-	export includes="${TOOLSDIR}/ispfpga/verilog/data/ecp5u/VHI.v ${TOOLSDIR}/ispfpga/verilog/data/ecp5u/VLO.v"
-	export project=$(grep '<BaliProject' project.ldf | cut -d '"' -f 4)
-	export implementation=$(echo $2 | cut -d '_' -f 1)
-	export target=$(echo $2 | cut -d '_' -f 2)
+	echo "Project: ${project}"
+	echo "Implementation: ${implementation}"
+	echo "Target: ${target}"
+	echo "Programming Targets: ${targets}"
+	echo "Programmer: ${programmer} @${frequency}"
+	echo "Chip: ${technology} ${part}-${size} ${footprint}"
+	echo "Initializing target ${target}..."
+	sleep 5
 }
 
 svf() {
 	svf="${PWD}/output/flash_${implementation}_${1}.svf"
 	tmpfile="/tmp/$$.xcf"
 	echo $project ${implementation} $1
+	sed -e ${part}
+	sed -e "s:PART:${part}:g" "${PWD}/boards/flash_${1}.xcf" | \
+	sed -e "s:SIZE:${size}:g" "${PWD}/boards/flash_${1}.xcf" | \
+	sed -e "s:TECHOLOGY:${technology}:g" "${PWD}/boards/flash_${1}.xcf" | \
 	sed -e "s:IMPLEMENTATION:${implementation}:g" "${PWD}/boards/flash_${1}.xcf" | \
 	sed -e "s:PWD:${PWD}:g" | \
 	sed -e "s:PROJECT:${project}:g" \
@@ -38,16 +56,16 @@ program() {
 		svf $t
 		cat "${PWD}/output/flash_${implementation}_${t}.svf" >> $_svf
 	done
-        sed -i "s/\(RUNTEST DRPAUSE\).*$/d" output/*.svf "${_svf}"
+        sed -i "/\(RUNTEST DRPAUSE\).*$/d" output/*.svf "${_svf}"
 	sed -i "s/\(FREQUENCY\).*$/\1\t$(($frequency/1000000)).00e+06 HZ ;/g" output/*.svf "${_svf}"
-	program_jtag -i"${_svf}" -d"UsbBlaster" -f$frequency|| true
+	program_jtag -i"${_svf}" -d"${programmer}" -f$frequency|| true
 }
 
 synthesize() {
 rm -rf build/${implementation}
 mkdir -p build/${implementation}
-	echo "set_option -technology ECP5U
-set_option -part LFE5U_45F
+	echo "set_option -technology ${technology}
+set_option -part ${part}_${size}
 set_option -package BG256C
 set_option -speed_grade -6
 set_option -symbolic_fsm_compiler true
@@ -73,9 +91,9 @@ set_option -include_path {${PWD}}
 echo \"add_file -verilog {${PWD}/${file}}\"
 done
 `
-`echo \"add_file -verilog {${PWD}/boards/pc03.v}\"`
+`echo \"add_file -verilog {${PWD}/boards/${board}.v}\"`
 `echo \"add_file -verilog {${PWD}/boards/${implementation}.v}\"`
-set_option -top_module ${implementation}
+set_option -top_module top_module
 project -result_file {${PWD}/build/${implementation}/${project}_${implementation}.edi}
 project -log_file {${project}_${implementation}.srf}
 project -run
@@ -87,14 +105,14 @@ project -run
 
 translate() {
 	pushd build/${implementation}
-	edif2ngd  -l ECP5U -d LFE5U-45F -path build/${implementation} -path ./ ${project}_${implementation}.edi ${project}_${implementation}.ngo
-	ngdbuild  -a ECP5U -d LFE5U-45F -p ${TOOLSDIR}/ispfpga/sa5p00/data -p build/impl ${project}_${implementation}.ngo ${project}_${implementation}.ngd
+	edif2ngd  -l ${technology} -d ${part}-${size} -path build/${implementation} -path ./ ${project}_${implementation}.edi ${project}_${implementation}.ngo
+	ngdbuild  -a ${technology} -d ${part}-${size} -p ${TOOLSDIR}/ispfpga/sa5p00/data -p build/impl ${project}_${implementation}.ngo ${project}_${implementation}.ngd
 	popd
 }
 
 mapper() {
 	pushd build/${implementation}
-	map -a ECP5U -p LFE5U-45F -t CABGA256 -s 6 -oc Commercial -ioreg b ${project}_${implementation}.ngd -o ${project}_${implementation}_map.ncd -pr ${project}_${implementation}.prf -mp ${project}_${implementation}.mrp -lpf ${project}_${implementation}_synplify.lpf -lpf ../../boards/pc03.lpf -retime -tdm -split_node -td_pack
+	map -a ${technology} -p ${part}-${size} -t ${footprint} -s 6 -oc Commercial -ioreg b ${project}_${implementation}.ngd -o ${project}_${implementation}_map.ncd -pr ${project}_${implementation}.prf -mp ${project}_${implementation}.mrp -lpf ${project}_${implementation}_synplify.lpf -lpf ../../boards/${board}.lpf -retime -tdm -split_node -td_pack
 	popd
 }
 
@@ -106,7 +124,7 @@ route() {
 
 generate() {
 	pushd build/${implementation}
-	bitgen -w ${project}_${implementation}.ncd -f ${project}_${implementation}.t2b -e -s ${project}.sec -k ${project}.bek ${project}_${implementation}.prf
+	bitgen -w ${project}_${implementation}.ncd ${project}_${implementation}.prf
 	popd
 }
 
@@ -121,4 +139,4 @@ build() {
 environment $@
 rm -rf output/flash_${implementation}_${target}.svf
 mkdir -p output/
-$1
+$target

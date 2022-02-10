@@ -6,7 +6,7 @@
 
 `timescale 1 ns / 1 ps
 
-module ac256 (
+module top_module (
 	sysclk,
 	jp1,
 	jp2

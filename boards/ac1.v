@@ -6,8 +6,8 @@
 
 `timescale 1 ns / 1 ps
 
-module ac1 (
-//	sysclk,
+module top_module (
+	sysclk,
 	jp1,
 	jp2
 	);
@@ -30,8 +30,7 @@ parameter WORD_WIDTH = 1;
 parameter USE_UART = 1;
 parameter BINARY = 0;
 
-//input 
-wire sysclk;
+input wire sysclk;
 inout wire[19:0] jp1;
 inout wire[19:0] jp2;
 
@@ -64,8 +63,6 @@ assign line_in[0] = jp1[0];
 assign jp1[1] = line_out[0];
 assign jp1[2] = line_out[1];
 assign jp1[3] = line_out[2];
-
-OSCG #(.DIV(82)) intosc(sysclk);
 
 main #(
 .PLL_FREQUENCY(PLL_FREQUENCY),

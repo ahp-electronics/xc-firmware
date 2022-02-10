@@ -8,8 +8,8 @@
 			<SelectedProg value="TRUE"/>
 			<Pos>1</Pos>
 			<Vendor>WinBond</Vendor>
-			<Family>ECP5U</Family>
-			<Name>LFE5U-45F</Name>
+			<Family>TECHNOLOGY</Family>
+			<Name>PART-SIZE</Name>
 			<Package>All</Package>
 			<Bypass>
 				<InstrLen>8</InstrLen>
@@ -17,14 +17,10 @@
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
-			<FileTime>03/31/21 12:48:15</FileTime>
-			<JedecChecksum>N/A</JedecChecksum>
-			<Operation>SPI Flash Verify Only</Operation>
+			<FileTime>02/04/22 18:22:49</FileTime>
+			<Operation>SPI Flash Unlock Device</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
-				<SVFProcessor>SVF Processor</SVFProcessor>
-				<Usercode>0x00000000</Usercode>
 				<AccessMode>SPI Flash Background Programming</AccessMode>
 			</Option>
 			<FPGALoader>
@@ -32,25 +28,24 @@
 				<Device>
 					<Pos>1</Pos>
 					<Vendor>Lattice</Vendor>
-					<Family>ECP5U</Family>
-					<Name>LFE5U-45F</Name>
+					<Family>TECHNOLOGY</Family>
+					<Name>PART-SIZE</Name>
 					<IDCode>0x41112043</IDCode>
 					<Package>All</Package>
-					<PON>LFE5U-45F</PON>
+					<PON>PART-SIZE</PON>
 					<Bypass>
 						<InstrLen>8</InstrLen>
 						<InstrVal>11111111</InstrVal>
 						<BScanLen>1</BScanLen>
 						<BScanVal>0</BScanVal>
 					</Bypass>
-					<MaskFile>PWD/tools/data/vmdata/database/xpga/ecp5/LFE5U-45F.msk</MaskFile>
+					<MaskFile>PWD/tools//data/vmdata/database/xpga/ecp5/PART-SIZE.msk</MaskFile>
 					<Operation>Bypass</Operation>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
 						<IOState>HighZ</IOState>
 						<PreloadLength>510</PreloadLength>
 						<IOVectorData>0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</IOVectorData>
-						<SVFProcessor>SVF Processor</SVFProcessor>
 						<AccessMode>JTAG</AccessMode>
 					</Option>
 				</Device>
@@ -62,13 +57,13 @@
 					<Family>SPI Serial Flash</Family>
 					<Name>W25Q128JV</Name>
 					<IDCode>0x17</IDCode>
-					<Package>8-lead SOIC</Package>
-					<Operation>SPI Flash Verify Only</Operation>
-					<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
+					<Package>8-pin SOIC</Package>
+					<Operation>SPI Flash Unlock Device</Operation>
+					<File>/home/plato/dev/github/xc-firmware/output/flash_xc32_program.svf</File>
 					<AddressBase>0x00000000</AddressBase>
-					<EndAddress>0x000F0000</EndAddress>
+					<EndAddress>0x006A0000</EndAddress>
 					<DeviceSize>128</DeviceSize>
-					<DataSize>1032632</DataSize>
+					<DataSize>7010726</DataSize>
 					<NumberOfDevices>1</NumberOfDevices>
 					<ReInitialize value="FALSE"/>
 				</Device>
@@ -77,15 +72,14 @@
 				<Device>
 					<Pos>1</Pos>
 					<Name></Name>
-					<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
+					<File>/home/plato/dev/github/xc-firmware/output/flash_xc32_program.svf</File>
 					<LocalChainList>
 						<LocalDevice index="-99"
 							name="Unknown"
-							file="build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit"/>
+							file="/home/plato/dev/github/xc-firmware/output/flash_xc32_program.svf"/>
 					</LocalChainList>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
-						<SVFProcessor>SVF Processor</SVFProcessor>
 					</Option>
 				</Device>
 			</FPGADevice>
