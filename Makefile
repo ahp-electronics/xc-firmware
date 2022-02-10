@@ -1,11 +1,11 @@
-CHIP=LCMXO3LF
-SIZE=6900C
+CHIP=LFE5U
+SIZE=45F
 FOOTPRINT=CABGA256
-TECH=MachXO3LF
-BOARD=lcmxo3l
+TECH=ECP5U
+BOARD=pc03
 PROG_TARGETS=bypass,erase,program
 PROG_FREQ=1000000
-PROGRAMMER=FT2232
+PROGRAMMER=UsbBlaster
 INCLUDES=-Isources/ -Itools/ispfpga/verilog/data/`echo "$(CHIP)" | tr '[:upper:]' '[:lower:]'`/
 
 %:
