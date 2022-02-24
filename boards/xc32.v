@@ -17,7 +17,7 @@ parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
 parameter NUM_LINES = 32;
-parameter DELAY_SIZE = 64;
+parameter DELAY_SIZE = 96;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
 parameter RESOLUTION = 8;
@@ -43,11 +43,11 @@ wire smpclk;
 wire strobe;
 
 assign extclk = jp1[16];
-assign jp1[17] = refclk;
-assign jp1[18] = intclk;
+assign jp1[17] = intclk;
+assign strobe = jp1[18];
 assign jp1[19] = smpclk;
 
-assign strobe = jp2[16];
+assign jp2[16] = refclk;
 assign jp2[17] = 1'd0;
 assign jp2[18] = TX;
 assign RX = jp2[19];

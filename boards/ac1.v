@@ -46,12 +46,12 @@ wire external_clock;
 wire strobe;
 
 assign extclk = jp1[16];
-assign jp1[17] = refclk;
-assign jp1[18] = intclk;
+assign jp1[17] = intclk;
+assign strobe = jp1[18];
 assign jp1[19] = smpclk;
 
-assign jp2[16] = strobe;
-assign jp2[17] = 0;
+assign jp2[16] = refclk;
+assign jp2[17] = 1'd0;
 assign jp2[18] = TX;
 assign RX = jp2[19];
 

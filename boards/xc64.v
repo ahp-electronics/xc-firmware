@@ -48,8 +48,8 @@ assign jp1[17] = refclk;
 assign jp1[18] = intclk;
 assign jp1[19] = smpclk;
 
-assign enable = jp2[16];
-assign spiclk = jp2[17];
+assign strobe = jp2[16];
+assign enable = jp2[17];
 assign jp2[18] = TX;
 assign RX = jp2[19];
 
@@ -102,7 +102,7 @@ main #(
         extclk,
         intclk,
         smpclk,
-		spiclk,
+        spiclk,
         strobe,
         enable
 );
