@@ -48,11 +48,11 @@ localparam TICK_FREQUENCY = PLL_FREQUENCY/TICK_CYCLES;
 localparam NUM_INPUTS = NUM_LINES*MUX_LINES;
 localparam[39:0] TICK = 40'd1000000000000/TICK_FREQUENCY;
 localparam NUM_BASELINES = NUM_INPUTS*(NUM_INPUTS-1)/2;
-localparam MAX_LAG = LAG_AUTO;
 localparam SPECTRA_SIZE = NUM_INPUTS*LAG_AUTO;
-localparam CORRELATIONS_HEAD_TAIL_SIZE = 1;
-localparam CORRELATIONS_SIZE = (HAS_CROSSCORRELATOR*NUM_BASELINES);
-localparam PAYLOAD_SIZE = (CORRELATIONS_SIZE*2+SPECTRA_SIZE*2+NUM_INPUTS)*RESOLUTION;
+localparam CORRELATIONS_HEAD_TAIL_SIZE = LAG_CROSS*2-1;
+localparam MAX_LAG = (LAG_AUTO > CORRELATIONS_HEAD_TAIL_SIZE) ? LAG_AUTO : CORRELATIONS_HEAD_TAIL_SIZE;
+localparam CORRELATIONS_SIZE = (HAS_CROSSCORRELATOR*NUM_BASELINES*CORRELATIONS_HEAD_TAIL_SIZE);
+localparam PAYLOAD_SIZE = ((CORRELATIONS_SIZE+SPECTRA_SIZE)*2+NUM_INPUTS)*RESOLUTION;
 localparam HEADER_SIZE = 64;
 localparam FOOTER_SIZE = 64;
 localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+FOOTER_SIZE;
@@ -139,6 +139,9 @@ wire extra_commands;
 wire timestamp_reset;
 wire timestamp_overflow;
 
+wire[NUM_LINES-1:0] auto_overflow;
+wire[NUM_LINES-1:0] cross_overflow;
+
 wire spi_done;
 wire RXIF;
 wire[7:0] RXREG;
@@ -175,7 +178,7 @@ COUNTER #(.WORD_WIDTH(64)) timestamp_block(
 	1,
 	1,
 	refclk,
-	timestamp_reset|timestamp_overflow
+	(timestamp_reset&~integrating)|timestamp_overflow
 );
 
 if(USE_UART) begin
@@ -295,20 +298,23 @@ generate
 		assign auto_tmp[a] = auto_tmp_a[a*12+:12];
 		assign cross_len[a] = cross_len_a[a*12+:12];
 		assign auto_len[a] = auto_len_a[a*12+:12];
+		assign auto_overflow[a] = (auto[a] == auto_len[a]+auto_tmp[a]);
+		assign cross_overflow[a] = (cross[a] == cross_len[a]+cross_tmp[a]);
+
 
 		always@(posedge intclk) begin
 			if(test[a][1]) begin
-				if(auto[a] < auto_len[a]+auto_tmp[a])
-					auto[a] <= auto[a]+1;
-				else
+				if(auto_overflow[a])
 					auto[a] <= auto_tmp[a];
-			end else
-				auto[a] <= auto_tmp [a];
-			if(test[a][2]) begin
-				if(cross[a] < cross_len[a]+cross_tmp[a])
-					cross[a] <= cross[a]+1;
 				else
+					auto[a] <= auto[a]+1;
+			end else
+				auto[a] <= auto_tmp[a];
+			if(test[a][2]) begin
+				if(cross_overflow[a])
 					cross[a] <= cross_tmp[a];
+				else
+					cross[a] <= cross[a]+1;
 			end else
 				cross[a] <= cross_tmp [a];
 		end
@@ -345,13 +351,13 @@ generate
 			reset_delayed
 		);
 		for(z=0; z < MAX_LAG*2; z=z+512) begin : jitter_block
-			for(y=z; y < z+512 && y < LAG_AUTO; y=y+1) begin : jitter_inner_block
+			for(y=z; y < z+512 && y < MAX_LAG*2; y=y+1) begin : jitter_inner_block
 				if(y<LAG_AUTO) begin
 					COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_r (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+:RESOLUTION],
 						,
 						delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
-						delay_lines[((auto[a]+y)>>1)][a*WORD_WIDTH+:WORD_WIDTH],
+						delay_lines[auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
 						leds[a][3],
 						~leds[a][4],
 						smpclk,
@@ -360,7 +366,7 @@ generate
 					COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_i (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 						,
-						delay_lines[((auto[a]+y)>>1)][a*WORD_WIDTH+:WORD_WIDTH],
+						~delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
 						delay_lines[auto[a]+y][a*WORD_WIDTH+:WORD_WIDTH],
 						leds[a][3],
 						~leds[a][4],
@@ -368,30 +374,32 @@ generate
 						reset_delayed
 					);
 				end
-			end
-		end
-		if(HAS_CROSSCORRELATOR) begin
-			for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
-				COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) correlators_block_r (
-					pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)-1)*RESOLUTION*2+:RESOLUTION],
-					,
-					delay_lines[cross[a]][a*WORD_WIDTH+:WORD_WIDTH],
-					delay_lines[(cross[b]>>1)][b*WORD_WIDTH+:WORD_WIDTH],
-					leds[a][3]&leds[b][3],
-					~(leds[a][4]&leds[b][4]),
-					smpclk,
-					reset_delayed
-				);
-				COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) correlators_block_i (
-					pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
-					,
-					delay_lines[(cross[a]>>1)][a*WORD_WIDTH+:WORD_WIDTH],
-					delay_lines[cross[b]][b*WORD_WIDTH+:WORD_WIDTH],
-					leds[a][3]&leds[b][3],
-					~(leds[a][4]&leds[b][4]),
-					smpclk,
-					reset_delayed
-				);
+				if(HAS_CROSSCORRELATOR) begin
+					if(y!=LAG_CROSS&&y<CORRELATIONS_HEAD_TAIL_SIZE) begin
+						for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
+							COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) counters_block_r (
+								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>LAG_CROSS?y-1:y)-1)*RESOLUTION*2+:RESOLUTION],
+								,
+								delay_lines[(cross[a]+(y<LAG_CROSS?LAG_CROSS-y-1:0))][a*WORD_WIDTH+:WORD_WIDTH],
+								delay_lines[(cross[b]+(y>LAG_CROSS?y-LAG_CROSS:0))][b*WORD_WIDTH+:WORD_WIDTH],
+								leds[a][3]&leds[b][3],
+								~(leds[a][4]&leds[b][4]),
+								smpclk,
+								reset_delayed
+							);
+							COUNTER #(.RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_i (
+								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>LAG_CROSS?y-1:y)-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
+								,
+								~delay_lines[(cross[a]+(y<LAG_CROSS?LAG_CROSS-y-1:0))][a*WORD_WIDTH+:WORD_WIDTH],
+								delay_lines[(cross[b]+(y>LAG_CROSS?y-LAG_CROSS:0))][b*WORD_WIDTH+:WORD_WIDTH],
+								leds[a][3]&leds[b][3],
+								~(leds[a][4]&leds[b][4]),
+								smpclk,
+								reset_delayed
+							);
+						end
+					end
+				end
 			end
 		end
 	end

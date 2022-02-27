@@ -49,11 +49,11 @@ svf() {
 program() {
 	_svf="${PWD}/output/flash_${implementation}.svf"
 	rm ${PWD}/output/flash_${implementation}*.svf
-	echo "" > $svf
+	echo "" > $_svf
 	for t in $targets; do
-		rm "${PWD}/output/flash_${implementation}_${t}.svf"
+		rm -f "${PWD}/output/flash_${implementation}_${t}.svf"
 		svf $t
-		cat "${PWD}/output/flash_${implementation}_${t}.svf" >> $_svf
+		cat "${PWD}/output/flash_${implementation}_${t}.svf" >> ${_svf}
 	done
 	sed -i "s/\(FREQUENCY\).*$/\1\t$(($frequency/1000000)).00e+06 HZ ;/g" output/*.svf "${_svf}"
 	program_jtag -i"${_svf}" -d"${programmer}" -f$frequency|| true
