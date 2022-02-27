@@ -11,9 +11,13 @@ environment() {
 	export part="$(echo $chip | cut -d '-' -f 1)"
 	export size="$(echo $chip | cut -d '-' -f 2)"
 	export footprint="$(echo $chip | cut -d '-' -f 3)"
-	export board="$(echo $1 | cut -d '_' -f 5)"
-	export programmer="$(echo $1 | cut -d '_' -f 6)"
-	export frequency="$(echo $1 | cut -d '_' -f 7)"
+	export flash="$(echo $1 | cut -d '_' -f 5)"
+	export flash_chip="$(grep $flash flashdb.txt | cut -d ';' -f 2)"
+	export flash_vendor="$(grep $flash flashdb.txt | cut -d ';' -f 1)"
+	export flash_jtagid="$(grep $flash flashdb.txt | cut -d ';' -f 3)"
+	export board="$(echo $1 | cut -d '_' -f 6)"
+	export programmer="$(echo $1 | cut -d '_' -f 7)"
+	export frequency="$(echo $1 | cut -d '_' -f 8)"
 	export TOOLSDIR=${PWD}/tools/
 	export FOUNDRY=${TOOLSDIR}/ispfpga
 	export TCL_LIBRARY=${TOOLSDIR}/tcltk/lib/tcl8.5
@@ -37,6 +41,9 @@ svf() {
 	echo $project ${implementation} $1
 	sed -e "s:PART:${part}:g" "${PWD}/boards/flash_${1}.xcf" | \
 	sed -e "s:SIZE:${size}:g" | \
+	sed -e "s:FLASH:${flash_chip}:g" | \
+	sed -e "s:VENDOR:${flash_vendor}:g" | \
+	sed -e "s:JTAGID:${flash_jtagid}:g" | \
 	sed -e "s:TECHNOLOGY:${technology}:g" | \
 	sed -e "s:IMPLEMENTATION:${implementation}:g" | \
 	sed -e "s:PWD:${PWD}:g" | \

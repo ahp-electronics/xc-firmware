@@ -7,7 +7,7 @@
 		<Device>
 			<SelectedProg value="TRUE"/>
 			<Pos>1</Pos>
-			<Vendor>WinBond</Vendor>
+			<Vendor>VENDOR</Vendor>
 			<Family>TECHNOLOGY</Family>
 			<Name>PART-SIZE</Name>
 			<Package>All</Package>
@@ -55,10 +55,10 @@
 			<FlashDevice>
 				<Device>
 					<Pos>1</Pos>
-					<Vendor>WinBond</Vendor>
+					<Vendor>VENDOR</Vendor>
 					<Family>SPI Serial Flash</Family>
-					<Name>W25Q128JV</Name>
-					<IDCode>0x17</IDCode>
+					<Name>FLASH</Name>
+					<IDCode>JTAGID</IDCode>
 					<Package>8-pin SOIC</Package>
 					<Operation>SPI Flash Erase,Program,Verify</Operation>
 					<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
