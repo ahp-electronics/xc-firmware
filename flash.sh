@@ -50,19 +50,20 @@ svf() {
 	sed -e "s:PROJECT:${project}:g" \
 	> "${tmpfile}"
 	ddtcmd -oft -svfchain -revd -of "${svf}" -if "${tmpfile}"
-	rm "${tmpfile}"
+#	rm "${tmpfile}"
 }
 
 program() {
-	_svf="${PWD}/output/flash_${implementation}.svf"
-	rm ${PWD}/output/flash_${implementation}*.svf
-	echo "" > $_svf
+        mkdir -p "${PWD}/output/${implementation}"
+	_svf="${PWD}/output/${implementation}/flash.svf"
+	rm -f "${_svf}"
+	echo "" > "${_svf}"
 	for t in $targets; do
 		rm -f "${PWD}/output/flash_${implementation}_${t}.svf"
 		svf $t
-		cat "${PWD}/output/flash_${implementation}_${t}.svf" >> ${_svf}
+		cat "${PWD}/output/flash_${implementation}_${t}.svf" >> "${_svf}"
 	done
-	sed -i "s/\(FREQUENCY\).*$/\1\t$(($frequency/1000000)).00e+06 HZ ;/g" output/*.svf "${_svf}"
+	sed -i "s/\(FREQUENCY\).*$/\1\t$(($frequency/1000000)).00e+06 HZ ;/g" "${_svf}"
 	program_jtag -i"${_svf}" -d"${programmer}" -f$frequency|| true
 }
 
@@ -140,6 +141,8 @@ build() {
 	route;
 	generate;
 }
+
+mkdir -p "$HOME/.config/LatticeSemi/"
 
 environment $@
 rm -rf output/flash_${implementation}_${target}.svf
