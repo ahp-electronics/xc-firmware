@@ -37,20 +37,26 @@ environment() {
 
 svf() {
 	svf="${PWD}/output/flash_${implementation}_${1}.svf"
-	tmpfile="/tmp/$$.xcf"
+	tmpfile="/tmp/temp.xcf"
+	binsize=$(wc -c ${PWD}/build/${implementation}/${project}_${implementation}.bit | cut -d ' ' -f 1)
+	endaddr=$(printf '0x%04X0000' $(( ${binsize}/65536 )) )
 	echo $project ${implementation} $1
 	sed -e "s:PART:${part}:g" "${PWD}/boards/flash_${1}.xcf" | \
-	sed -e "s:SIZE:${size}:g" | \
+	sed -e "s:LUTSIZE:${size}:g" | \
 	sed -e "s:FLASH:${flash_chip}:g" | \
 	sed -e "s:VENDOR:${flash_vendor}:g" | \
 	sed -e "s:JTAGID:${flash_jtagid}:g" | \
 	sed -e "s:TECHNOLOGY:${technology}:g" | \
 	sed -e "s:IMPLEMENTATION:${implementation}:g" | \
 	sed -e "s:PWD:${PWD}:g" | \
-	sed -e "s:PROJECT:${project}:g" \
+	sed -e "s:PROJECT:${project}:g" | \
+	sed -e "s:END-ADDR:${endaddr}:g" | \
+	sed -e "s:BINSIZE:${binsize}:g" \
 	> "${tmpfile}"
+	rm -f "${PWD}/output/flash_${implementation}_${t}.svf"
+	cp "${tmpfile}" "${PWD}/output/flash_${implementation}_${t}.xcf"
 	ddtcmd -oft -svfchain -revd -of "${svf}" -if "${tmpfile}"
-#	rm "${tmpfile}"
+	rm "${tmpfile}"
 }
 
 program() {
@@ -59,7 +65,6 @@ program() {
 	rm -f "${_svf}"
 	echo "" > "${_svf}"
 	for t in $targets; do
-		rm -f "${PWD}/output/flash_${implementation}_${t}.svf"
 		svf $t
 		cat "${PWD}/output/flash_${implementation}_${t}.svf" >> "${_svf}"
 	done

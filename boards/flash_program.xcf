@@ -9,7 +9,7 @@
 			<Pos>1</Pos>
 			<Vendor>VENDOR</Vendor>
 			<Family>TECHNOLOGY</Family>
-			<Name>PART-SIZE</Name>
+			<Name>PART-LUTSIZE</Name>
 			<Package>All</Package>
 			<Bypass>
 				<InstrLen>8</InstrLen>
@@ -31,17 +31,17 @@
 					<Pos>1</Pos>
 					<Vendor>Lattice</Vendor>
 					<Family>TECHNOLOGY</Family>
-					<Name>PART-SIZE</Name>
+					<Name>PART-LUTSIZE</Name>
 					<IDCode>0x41112043</IDCode>
 					<Package>All</Package>
-					<PON>PART-SIZE</PON>
+					<PON>PART-LUTSIZE</PON>
 					<Bypass>
 						<InstrLen>8</InstrLen>
 						<InstrVal>11111111</InstrVal>
 						<BScanLen>1</BScanLen>
 						<BScanVal>0</BScanVal>
 					</Bypass>
-					<MaskFile>PWD/tools/data/vmdata/database/xpga/ecp5/PART-SIZE.msk</MaskFile>
+					<MaskFile>PWD/tools/data/vmdata/database/xpga/ecp5/PART-LUTSIZE.msk</MaskFile>
 					<Operation>Bypass</Operation>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -63,9 +63,9 @@
 					<Operation>SPI Flash Erase,Program,Verify</Operation>
 					<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
 					<AddressBase>0x00000000</AddressBase>
-					<EndAddress>0x00FF0000</EndAddress>
+					<EndAddress>END-ADDR</EndAddress>
 					<DeviceSize>128</DeviceSize>
-					<DataSize>1032632</DataSize>
+					<DataSize>BINSIZE</DataSize>
 					<NumberOfDevices>1</NumberOfDevices>
 					<ReInitialize value="FALSE"/>
 				</Device>

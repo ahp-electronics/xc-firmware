@@ -9,10 +9,10 @@
 			<Pos>1</Pos>
 			<Vendor>Lattice</Vendor>
 			<Family>TECHNOLOGY</Family>
-			<Name>PART-SIZE</Name>
+			<Name>PART-LUTSIZE</Name>
 			<IDCode>0x41112043</IDCode>
 			<Package>All</Package>
-			<PON>PART-SIZE</PON>
+			<PON>PART-LUTSIZE</PON>
 			<Bypass>
 				<InstrLen>8</InstrLen>
 				<InstrVal>11111111</InstrVal>
