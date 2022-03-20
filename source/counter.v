@@ -9,8 +9,8 @@
 module COUNTER (
 		counter_out,
 		overflow,
-		signal,
-		nsignal,
+		in_p,
+		in_n,
 		cumulative,
 		multiply,
 		clk,
@@ -24,12 +24,18 @@ module COUNTER (
 	input wire signed [WORD_WIDTH:0] signal;
 	input wire signed [WORD_WIDTH:0] nsignal;
 	input wire reset;
+	input wire [WORD_WIDTH-1:0] in_p;
+	input wire [WORD_WIDTH-1:0] in_n;
 	input wire clk;
 	input wire cumulative;
 	input wire multiply;
 	assign overflow = (counter_out == ((1<<(RESOLUTION-1))|1) || counter_out == ~(1<<(RESOLUTION-1)));
+	wire signed [WORD_WIDTH:0] signal;
+	wire signed [WORD_WIDTH:0] nsignal;
 	reg signed [WORD_WIDTH:0] tmp_signal;
 	reg signed [WORD_WIDTH:0] tmp_nsignal;
+	assign signal = { 0, in_p };
+	assign nsignal = { 0, in_n };
 	
 	always @(posedge clk) begin
 		if(~reset) begin

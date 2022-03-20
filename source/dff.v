@@ -8,22 +8,29 @@
 
 module dff (
 	clk,
+	refclk,
 	d,
 	q
 );
 parameter WORD_WIDTH=1;
 input wire clk;
+input wire refclk;
+reg _refclk;
 input wire[WORD_WIDTH-1:0] d;
 output reg[WORD_WIDTH-1:0] q;
 
 always @ ( posedge clk)
 	begin
-		q <= d;
+		if(refclk != _refclk) begin
+			_refclk <= refclk;
+			q <= d;
+		end
 	end
 endmodule
 
 module fifo (
 	clk,
+	refclk,
 	d,
 	q
 	);
@@ -31,6 +38,7 @@ module fifo (
 	parameter WORD_WIDTH=1;
 	
 	input wire clk;
+	input wire refclk;
 	input wire[WORD_WIDTH-1:0] d;
 	output wire[DELAY_SIZE*WORD_WIDTH-1:0] q;
 	 
@@ -40,7 +48,7 @@ module fifo (
 		genvar b;
 		for(a=1; a<DELAY_SIZE; a=a+512) begin : delay_iteration_block
 			for(b=a; b < a+512 && b < DELAY_SIZE; b=b+1) begin : delay_iteration_inner_block
-				dff #(.WORD_WIDTH(WORD_WIDTH)) delay(clk, q[(b-1)*WORD_WIDTH+:WORD_WIDTH], q[b*WORD_WIDTH+:WORD_WIDTH]);
+				dff #(.WORD_WIDTH(WORD_WIDTH)) delay(clk, refclk, q[(b-1)*WORD_WIDTH+:WORD_WIDTH], q[b*WORD_WIDTH+:WORD_WIDTH]);
 			end
 		end
 	endgenerate

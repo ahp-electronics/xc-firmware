@@ -14,8 +14,11 @@ module CMD_PARSER(
 	cross_len,
 	auto_idx,
 	auto_len,
+	cross_div,
+	cross_div_len,
+	auto_div,
+	auto_div_len,
 	leds,
-	clock_divider,
 	baud_rate,
 	current_line,
 	integrating,
@@ -45,11 +48,17 @@ input wire [7:0] cmd;
 output reg[8*NUM_INPUTS-1:0] voltage_pwm = 0;
 output reg[8*NUM_INPUTS-1:0] test = 0;
 output reg[8*NUM_INPUTS-1:0] leds = 0;
-output reg[12*NUM_INPUTS-1:0] cross_idx = 0;
-output reg[12*NUM_INPUTS-1:0] auto_idx = 0;
-output reg[12*NUM_INPUTS-1:0] cross_len = 0;
-output reg[12*NUM_INPUTS-1:0] auto_len = 0;
-output reg[3:0] clock_divider = 0;
+
+output reg[16*NUM_INPUTS-1:0] cross_idx = 0;
+output reg[16*NUM_INPUTS-1:0] auto_idx = 0;
+output reg[16*NUM_INPUTS-1:0] cross_len = 0;
+output reg[16*NUM_INPUTS-1:0] auto_len = 0;
+
+output reg[4*NUM_INPUTS-1:0] cross_div = 0;
+output reg[4*NUM_INPUTS-1:0] auto_div = 0;
+output reg[4*NUM_INPUTS-1:0] cross_div_len = 0;
+output reg[4*NUM_INPUTS-1:0] auto_div_len = 0;
+
 output reg[3:0] baud_rate = 0;
 output reg[7:0] current_line = 0;
 output reg integrating = 0;
@@ -74,17 +83,27 @@ always@(posedge clk) begin
 	end else if ((cmd[3:0]&4'b1100) == SET_DELAY) begin
 		if(extra_commands) begin
 			if (cmd[7])
-				auto_len [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				auto_len [current_line*16+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			else
-				cross_len [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				cross_len [current_line*16+(cmd[1:0]*3)+:3] <= cmd[6:4];
 		end else begin
 			if (cmd[7])
-				auto_idx [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				auto_idx [current_line*16+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			else
-				cross_idx [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				cross_idx [current_line*16+(cmd[1:0]*3)+:3] <= cmd[6:4];
 		end
 	end else if (cmd[3:0] == SET_FREQ_DIV) begin
-		clock_divider <= cmd[7:4];
+		if(extra_commands) begin
+			if (cmd[7])
+				auto_div_len [current_line*4+(cmd[6]*2)+:2] <= cmd[5:4];
+			else
+				cross_div_len [current_line*4+(cmd[6]*2)+:2] <= cmd[5:4];
+		end else begin
+			if (cmd[7])
+				auto_div [current_line*4+(cmd[6]*2)+:2] <= cmd[5:4];
+			else
+				cross_div [current_line*4+(cmd[6]*2)+:2] <= cmd[5:4];
+		end
 	end else if (cmd[3:0] == ENABLE_TEST) begin
 		test[current_line*8+4*extra_commands+:4] <= cmd[7:4];
 	end else if (cmd[3:0] == SET_VOLTAGE) begin
