@@ -47,14 +47,24 @@ The count of pulses and correlation comes with an ASCII packet string ended with
 
 Each packet starts with a header with payload length indication, it is possible to change some parameters from the code
 
+**header**
+
 + bytes 0-1: hexadecimal sample size value
 + bytes 2-3: hexadecimal inputs quantity
 + bytes 4-6: hexadecimal delay channels quantity
 + bytes 7-10: hexadecimal live delay channels quantity
 + bytes 11: hexadecimal flags [bits: 0=live autocorrelator, 1=live crosscorrelator, 2=leds available, 3=cross-correlator]
 + bytes 12-15: hexadecimal value of the clock tau in picoseconds
+
+**payload**
+
 + bytes +lines#: pulses count of each line within the integration time
 + bytes +lines#: autocorrelations count of each line by the selected autocorrelation line delayed by crosscorrelation lag zero
 + bytes +baselines#: crosscorrelations count of pulses of each line with others by the selected delay amount
++ bytes +16: 8-byte timestamp of current packet 
+
+**checksum**
+
++ bytes +1: 1-byte CRC of packet payload
 
 The packet rate is determined by the baud rate and the packet size, the sampling rate is determined by the clock tau multiplied by the number of mux lines, divided by the clock tau multiplier plus one power of two.
