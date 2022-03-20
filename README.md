@@ -28,6 +28,8 @@ parameter USE_UART = 1;			//Use UART or SPI communication?
 
 The generated SVF file can be downloaded to the device using urJTAG http://urjtag.org/
 
+The cross-platform driver library: https://github.com/ahp-electronics/libahp-xc
+
 To use the correlator try the GUI: https://github.com/ahp-electronics/xc-gui
 
 The project runs at 10MHz and uses 57600 baud/second UART communication with the host initially
