@@ -4,8 +4,8 @@ FOOTPRINT=CABGA256
 TECH=ECP5U
 FLASH=W25Q128FV
 BOARD=pc03
-PROG_TARGETS=test,erase,program
-PROG_FREQ=24000000
+PROG_TARGETS=bypass,erase,program
+PROG_FREQ=1000000
 PROGRAMMER=UsbBlaster
 INCLUDES=-Isources/ -Itools/ispfpga/verilog/data/`echo "$(CHIP)" | tr '[:upper:]' '[:lower:]'`/
 
