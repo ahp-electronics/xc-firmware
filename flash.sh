@@ -36,10 +36,10 @@ environment() {
 }
 
 svf() {
-	svf="${PWD}/output/flash_${implementation}_${1}.svf"
-	tmpfile="/tmp/temp.xcf"
-	binsize=$(wc -c ${PWD}/build/${implementation}/${project}_${implementation}.bit | cut -d ' ' -f 1)
-	endaddr=$(printf '0x%04X0000' $(( ${binsize}/65536 )) )
+	svf="${PWD}/output/${implementation}/${1}.svf"
+	tmpfile="${PWD}/output/${implementation}/${1}.xcf"
+	binsize=$(( $(wc -c ${PWD}/build/${implementation}/${project}_${implementation}.bit | cut -d ' ' -f 1) - 1 ))
+	endaddr=$(printf '0x%05X000' $(( ${binsize}/32768 )) )
 	echo $project ${implementation} $1
 	sed -e "s:PART:${part}:g" "${PWD}/boards/flash_${1}.xcf" | \
 	sed -e "s:LUTSIZE:${size}:g" | \
@@ -53,10 +53,8 @@ svf() {
 	sed -e "s:END-ADDR:${endaddr}:g" | \
 	sed -e "s:BINSIZE:${binsize}:g" \
 	> "${tmpfile}"
-	rm -f "${PWD}/output/flash_${implementation}_${t}.svf"
-	cp "${tmpfile}" "${PWD}/output/flash_${implementation}_${t}.xcf"
+	rm -f "${svf}"
 	ddtcmd -oft -svfchain -revd -of "${svf}" -if "${tmpfile}"
-	rm "${tmpfile}"
 }
 
 program() {
@@ -66,15 +64,21 @@ program() {
 	echo "" > "${_svf}"
 	for t in $targets; do
 		svf $t
-		cat "${PWD}/output/flash_${implementation}_${t}.svf" >> "${_svf}"
+		cat "${PWD}/output/${implementation}/${t}.svf" >> "${_svf}"
 	done
+	sed -i "s/SDR 16 TDI(00A0)//g" "${_svf}"
+        sed -i "s/		TDO(00FF)//g" "${_svf}"
+        sed -i "s/		MASK(C100) ;//g" "${_svf}"
 	sed -i "s/\(FREQUENCY\).*$/\1\t$(($frequency/1000000)).00e+06 HZ ;/g" "${_svf}"
-	program_jtag -i"${_svf}" -d"${programmer}" -f$frequency|| true
+	program_jtag -i"${_svf}" -d"${programmer}" -f${frequency}|| true
 }
 
 synthesize() {
 rm -rf build/${implementation}
 mkdir -p build/${implementation}
+if [ -e ${PWD}/output/${implementation}.v ]; then
+ cp ${PWD}/boards/${implementation}.v ${PWD}/output/
+fi
 	echo "set_option -technology ${technology}
 set_option -part ${part}_${size}
 set_option -package BG256C
@@ -102,8 +106,8 @@ set_option -include_path {${PWD}}
 echo \"add_file -verilog {${PWD}/${file}}\"
 done
 `
+`echo \"add_file -verilog {${PWD}/output/${implementation}.v}\"`
 `echo \"add_file -verilog {${PWD}/boards/${board}.v}\"`
-`echo \"add_file -verilog {${PWD}/boards/${implementation}.v}\"`
 set_option -top_module top_module
 project -result_file {${PWD}/build/${implementation}/${project}_${implementation}.edi}
 project -log_file {${project}_${implementation}.srf}
@@ -139,6 +143,55 @@ generate() {
 	popd
 }
 
+prepare() {
+	echo "enter muliplexer lines #:"
+        read MUX_LINES
+	echo "enter lines per mux #:"
+        read NUM_LINES
+	echo "enter channels #:"
+        read DELAY_SIZE
+	echo "enter single-shot baseline channels #:"
+        read LAG_CROSS
+	echo "enter single-shot line channels #:"
+        read LAG_AUTO
+	echo "enter packet bits per sample:"
+        read RESOLUTION
+	echo "has led lines on each channel?"
+        read HAS_LEDS
+	echo "has crosscorrelator?"
+        read HAS_CROSSCORRELATOR
+	echo "has psu on each line?"
+        read HAS_PSU
+	echo "is missing edge-detection?"
+        read HAS_CUMULATIVE_ONLY
+	echo "enter word width of each channel"
+        read WORD_WIDTH
+	echo "use uart? enter 0 if SPI is prefered"
+        read USE_UART
+
+        source="${PWD}/boards/template.v"
+        tmpfile="${PWD}/output/${implementation}.v"
+
+	est_size=$(( ((((${NUM_LINES}*(${NUM_LINES}-1)*${LAG_CROSS}*${HAS_CROSSCORRELATOR}/2+${NUM_LINES}*${LAG_AUTO})*2+${NUM_LINES})^${RESOLUTION}/4+32+${DELAY_SIZE}*${NUM_LINES})/200) ))
+	echo "design size: ${est_size}"
+	sleep 5;
+	if (( ${est_size} > 40 )); then echo "design too large, aborting"; sleep 5; exit; fi
+
+        sed -e "s:_MUX_LINES:${MUX_LINES}:g" ${source} | \
+        sed -e "s:_NUM_LINES:${NUM_LINES}:g" | \
+        sed -e "s:_DELAY_SIZE:${DELAY_SIZE}:g" | \
+        sed -e "s:_LAG_CROSS:${LAG_CROSS}:g" | \
+        sed -e "s:_LAG_AUTO:${LAG_AUTO}:g" | \
+        sed -e "s:_RESOLUTION:${RESOLUTION}:g" | \
+        sed -e "s:_HAS_LEDS:${HAS_LEDS}:g" | \
+        sed -e "s:_HAS_CROSSCORRELATOR:${HAS_CROSSCORRELATOR}:g" | \
+        sed -e "s:_HAS_PSU:${HAS_PSU}:g" | \
+        sed -e "s:_HAS_CUMULATIVE_ONLY:${HAS_CUMULATIVE_ONLY}:g" | \
+        sed -e "s:_WORD_WIDTH:${WORD_WIDTH}:g" | \
+        sed -e "s:_USE_UART:${USE_UART}:g" \
+         > ${tmpfile}
+}
+
 build() {
 	synthesize;
 	translate;
@@ -150,6 +203,8 @@ build() {
 mkdir -p "$HOME/.config/LatticeSemi/"
 
 environment $@
-rm -rf output/flash_${implementation}_${target}.svf
+[ -e ${PWD}/boards/${implementation}.v ] && cp -f ${PWD}/boards/${implementation}.v ] ${PWD}/output/
+[ -e ${PWD}/output/${implementation}.v ] || prepare
+rm -rf output/flash.svf
 mkdir -p output/
 $target

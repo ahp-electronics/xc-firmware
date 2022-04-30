@@ -41,7 +41,7 @@ Here below is defined the communication protocol:
     0x02: activate leds or power lines using bits [5:4], invert pulse reading with bit 6, single clock cycle pulse width with bit 7
     0x03: baudrate 57600 left-shifted by bits [7:4]
     0x04: bits [1:0] => indexer, bits [6:4] => delay value. If bit 7 is 0, then start delay for cross-correlations is set, if bit 4 is 1, then start delay for autocorrelations is set, if extra commands these values define the size of the correlation scan).
-    0x08: sampling clock tau = clock tau left-shifted by bits [7:4]
+    0x08: sampling clock tau = bits [7:4] are the clock tau power of two exponent
     0x09: power voltage = bits [7:4]
     0x0c: Set tests: bit 5 => enable pll oscillator signal on led 0, bit 5 => enable autocorrelation scan, bit 6 => enable crosscorrelation scan, bit 7 => BCM encoder on led 0 (pulse XOR by sampling clock) (if extra commands bits [5:4] are routed to 4 extra tests flags)
 
@@ -69,5 +69,5 @@ checksum
 
     bytes +1: 1-byte CRC of packet payload
 
-The packet rate is determined by the baud rate and the packet size, the sampling rate is determined by the clock tau multiplied by the number of mux lines, divided by the clock tau multiplier plus one power of two.
+The packet time is determined by the baud rate and the packet size, the sampling rate is determined by the clock tau multiplied by the number of mux lines, raised by the clock tau power of two exponent.
 
