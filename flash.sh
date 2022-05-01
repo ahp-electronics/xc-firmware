@@ -203,7 +203,7 @@ build() {
 mkdir -p "$HOME/.config/LatticeSemi/"
 
 environment $@
-[ -e ${PWD}/boards/${implementation}.v ] && cp -f ${PWD}/boards/${implementation}.v ] ${PWD}/output/
+[ -e ${PWD}/boards/${implementation}.v ] && cp -f ${PWD}/boards/${implementation}.v ${PWD}/output/
 [ -e ${PWD}/output/${implementation}.v ] || prepare
 rm -rf output/flash.svf
 mkdir -p output/

@@ -14,6 +14,7 @@ module COUNTER (
 		cumulative,
 		multiply,
 		clk,
+		refclk,
 		reset
 	);
 	parameter RESOLUTION=64;
@@ -27,6 +28,7 @@ module COUNTER (
 	input wire [WORD_WIDTH-1:0] in_p;
 	input wire [WORD_WIDTH-1:0] in_n;
 	input wire clk;
+	input wire refclk;
 	input wire cumulative;
 	input wire multiply;
 	assign overflow = (counter_out == ((1<<(RESOLUTION-1))|1) || counter_out == ~(1<<(RESOLUTION-1)));
@@ -36,21 +38,24 @@ module COUNTER (
 	reg signed [WORD_WIDTH:0] tmp_nsignal;
 	assign signal = { 0, in_p };
 	assign nsignal = { 0, in_n };
-	
+	reg _refclk;
+
 	always @(posedge clk) begin
-		if(~reset) begin
-			if(!overflow) begin
-				if((cumulative | HAS_CUMULATIVE_ONLY) || (signal != tmp_signal) || (nsignal != tmp_nsignal)) begin
-					tmp_signal <= signal;
-					tmp_nsignal <= nsignal;
-					if(multiply)
-						counter_out <= counter_out + signal * nsignal;
-					else
-						counter_out <= counter_out + signal - nsignal;
+		if(refclk != _refclk) begin
+			if(~reset) begin
+				if(!overflow) begin
+					if((cumulative | HAS_CUMULATIVE_ONLY) || (signal != tmp_signal) || (nsignal != tmp_nsignal)) begin
+						tmp_signal <= signal;
+						tmp_nsignal <= nsignal;
+						if(multiply)
+							counter_out <= counter_out + signal * nsignal;
+						else
+							counter_out <= counter_out + signal - nsignal;
+					end
 				end
-			end
-		end else
-			counter_out <= 0;
+			end else
+				counter_out <= 0;
+		end
 	end
 		
 endmodule
