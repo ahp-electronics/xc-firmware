@@ -31,8 +31,6 @@ environment() {
 	echo "Programming Targets: ${targets}"
 	echo "Programmer: ${programmer} @${frequency}"
 	echo "Chip: ${technology} ${part}-${size} ${footprint}"
-	echo "Initializing target ${target}..."
-	sleep 5
 }
 
 svf() {
@@ -203,8 +201,11 @@ build() {
 mkdir -p "$HOME/.config/LatticeSemi/"
 
 environment $@
-[ -e ${PWD}/boards/${implementation}.v ] && cp -f ${PWD}/boards/${implementation}.v ${PWD}/output/
-[ -e ${PWD}/output/${implementation}.v ] || prepare
-rm -rf output/flash.svf
-mkdir -p output/
+echo "Initializing target ${target}..."
+if sleep 5; then
+	[ -e ${PWD}/boards/${implementation}.v ] && cp -f ${PWD}/boards/${implementation}.v ${PWD}/output/
+	[ -e ${PWD}/output/${implementation}.v ] || prepare
+	rm -rf output/flash.svf
+	mkdir -p output/
 $target
+fi

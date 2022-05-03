@@ -17,7 +17,7 @@ parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 10;
 parameter NUM_LINES = 4;
-parameter DELAY_SIZE = 1;
+parameter DELAY_SIZE = 0;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
 parameter RESOLUTION = 16;
@@ -28,6 +28,7 @@ parameter HAS_CUMULATIVE_ONLY = 1;
 parameter BAUD_RATE = 500000;
 parameter WORD_WIDTH = 1;
 parameter USE_UART = 0;
+parameter USE_SOFT_CLOCK = 0;
 
 input wire sysclk;
 inout wire[19:0] jp1;
@@ -90,6 +91,7 @@ main #(
 .LAG_AUTO(LAG_AUTO),
 .WORD_WIDTH(WORD_WIDTH),
 .BAUD_RATE(BAUD_RATE),
+.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
 .USE_UART(USE_UART)
 ) main_block(
         TX,

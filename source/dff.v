@@ -11,19 +11,24 @@ module dff (
 	refclk,
 	d,
 	q
-);
-parameter WORD_WIDTH=1;
-input wire clk;
-input wire refclk;
-reg _refclk;
-input wire[WORD_WIDTH-1:0] d;
-output reg[WORD_WIDTH-1:0] q;
+	);
+	parameter WORD_WIDTH=1;
+	parameter USE_SOFT_CLOCK=0;
+	input wire clk;
+	input wire refclk;
+	reg _refclk;
+	input wire[WORD_WIDTH-1:0] d;
+	output reg[WORD_WIDTH-1:0] q;
 
-always @ ( posedge clk)
-	begin
-		if(refclk != _refclk) begin
+	wire clock;
+	assign clock = (USE_SOFT_CLOCK ? clk : refclk);
+
+	always @ ( posedge clock) begin
+		if(refclk != _refclk || !USE_SOFT_CLOCK) begin
 			_refclk <= refclk;
-			q <= d;
+			if(refclk || !USE_SOFT_CLOCK) begin
+				q <= d;
+			end
 		end
 	end
 endmodule
@@ -36,6 +41,7 @@ module fifo (
 	);
 	parameter DELAY_SIZE = 1;
 	parameter WORD_WIDTH=1;
+	parameter USE_SOFT_CLOCK=0;
 	
 	input wire clk;
 	input wire refclk;
@@ -48,7 +54,7 @@ module fifo (
 		genvar b;
 		for(a=1; a<DELAY_SIZE; a=a+512) begin : delay_iteration_block
 			for(b=a; b < a+512 && b < DELAY_SIZE; b=b+1) begin : delay_iteration_inner_block
-				dff #(.WORD_WIDTH(WORD_WIDTH)) delay(clk, refclk, q[(b-1)*WORD_WIDTH+:WORD_WIDTH], q[b*WORD_WIDTH+:WORD_WIDTH]);
+				dff #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH)) delay(clk, refclk, q[(b-1)*WORD_WIDTH+:WORD_WIDTH], q[b*WORD_WIDTH+:WORD_WIDTH]);
 			end
 		end
 	endgenerate
