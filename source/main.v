@@ -115,8 +115,8 @@ wire[NUM_INPUTS*WORD_WIDTH-1:0] cross_delay_lines [0:LAG_SIZE_CROSS];
 
 reg[19:0] cross [0:NUM_INPUTS];
 reg[19:0] auto [0:NUM_INPUTS];
-reg[16:0] cross_idx [0:NUM_INPUTS];
-reg[16:0] auto_idx [0:NUM_INPUTS];
+reg[11:0] cross_increment [0:NUM_INPUTS];
+reg[11:0] auto_increment [0:NUM_INPUTS];
 
 reg[NUM_INPUTS-1:0] signal_in;
 
@@ -145,6 +145,8 @@ wire[20*NUM_INPUTS-1:0] cross_tmp_a;
 wire[20*NUM_INPUTS-1:0] auto_tmp_a;
 wire[20*NUM_INPUTS-1:0] cross_len_a;
 wire[20*NUM_INPUTS-1:0] auto_len_a;
+wire[12*NUM_INPUTS-1:0] cross_increment_a;
+wire[12*NUM_INPUTS-1:0] auto_increment_a;
 wire[63:0] timestamp;
 wire extra_commands;
 wire timestamp_reset;
@@ -161,8 +163,7 @@ assign in_capture = enable_tx | integrating;
 assign intclk = tx_done;
 
 pll pll_block (refclk, pllclk);
-dff #(.USE_SOFT_CLOCK(0)) reset_delay(pllclk, refclk, intclk, reset_delayed);
-reg[7:0] CK;
+dff #(.USE_SOFT_CLOCK(0)) reset_delay(pllclk, TXIF, intclk, reset_delayed);
 
 indicators #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(NUM_INPUTS*1000), .CHANNELS(NUM_INPUTS), .RESOLUTION(8)) indicators_block(
 	pwm_out,
@@ -234,8 +235,10 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 	test_a,
 	cross_tmp_a,
 	cross_len_a,
+	cross_increment_a,
 	auto_tmp_a,
 	auto_len_a,
+	auto_increment_a,
 	leds_a,
 	baud_rate,
 	current_line,
@@ -298,25 +301,25 @@ generate
 		assign auto_tmp[a] = auto_tmp_a[a*20+:20];
 		assign cross_len[a] = cross_len_a[a*20+:20];
 		assign auto_len[a] = auto_len_a[a*20+:20];
+		assign cross_increment[a] = cross_increment_a[a*12+:12];
+		assign auto_increment[a] = auto_increment_a[a*12+:12];
 
 		always@(posedge intclk) begin
 			if (!QUADRANT_OR_SINGLE) begin
 				if(test[a][1]&&(auto[a][0+:12] != (auto_tmp[a][0+:12]+auto_len[a][0+:12]) && auto[a][12+:4] != (auto_tmp[a][12+:4]+auto_len[a][12+:4]))) begin
-					if(auto[a] == DELAY_SIZE-1) begin
-						auto[a][0+:12] <= DELAY_SIZE>>1;
-						auto[a][12+:4] <= auto[a][12+:4]+1;
+					if(auto[a][0+:12] >= DELAY_SIZE) begin
+						auto[a][0+:12] <= auto[a][0+:12]-(DELAY_SIZE>>1);
+						auto[a][12+:4] <= auto[a][12+:4];
 					end else begin
-						auto_idx[a] <= auto_idx[a]+1;
-						auto[a][0+:12] <= auto[a][0+:12]+1;
+						auto[a][0+:12] <= auto[a][0+:12]+auto_increment[a];
 					end
 				end else begin
-					auto_idx[a] <= 0;
 					auto[a][12+:4] <= auto_tmp[a][12+:4];
 					auto[a][0+:12] <= auto_tmp[a][0+:12];
 				end
 			end else begin
 				if(test[a][1]&&(auto[a] != (cross_len[a]+cross_tmp[a]))) begin
-					auto[a] <= auto[a]+1;
+					auto[a] <= auto[a]+auto_increment[a];
 				end else begin
 					auto[a] <= auto_tmp[a];
 				end
@@ -324,21 +327,19 @@ generate
 
 			if (!QUADRANT_OR_SINGLE) begin
 				if(test[a][2]&&(cross[a][0+:12] != (cross_tmp[a][0+:12]+cross_len[a][0+:12]) && cross[a][12+:4] != (cross_tmp[a][12+:4]+cross_len[a][12+:4]))) begin
-					if(cross[a] == DELAY_SIZE-1) begin
-						cross[a][0+:12] <= DELAY_SIZE>>1;
-						cross[a][12+:4] <= cross[a][12+:4]+1;
+					if(cross[a][0+:12] >= DELAY_SIZE) begin
+						cross[a][0+:12] <= cross[a][0+:12]-(DELAY_SIZE>>1);
+						cross[a][12+:4] <= cross[a][12+:4]+cross_increment[a];
 					end else begin
-						cross_idx[a] <= cross_idx[a]+1;
-						cross[a][0+:12] <= cross[a][0+:12]+1;
+						cross[a][0+:12] <= cross[a][0+:12]+cross_increment[a];
 					end
 				end else begin
-					cross_idx[a] <= 0;
 					cross[a][12+:4] <= cross_tmp[a][12+:4];
 					cross[a][0+:12] <= cross_tmp[a][0+:12];
 				end
 			end else begin
 				if(test[a][2]&&(cross[a] != (cross_len[a]+cross_tmp[a]))) begin
-					cross[a] <= cross[a]+1;
+					cross[a] <= cross[a]+cross_increment[a];
 				end else begin
 					cross[a] <= cross_tmp[a];
 				end
@@ -369,8 +370,8 @@ generate
 			assign lineout[NUM_INPUTS*3+a] = HAS_PSU ? voltage[a] : leds[a][1];
 		end
 
-		fifo #(.USE_SOFT_CLOCK(1), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_AUTO)) auto_delay_line(pllclk, auto_smpclk[a], adc_data[a], auto_delays[a]);
-		fifo #(.USE_SOFT_CLOCK(1), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_CROSS)) cross_delay_line(pllclk, cross_smpclk[a], adc_data[a], cross_delays[a]);
+		fifo #(.USE_SOFT_CLOCK(0), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_AUTO)) auto_delay_line(pllclk, auto_smpclk[a], adc_data[a], auto_delays[a]);
+		fifo #(.USE_SOFT_CLOCK(0), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_CROSS)) cross_delay_line(pllclk, cross_smpclk[a], adc_data[a], cross_delays[a]);
 
 		CLK_GEN auto_sampling_clock_block(
 			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES << auto[a][12+:4] : TICK_CYCLES*auto[a],
@@ -388,21 +389,21 @@ generate
 			enable
 		);
 
-		COUNTER #(.USE_SOFT_CLOCK(1), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) counters_block (
+		COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) counters_block (
 			pulses[(CORRELATIONS_SIZE*2+NUM_INPUTS*LAG_AUTO*2+NUM_INPUTS-1-a)*RESOLUTION+:RESOLUTION],
 			overflow[a],
-			auto_delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH]*(auto[a]+1),
+			auto_delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
 			0,
 			leds[a][3],
 			0,
 			pllclk,
-			auto_smpclk[a],
+			pllclk,
 			reset_delayed
 		);
 		for(z=0; z < MAX_LAG*2; z=z+512) begin : jitter_block
 			for(y=z; y < z+512 && y < MAX_LAG*2; y=y+1) begin : jitter_inner_block
 				if(y<LAG_AUTO) begin
-					COUNTER #(.USE_SOFT_CLOCK(1), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_r (
+					COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_r (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+:RESOLUTION],
 						,
 						auto_delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
@@ -410,10 +411,10 @@ generate
 						leds[a][3],
 						~leds[a][4],
 						pllclk,
-						auto_smpclk[a],
+						pllclk,
 						reset_delayed
 					);
-					COUNTER #(.USE_SOFT_CLOCK(1), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_i (
+					COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_i (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 						,
 						auto_delay_lines[(QUADRANT ? 1 : 0)][a*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0)),
@@ -421,14 +422,14 @@ generate
 						leds[a][3],
 						~leds[a][4],
 						pllclk,
-						auto_smpclk[a],
+						pllclk,
 						reset_delayed
 					);
 				end
 				if(HAS_CROSSCORRELATOR) begin
 					if(y!=LAG_CROSS&&y<CORRELATIONS_HEAD_TAIL_SIZE) begin
 						for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
-							COUNTER #(.USE_SOFT_CLOCK(1), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_r (
+							COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_r (
 								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>LAG_CROSS?y-1:y)-1)*RESOLUTION*2+:RESOLUTION],
 								,
 								cross_delay_lines[((QUADRANT_OR_SINGLE) ? 0 : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH],
@@ -436,10 +437,10 @@ generate
 								leds[a][3]&leds[b][3],
 								~(leds[a][4]&leds[b][4]),
 								pllclk,
-								(QUADRANT_OR_SINGLE ? ((cross[a] > cross[b]) ? cross_smpclk[a] : cross_smpclk[b]) : ((cross[a][12+:4] > cross[b][12+:4]) ? cross_smpclk[a] : cross_smpclk[b])),
+								pllclk,
 								reset_delayed
 							);
-							COUNTER #(.USE_SOFT_CLOCK(1), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_i (
+							COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_i (
 								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>LAG_CROSS?y-1:y)-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 								,
 								cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 0 ) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0)),
@@ -447,7 +448,7 @@ generate
 								leds[a][3]&leds[b][3],
 								~(leds[a][4]&leds[b][4]),
 								pllclk,
-								(QUADRANT_OR_SINGLE ? ((cross[a] > cross[b]) ? cross_smpclk[a] : cross_smpclk[b]) : ((cross[a][12+:4] > cross[b][12+:4]) ? cross_smpclk[a] : cross_smpclk[b])),
+								pllclk,
 								reset_delayed
 							);
 						end

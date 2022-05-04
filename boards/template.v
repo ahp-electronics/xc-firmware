@@ -28,6 +28,8 @@ parameter HAS_CUMULATIVE_ONLY = _HAS_CUMULATIVE_ONLY;
 parameter BAUD_RATE = 57600;
 parameter WORD_WIDTH = _WORD_WIDTH;
 parameter USE_UART = _USE_UART;
+parameter BINARY = _BINARY;
+parameter USE_SOFT_CLOCK = _USE_SOFT_CLOCK;
 
 input wire sysclk;
 inout wire[19:0] jp1;
@@ -74,21 +76,23 @@ main #(
 .LAG_AUTO(LAG_AUTO),
 .WORD_WIDTH(WORD_WIDTH),
 .BAUD_RATE(BAUD_RATE),
+.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
+.BINARY(BINARY),
 .USE_UART(USE_UART)
 ) main_block(
-        TX,
-        RX,
-        line_in,
-        line_out,
-        mux_out,
-        sysclk,
-        refclk,
-        extclk,
-        intclk,
-        smpclk,
-        spiclk,
-        strobe,
-        1'd1
+       TX,
+       RX,
+       line_in,
+       line_out,
+       mux_out,
+       sysclk,
+       refclk,
+       extclk,
+       intclk,
+       smpclk,
+       ,
+       strobe,
+       1'd1
 );
 
 endmodule

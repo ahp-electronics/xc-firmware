@@ -12,8 +12,10 @@ module CMD_PARSER(
 	test,
 	cross_idx,
 	cross_len,
+	cross_increment,
 	auto_idx,
 	auto_len,
+	auto_increment,
 	leds,
 	baud_rate,
 	current_line,
@@ -48,6 +50,8 @@ output reg[20*NUM_INPUTS-1:0] cross_idx = 0;
 output reg[20*NUM_INPUTS-1:0] auto_idx = 0;
 output reg[20*NUM_INPUTS-1:0] cross_len = 0;
 output reg[20*NUM_INPUTS-1:0] auto_len = 0;
+output reg[12*NUM_INPUTS-1:0] cross_increment = 1;
+output reg[12*NUM_INPUTS-1:0] auto_increment = 1;
 output reg[3:0] baud_rate = 0;
 output reg[7:0] current_line = 0;
 output reg integrating = 0;
@@ -71,10 +75,17 @@ always@(posedge clk) begin
 		baud_rate <= cmd[7:4];
 	end else if ((cmd[3:0]&4'b1100) == SET_DELAY) begin
 		if(extra_commands) begin
-			if (cmd[7])
-				auto_len [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
-			else
-				cross_len [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			if(test[current_line*8+7]) begin
+				if (cmd[7])
+					auto_increment [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				else
+					cross_increment [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			end else begin
+				if (cmd[7])
+					auto_len [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				else
+					cross_len [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			end
 		end else begin
 			if (cmd[7])
 				auto_idx [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];

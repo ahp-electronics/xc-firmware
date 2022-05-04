@@ -166,6 +166,10 @@ prepare() {
         read WORD_WIDTH
 	echo "use uart? enter 0 if SPI is prefered"
         read USE_UART
+	echo "use binary data?"
+        read BINARY
+	echo "use software clocks?"
+        read USE_SOFT_CLOCK
 
         source="${PWD}/boards/template.v"
         tmpfile="${PWD}/output/${implementation}.v"
@@ -187,6 +191,8 @@ prepare() {
         sed -e "s:_HAS_CUMULATIVE_ONLY:${HAS_CUMULATIVE_ONLY}:g" | \
         sed -e "s:_WORD_WIDTH:${WORD_WIDTH}:g" | \
         sed -e "s:_USE_UART:${USE_UART}:g" \
+        sed -e "s:_BINARY:${BINARY}:g" \
+        sed -e "s:_USE_SOFT_CLOCK:${USE_SOFT_CLOCK}:g" \
          > ${tmpfile}
 }
 
