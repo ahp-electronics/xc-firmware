@@ -13,7 +13,7 @@ parameter CLK_FREQUENCY = 10000000;	//The crystal frequency
 parameter SIN_FREQUENCY = 50;		//The internal optional PSU frequency
 parameter MUX_LINES = 1;		//Muxer lines
 parameter NUM_LINES = 8;		//Lines per each Muxer line
-parameter DELAY_SIZE = 2048;		//The delay FIFO size
+parameter DELAY_SIZE = 2048;		//If 4 use quadrature sampling, if 0 use single sample quadrature sampling, else the delay FIFO size
 parameter LAG_CROSS = 1;		//Lag lines size for live crosscorrelation
 parameter LAG_AUTO = 1;			//Lag lines size for live autocorrelation
 parameter RESOLUTION = 24;		//Resolution (count capacity) of each correlation/intensity counter
@@ -22,8 +22,10 @@ parameter HAS_CROSSCORRELATOR = 1;	//Has this device crosscorrelation capability
 parameter HAS_PSU = 0;			//Has this device a software PSU?
 parameter HAS_CUMULATIVE_ONLY = 0;	//Has this device not on-edge counting?
 parameter BAUD_RATE = 57600;		//Communication port baud rate
-parameter WORD_WIDTH = 1;		//Word width (greater than 1 when using ADC - must be in sync with the ADC ramp generator)
+parameter WORD_WIDTH = 1;		//Word width (greater than 1 when using ADC - must be in sync with the ADC ramp gener
+parameter BINARY = 0;		//use binary packet transmission instead of ASCII
 parameter USE_UART = 1;			//Use UART or SPI communication?
+parameter USE_SOFT_CLOCK = 1;			//Limit usage of gated clocks
 ```
 
 The generated SVF file can be downloaded to the device using urJTAG http://urjtag.org/
@@ -41,9 +43,9 @@ Here below is defined the communication protocol:
     0x02: activate leds or power lines using bits [5:4], invert pulse reading with bit 6, single clock cycle pulse width with bit 7
     0x03: baudrate 57600 left-shifted by bits [7:4]
     0x04: bits [1:0] => indexer, bits [6:4] => delay value. If bit 7 is 0, then start delay for cross-correlations is set, if bit 4 is 1, then start delay for autocorrelations is set, if extra commands these values define the size of the correlation scan).
-    0x08: sampling clock tau = bits [7:4] are the clock tau power of two exponent
+    0x08: sampling clock tau = bits [7:4] are the clock tau power of two exponent or the upper 4 bits of the delay. If bit 7 is 0, this applies to cross-correlations, if bit 4 is 1, this applies to autocorrelations, if extra commands these values apply to the size of the correlation scan. if tests[7] is set, these commands sets the step increment.
     0x09: power voltage = bits [7:4]
-    0x0c: Set tests: bit 5 => enable pll oscillator signal on led 0, bit 5 => enable autocorrelation scan, bit 6 => enable crosscorrelation scan, bit 7 => BCM encoder on led 0 (pulse XOR by sampling clock) (if extra commands bits [5:4] are routed to 4 extra tests flags)
+    0x0c: Set tests: bit 5 => enable pll oscillator signal on led 0, bit 5 => enable autocorrelation scan, bit 6 => enable crosscorrelation scan, bit 7 => BCM encoder on led 0 (pulse XOR by sampling clock) (if extra commands bits [5:4] are routed to tests flags [7:4])
 
 The count of pulses and correlation comes with an ASCII packet string ended with a 0x0d character
 
