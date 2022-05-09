@@ -56,18 +56,7 @@ svf() {
 }
 
 program() {
-        mkdir -p "${PWD}/output/${implementation}"
 	_svf="${PWD}/output/${implementation}/flash.svf"
-	rm -f "${_svf}"
-	echo "" > "${_svf}"
-	for t in $targets; do
-		svf $t
-		cat "${PWD}/output/${implementation}/${t}.svf" >> "${_svf}"
-	done
-	sed -i "s/SDR 16 TDI(00A0)//g" "${_svf}"
-        sed -i "s/		TDO(00FF)//g" "${_svf}"
-        sed -i "s/		MASK(C100) ;//g" "${_svf}"
-	sed -i "s/\(FREQUENCY\).*$/\1\t$(($frequency/1000000)).00e+06 HZ ;/g" "${_svf}"
 	program_jtag -i"${_svf}" -d"${programmer}" -f${frequency}|| true
 }
 
@@ -139,6 +128,18 @@ generate() {
 	pushd build/${implementation}
 	bitgen -w ${project}_${implementation}.ncd ${project}_${implementation}.prf
 	popd
+        mkdir -p "${PWD}/output/${implementation}"
+	_svf="${PWD}/output/${implementation}/flash.svf"
+	rm -f "${_svf}"
+	echo "" > "${_svf}"
+	for t in $targets; do
+		svf $t
+		cat "${PWD}/output/${implementation}/${t}.svf" >> "${_svf}"
+	done
+	sed -i "s/SDR 16 TDI(00A0)//g" "${_svf}"
+        sed -i "s/		TDO(00FF)//g" "${_svf}"
+        sed -i "s/		MASK(C100) ;//g" "${_svf}"
+	sed -i "s/\(FREQUENCY\).*$/\1\t$(($frequency/1000000)).00e+06 HZ ;/g" "${_svf}"
 }
 
 prepare() {
