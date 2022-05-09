@@ -397,7 +397,7 @@ generate
 			leds[a][3],
 			0,
 			pllclk,
-			pllclk,
+			auto_smpclk[a],
 			reset_delayed
 		);
 		for(z=0; z < MAX_LAG*2; z=z+512) begin : jitter_block
@@ -411,7 +411,7 @@ generate
 						leds[a][3],
 						~leds[a][4],
 						pllclk,
-						pllclk,
+						auto_smpclk[a],
 						reset_delayed
 					);
 					COUNTER #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_i (
@@ -422,7 +422,7 @@ generate
 						leds[a][3],
 						~leds[a][4],
 						pllclk,
-						pllclk,
+						auto_smpclk[a],
 						reset_delayed
 					);
 				end
@@ -437,7 +437,7 @@ generate
 								leds[a][3]&leds[b][3],
 								~(leds[a][4]&leds[b][4]),
 								pllclk,
-								pllclk,
+								((QUADRANT_OR_SINGLE) ? (cross[a] > cross[b] ? cross_smpclk[a] : cross_smpclk[b]) : (cross[a][12+:4] > cross[b] ? cross_smpclk[a] : cross_smpclk[b])),
 								reset_delayed
 							);
 							COUNTER #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_i (
@@ -448,7 +448,7 @@ generate
 								leds[a][3]&leds[b][3],
 								~(leds[a][4]&leds[b][4]),
 								pllclk,
-								pllclk,
+								((QUADRANT_OR_SINGLE) ? (cross[a] > cross[b] ? cross_smpclk[a] : cross_smpclk[b]) : (cross[a][12+:4] > cross[b] ? cross_smpclk[a] : cross_smpclk[b])),
 								reset_delayed
 							);
 						end
