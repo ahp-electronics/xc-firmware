@@ -6,6 +6,7 @@
 
 int program_jtag(const char *svf_file, const char *drivername, long frequency);
 
+#ifdef _EXECUTABLE_
 int main(int argc, char **argv)
 {
 	int opt;
@@ -35,6 +36,7 @@ int main(int argc, char **argv)
 		return program_jtag(svf, driver, frequency);
 	return 0;
 }
+#endif
 
 int program_jtag(const char *svf_file, const char *drivername, long frequency)
 {

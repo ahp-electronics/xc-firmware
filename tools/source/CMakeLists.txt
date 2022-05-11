@@ -20,9 +20,13 @@ set(PROG_SRCS
 )
 
 add_executable(program_jtag ${PROG_SRCS})
+add_library(jtag SHARED ${PROG_SRCS})
+
+target_compile_definitions(program_jtag PUBLIC _EXECUTABLE_)
 
 target_link_libraries(program_jtag ${URJTAG_LIBRARIES})
 
-install(TARGETS program_jtag RUNTIME DESTINATION bin)
+install(TARGETS program_jtag RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+install(TARGETS jtag LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 
 endif (URJTAG_FOUND)
