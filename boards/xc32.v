@@ -20,7 +20,7 @@ parameter NUM_LINES = 32;
 parameter DELAY_SIZE = 4;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
-parameter RESOLUTION = 4;
+parameter RESOLUTION = 8;
 parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
@@ -29,7 +29,7 @@ parameter BAUD_RATE = 57600;
 parameter WORD_WIDTH = 1;
 parameter USE_UART = 1;
 parameter BINARY = 0;
-parameter USE_SOFT_CLOCK = 0;
+parameter USE_SOFT_CLOCK = 1;
 
 input wire sysclk;
 inout wire[19:0] jp1;
