@@ -406,8 +406,8 @@ generate
 					COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_r (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+:RESOLUTION],
 						,
-						auto_delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
-						auto_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1 ) : auto[a])+y][a*WORD_WIDTH+:WORD_WIDTH],
+						auto_delay_lines[1][a*WORD_WIDTH+:WORD_WIDTH],
+						auto_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 3 : 1 ) : auto[a])+y][a*WORD_WIDTH+:WORD_WIDTH],
 						leds[a][3],
 						~leds[a][4],
 						pllclk,
@@ -417,8 +417,8 @@ generate
 					COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_i (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 						,
-						auto_delay_lines[(QUADRANT ? 1 : 0)][a*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0)),
-						auto_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 3 : 1 ) : auto[a])+y][a*WORD_WIDTH+:WORD_WIDTH],
+						auto_delay_lines[(QUADRANT ? 2 : 1)][a*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0)),
+						auto_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 4 : 1 ) : auto[a])+y][a*WORD_WIDTH+:WORD_WIDTH],
 						leds[a][3],
 						~leds[a][4],
 						pllclk,
@@ -432,8 +432,8 @@ generate
 							COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_r (
 								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>LAG_CROSS?y-1:y)-1)*RESOLUTION*2+:RESOLUTION],
 								,
-								cross_delay_lines[((QUADRANT_OR_SINGLE) ? 0 : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH],
-								cross_delay_lines[((QUADRANT_OR_SINGLE) ?  (QUADRANT ? 2 : 1 ) : cross[b])+(y>LAG_CROSS?y-LAG_CROSS:0)][b*WORD_WIDTH+:WORD_WIDTH],
+								cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH],
+								cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[b])+(y>LAG_CROSS?y-LAG_CROSS:0)][b*WORD_WIDTH+:WORD_WIDTH],
 								leds[a][3]&leds[b][3],
 								~(leds[a][4]&leds[b][4]),
 								pllclk,
@@ -443,8 +443,8 @@ generate
 							COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_i (
 								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>LAG_CROSS?y-1:y)-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 								,
-								cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 0 ) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0)),
-								cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 3 : 1 ) : cross[b])+(y>LAG_CROSS?y-LAG_CROSS:0)][b*WORD_WIDTH+:WORD_WIDTH],
+								cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0)),
+								cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[b])+(y>LAG_CROSS?y-LAG_CROSS:0)][b*WORD_WIDTH+:WORD_WIDTH],
 								leds[a][3]&leds[b][3],
 								~(leds[a][4]&leds[b][4]),
 								pllclk,
