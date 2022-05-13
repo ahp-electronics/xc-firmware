@@ -397,13 +397,13 @@ generate
 			leds[a][3],
 			0,
 			pllclk,
-			auto_smpclk[a],
+			pllclk,
 			reset_delayed
 		);
 		for(z=0; z < MAX_LAG*2; z=z+512) begin : jitter_block
 			for(y=z; y < z+512 && y < MAX_LAG*2; y=y+1) begin : jitter_inner_block
 				if(y<LAG_AUTO) begin
-					COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_r (
+					COUNTER #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_r (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+:RESOLUTION],
 						,
 						auto_delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
@@ -414,7 +414,7 @@ generate
 						pllclk,
 						reset_delayed
 					);
-					COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_i (
+					COUNTER #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_i (
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 						,
 						auto_delay_lines[(QUADRANT ? 1 : 0)][a*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0)),
@@ -429,7 +429,7 @@ generate
 				if(HAS_CROSSCORRELATOR) begin
 					if(y!=LAG_CROSS&&y<CORRELATIONS_HEAD_TAIL_SIZE) begin
 						for (b=a+1; b<NUM_INPUTS; b=b+1) begin : correlators_block
-							COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_r (
+							COUNTER #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_r (
 								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>LAG_CROSS?y-1:y)-1)*RESOLUTION*2+:RESOLUTION],
 								,
 								cross_delay_lines[((QUADRANT_OR_SINGLE) ? 0 : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH],
@@ -437,10 +437,10 @@ generate
 								leds[a][3]&leds[b][3],
 								~(leds[a][4]&leds[b][4]),
 								pllclk,
-								((QUADRANT_OR_SINGLE) ? (cross[a] > cross[b] ? cross_smpclk[a] : cross_smpclk[b]) : (cross[a][12+:4] > cross[b] ? cross_smpclk[a] : cross_smpclk[b])),
+								pllclk,
 								reset_delayed
 							);
-							COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_i (
+							COUNTER #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH)) correlators_block_i (
 								pulses[((CORRELATIONS_SIZE-((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)-b+a+1)*CORRELATIONS_HEAD_TAIL_SIZE-(y>LAG_CROSS?y-1:y)-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 								,
 								cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 0 ) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0)),
