@@ -15,19 +15,19 @@ module top_module (
 parameter PLL_FREQUENCY = 400000000;
 parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
-parameter MUX_LINES = 10;
+parameter MUX_LINES = 16;
 parameter NUM_LINES = 4;
 parameter DELAY_SIZE = 4;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
-parameter RESOLUTION = 16;
-parameter HAS_LEDS = 0;
+parameter RESOLUTION = 8;
+parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
-parameter HAS_CUMULATIVE_ONLY = 1;
-parameter BAUD_RATE = 500000;
+parameter HAS_CUMULATIVE_ONLY = 0;
+parameter BAUD_RATE = 57600;
 parameter WORD_WIDTH = 1;
-parameter USE_UART = 0;
+parameter USE_UART = 1;
 parameter BINARY = 0;
 parameter USE_SOFT_CLOCK = 1;
 
