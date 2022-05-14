@@ -17,11 +17,10 @@
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<FileTime>02/04/22 18:22:49</FileTime>
 			<Operation>SPI Flash Bypass</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
-				<AccessMode>SPI Flash Background bypassming</AccessMode>
+				<AccessMode>SPI Flash Background Programming</AccessMode>
 			</Option>
 			<FPGALoader>
 			<CPLDDevice>
@@ -39,7 +38,7 @@
 						<BScanLen>1</BScanLen>
 						<BScanVal>0</BScanVal>
 					</Bypass>
-					<MaskFile>PWD/tools//data/vmdata/database/xpga/ecp5/PART-LUTSIZE.msk</MaskFile>
+					<MaskFile>PWD/tools/data/vmdata/database/xpga/ecp5/PART-LUTSIZE.msk</MaskFile>
 					<Operation>Bypass</Operation>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -59,11 +58,10 @@
 					<IDCode>JTAGID</IDCode>
 					<Package>8-pin SOIC</Package>
 					<Operation>SPI Flash Bypass</Operation>
-					<File>PWD/output/flash_IMPLEMENTATION_bypass.svf</File>
 					<AddressBase>0x00000000</AddressBase>
-					<EndAddress>0x006A0000</EndAddress>
+					<EndAddress>END-ADDR</EndAddress>
 					<DeviceSize>128</DeviceSize>
-					<DataSize>7010726</DataSize>
+					<DataSize>BINSIZE</DataSize>
 					<NumberOfDevices>1</NumberOfDevices>
 					<ReInitialize value="FALSE"/>
 				</Device>
@@ -72,11 +70,10 @@
 				<Device>
 					<Pos>1</Pos>
 					<Name></Name>
-					<File>PWD/output/flash_IMPLEMENTATION_bypass.svf</File>
 					<LocalChainList>
 						<LocalDevice index="-99"
 							name="Unknown"
-							file="PWD/output/flash_IMPLEMENTATION_bypass.svf"/>
+							file=""/>
 					</LocalChainList>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -87,18 +84,12 @@
 		</Device>
 	</Chain>
 	<ProjectOptions>
-		<bypass>SEQUENTIAL</bypass>
+		<Program>SEQUENTIAL</Program>
 		<Process>ENTIRED CHAIN</Process>
 		<OperationOverride>No Override</OperationOverride>
 		<StartTAP>TLR</StartTAP>
 		<EndTAP>TLR</EndTAP>
-		<DisableCheckBoard value="TRUE"/>
 		<VerifyUsercode value="FALSE"/>
 		<TCKDelay>1</TCKDelay>
 	</ProjectOptions>
-	<CableOptions>
-		<CableName>USB2</CableName>
-		<PortAdd>FTUSB-0</PortAdd>
-		<USBID>TTL232R Location 0000 Serial TTL232R</USBID>
-	</CableOptions>
 </ispXCF>
