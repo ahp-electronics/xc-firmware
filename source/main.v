@@ -357,11 +357,7 @@ generate
 				
 		assign adc_data[a] = pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
 		
-		if(HAS_LEDS) begin
-			assign pulse_in[a] = (leds[a][2]?~signal_in[a*WORD_WIDTH+:WORD_WIDTH] : signal_in[a*WORD_WIDTH+:WORD_WIDTH]);
-		end else begin
-			assign pulse_in[a] = signal_in[a*WORD_WIDTH+:WORD_WIDTH];
-		end
+		assign pulse_in[a] = (leds[a][2]?~signal_in[a*WORD_WIDTH+:WORD_WIDTH] : signal_in[a*WORD_WIDTH+:WORD_WIDTH]);
 		
 		if(HAS_LEDS) begin
 			assign lineout[a] = (pwm_out[a]|in_capture)&~overflow[a];
