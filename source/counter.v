@@ -53,10 +53,11 @@ module COUNTER (
 						if((cumulative | HAS_CUMULATIVE_ONLY) || (signal != tmp_signal) || (nsignal != tmp_nsignal)) begin
 							tmp_signal <= signal;
 							tmp_nsignal <= nsignal;
-							if(multiply)
+							if(multiply) begin
 								counter_out <= counter_out + signal * nsignal;
-							else
+							end else begin
 								counter_out <= counter_out + signal - nsignal;
+							end
 						end
 					end
 				end else
