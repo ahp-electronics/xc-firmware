@@ -2,7 +2,7 @@
 
 #### This repository contains code of the XC series correlators
 
-![AHP XC8 cross-correlator](https://github.com/ahp-electronics/pictures/blob/master/XC8_small.png "XC8")
+![AHP XC8 cross-correlator](https://github.com/ahp-electronics/pictures/blob/master/XC32_small.png "XC32")
 
 
 You'll find board and device specific files into the boards/ folder, device files contain some custom parameters that can characterize the device:
@@ -63,8 +63,8 @@ header
 payload
 
     bytes +lines#: pulses count of each line within the integration time
-    bytes +lines#: autocorrelations count of each line by the selected autocorrelation line delayed by crosscorrelation lag zero
-    bytes +baselines#: crosscorrelations count of pulses of each line with others by the selected delay amount
+    bytes +lines#: autocorrelations real/imaginary count of each line within the packet time
+    bytes +baselines#: crosscorrelations real/imaginary count of pulses of each line with others ones within the packet time
     bytes +16: 8-byte timestamp of current packet
 
 checksum
