@@ -273,15 +273,14 @@ if(HAS_CROSSCORRELATOR) begin
 	.BINARY(BINARY),
 	.USE_UART(USE_UART)) (
 		pulses,
-		overflow,
 		pllclk,
 		cross_a,
 		adc_data_a,
 		cross_smpclk,
 		leds_a,
 		order,
-		reset_delayed
-    );
+		reset
+);
 end
 always@(*) begin
 	signal_in[mux_line*NUM_LINES*WORD_WIDTH+:NUM_LINES*WORD_WIDTH] <= line_in;
