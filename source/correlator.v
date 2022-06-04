@@ -91,8 +91,6 @@ module CORRELATOR (
 	reg[11:0] y;
 	reg[11:0] z;
 
-	wire[WORD_WIDTH-1:0] counts [CORRELATIONS_SIZE*2];
-
 	generate
 		genvar _idx;
 		genvar x;
