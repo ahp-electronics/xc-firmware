@@ -54,7 +54,7 @@ output reg[20*NUM_INPUTS-1:0] auto_len = 0;
 output reg[12*NUM_INPUTS-1:0] cross_increment = 1;
 output reg[12*NUM_INPUTS-1:0] auto_increment = 1;
 output reg[3:0] baud_rate = 0;
-output reg[3:0] order = 0;
+output reg[7:0] order = 0;
 output reg[7:0] current_line = 0;
 output reg integrating = 0;
 output reg external_clock = 0;
@@ -75,7 +75,7 @@ always@(posedge clk) begin
 		leds[current_line*8+4*extra_commands+:4] <= cmd[7:4];
 	end else if (cmd[3:0] == SET_BAUD_RATE) begin
 		if (cmd[7])
-			order <= cmd[7:4];
+			order[cmd[7:6]] <= cmd[5:4];
 		else
 			baud_rate <= cmd[7:4];
 	end else if ((cmd[3:0]&4'b1100) == SET_DELAY) begin

@@ -68,7 +68,7 @@ module CORRELATOR (
 	output reg [PAYLOAD_SIZE-1:0] pulses;
 	input wire reset;
 	input wire pllclk;
-	input wire [3:0] order;
+	input wire [7:0] order;
 	input wire [WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
 	input wire [20*NUM_INPUTS-1:0] cross_a;
 	input wire [19:0] cross[0:NUM_INPUTS];
