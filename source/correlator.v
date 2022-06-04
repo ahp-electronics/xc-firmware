@@ -28,7 +28,6 @@ module CORRELATOR (
 	parameter LAG_AUTO = 1;
 	parameter RESOLUTION = 24;
 	parameter HAS_LEDS = 1;
-	parameter HAS_CROSSCORRELATOR = 1;
 	parameter HAS_PSU = 0;
 	parameter HAS_CUMULATIVE_ONLY = 0;
 	parameter BAUD_RATE = 57600;
@@ -47,7 +46,7 @@ module CORRELATOR (
 	localparam SPECTRA_SIZE = NUM_INPUTS*LAG_AUTO;
 	localparam CORRELATIONS_HEAD_TAIL_SIZE = LAG_CROSS*2-1;
 	localparam MAX_LAG = (LAG_AUTO > CORRELATIONS_HEAD_TAIL_SIZE) ? LAG_AUTO : CORRELATIONS_HEAD_TAIL_SIZE;
-	localparam CORRELATIONS_SIZE = (HAS_CROSSCORRELATOR*NUM_BASELINES*CORRELATIONS_HEAD_TAIL_SIZE);
+	localparam CORRELATIONS_SIZE = (CROSSCORRELATOR*NUM_BASELINES*CORRELATIONS_HEAD_TAIL_SIZE);
 	localparam PAYLOAD_SIZE = ((CORRELATIONS_SIZE+SPECTRA_SIZE)*2+NUM_INPUTS)*RESOLUTION;
 	localparam HEADER_SIZE = 64;
 	localparam FOOTER_SIZE = 64;
@@ -74,8 +73,8 @@ module CORRELATOR (
 	input wire [NUM_INPUTS-1:0] cross_smpclk;
 	input wire [NUM_INPUTS*8-1:0] leds_a;
 
-	reg[WORD_WIDTH-1:0] r[0:CORRELATIONS_SIZE];
-	reg[WORD_WIDTH-1:0] i[0:CORRELATIONS_SIZE];
+	reg signed [WORD_WIDTH-1:0] r[0:CORRELATIONS_SIZE];
+	reg signed [WORD_WIDTH-1:0] i[0:CORRELATIONS_SIZE];
 
 	wire [CORRELATIONS_SIZE*CORRELATIONS_HEAD_TAIL_SIZE-1:0] overflow;
 	wire [WORD_WIDTH-1:0] adc_data [0:NUM_INPUTS];
@@ -100,7 +99,7 @@ module CORRELATOR (
 		for (_idx = 0; _idx < CORRELATIONS_HEAD_TAIL_SIZE; _idx = _idx+1) begin : iteration_block
 			assign r[_idx*2] = pulses[_idx*RESOLUTION*2+:RESOLUTION];
 			assign i[_idx*2+1] = pulses[_idx*RESOLUTION*2+RESOLUTION+:RESOLUTION];
-			assign overflow[_idx] = r[_idx] == ((1<<RESOLUTION-1)-1) || r[_idx] == ~0 || r[_idx] == ((1<<RESOLUTION-1)-1) || r[_idx] == ~0;
+			assign overflow[_idx] = (r[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || r[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)));
 		end
 
 		for (line1 = 0; line1 < NUM_INPUTS; line1 = line1+1) begin : correlator_outer_block
@@ -118,28 +117,18 @@ module CORRELATOR (
 		for(z=0; z < MAX_LAG*2; z=z+512) begin : jitter_block
 			for(y=z; y < z+512 && y < MAX_LAG*2; y=y+1) begin : jitter_inner_block
 				if(y!=LAG_CROSS&&y<CORRELATIONS_HEAD_TAIL_SIZE) begin
-					for (a=0; a<NUM_INPUTS; a=a+1) begin : correlators_initial_block
-						for (b=a+order+1; b<NUM_INPUTS; b=b+order+1) begin : correlators_block
+					for (a=0; a<NUM_INPUTS-order-1; a=a+1) begin : correlators_initial_block
+						for (b=a+order+1; b<NUM_INPUTS-order; b=b+1) begin : correlators_block
 							for (c=0; c<order+1; c=c+1) begin : order_block
 								if(~reset) begin
 									if(!overflow[idx]) begin
 										if(leds[a][3]&leds[b+c][3]) begin
-											if(c == 0) begin
-												if(~(leds[a][4]&leds[b+c][4])) begin
-													r[idx] <= r[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] * cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0));
-													i[idx] <= i[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] * cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c+c*WORD_WIDTH+:WORD_WIDTH];
-												end else begin
-													r[idx] <= r[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] - cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0));
-													i[idx] <= i[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] - cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH];
-												end
+											if(~(leds[a][4]&leds[b+c][4])) begin
+												r[idx] <= r[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] * cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0));
+												i[idx] <= i[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] * cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c+c*WORD_WIDTH+:WORD_WIDTH];
 											end else begin
-												if(~(leds[a][4]&leds[b+c][4])) begin
-													r[idx] <= r[idx] + r[idx] * cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0));
-													i[idx] <= i[idx] + i[idx] * cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH];
-												end else begin
-													r[idx] <= r[idx] + r[idx] - cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0));
-													i[idx] <= i[idx] + i[idx] - cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH];
-												end
+												r[idx] <= r[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] - cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0));
+												i[idx] <= i[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] - cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH];
 											end
 										end
 									end
