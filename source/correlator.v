@@ -61,8 +61,9 @@ module CORRELATOR (
 
 	localparam QUADRANT_OR_SINGLE = (DELAY_SIZE < 5);
 	localparam QUADRANT = (DELAY_SIZE == 4);
+	localparam SINGLE = (DELAY_SIZE == 0);
 
-	wire [WORD_WIDTH*DELAY_SIZE:0] cross_delay_lines [0:NUM_INPUTS];
+	wire [WORD_WIDTH*DELAY_SIZE-1:0] cross_delay_lines [0:NUM_INPUTS];
 	output reg [PAYLOAD_SIZE-1:0] pulses;
 	input wire reset;
 	input wire pllclk;
@@ -73,6 +74,10 @@ module CORRELATOR (
 	input wire [NUM_INPUTS-1:0] cross_smpclk;
 	input wire [NUM_INPUTS*8-1:0] leds_a;
 
+	wire [19:0] delays_r [0:NUM_INPUTS];
+	wire [19:0] delays_i [0:NUM_INPUTS];
+	wire [WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE-1:0] cross_delayed_lines_r [0:NUM_INPUTS];
+	wire [WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE-1:0] cross_delayed_lines_i [0:NUM_INPUTS];
 	reg signed [WORD_WIDTH-1:0] r[0:CORRELATIONS_SIZE];
 	reg signed [WORD_WIDTH-1:0] i[0:CORRELATIONS_SIZE];
 
@@ -92,57 +97,52 @@ module CORRELATOR (
 		genvar _idx;
 		genvar x;
 		genvar j;
-		genvar line1;
+		genvar line;
 		genvar line2;
 		genvar channel;
 		genvar _channels;
 		for (_idx = 0; _idx < CORRELATIONS_SIZE; _idx = _idx+1) begin : iteration_block
 			assign r[_idx] = pulses[_idx*RESOLUTION*2+:RESOLUTION];
-			assign i[_idx] = pulses[_idx*RESOLUTION*2+RESOLUTION+:RESOLUTION];
+			assign i[_idx] = pulses[_idx*RESOLUTION*2+RESOLUTION*CORRELATIONS_HEAD_TAIL_SIZE+:RESOLUTION*CORRELATIONS_HEAD_TAIL_SIZE];
 			assign overflow[_idx] = (r[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || r[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)));
 		end
 
-		for (line1 = 0; line1 < NUM_INPUTS; line1 = line1+1) begin : correlator_outer_block
-			fifo #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_CROSS)) cross_delay_line(pllclk, cross_smpclk[line1], adc_data[line1], cross_delay_lines[line1]);
-			for(x = 0; x < LAG_SIZE_CROSS; x=x+512) begin : correlator_iteration_block
-				assign adc_data[line1] = adc_data_a[line1*WORD_WIDTH+:WORD_WIDTH];
-				assign leds[line1] = leds_a[line1*8+:8];
-				assign cross[line1] = cross_a[line1*20+:20];
-			end
+		for (line = 0; line < NUM_INPUTS; line = line+1) begin : correlator_outer_block
+			fifo #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_CROSS)) cross_delay_line(pllclk, cross_smpclk[line], adc_data[line], cross_delay_lines[line]);
+			assign adc_data[line] = adc_data_a[line*WORD_WIDTH+:WORD_WIDTH];
+			assign leds[line] = leds_a[line*8+:8];
+			assign cross[line] = cross_a[line*20+:20];
+			assign delays_r[line] = (QUADRANT ? 1 : (SINGLE ? 1 : cross[line]));
+			assign delays_i[line] = (QUADRANT ? 2 : (SINGLE ? 1 : cross[line]));
+			assign cross_delayed_lines_r[line] = cross_delay_lines[line][(QUADRANT_OR_SINGLE ? 1 : cross[line])*WORD_WIDTH+:WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE];
+			assign cross_delayed_lines_i[line] = cross_delay_lines[line][(QUADRANT ? 2 : (SINGLE ? 1 : cross[line]))*WORD_WIDTH+:WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE];
 		end
 	endgenerate
 
 	always @(posedge pllclk) begin
 		idx <= 0;
-		for(z=0; z < MAX_LAG*2; z=z+512) begin : jitter_block
-			for(y=z; y < z+512 && y < MAX_LAG*2; y=y+1) begin : jitter_inner_block
-				if(y!=LAG_CROSS&&y<CORRELATIONS_HEAD_TAIL_SIZE) begin
-					for (a=0; a<NUM_INPUTS-order-1; a=a+1) begin : correlators_initial_block
-						for (b=a+order+1; b<NUM_INPUTS-order; b=b+1) begin : correlators_block
-							for (c=0; c<order+1; c=c+1) begin : order_block
-								if(~reset) begin
-									if(!overflow[idx]) begin
-										if(leds[a][3]&leds[b+c][3]) begin
-											if(~(leds[a][4]&leds[b+c][4])) begin
-												r[idx] <= r[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] * cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0));
-												i[idx] <= i[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] * cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c+c*WORD_WIDTH+:WORD_WIDTH];
-											end else begin
-												r[idx] <= r[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] - cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0));
-												i[idx] <= i[idx] + cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 1 : 1) : cross[a])+(y<LAG_CROSS?LAG_CROSS-y-1:0)][a*WORD_WIDTH+:WORD_WIDTH] - cross_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 2 : 1) : cross[b+c])+(y>LAG_CROSS?y-LAG_CROSS:0)][b+c*WORD_WIDTH+:WORD_WIDTH];
-											end
-										end
-									end
+		for (a=0; a<NUM_INPUTS-(order+1); a=a+1) begin : correlators_outer_block
+			for (b=a+order+1; b<NUM_INPUTS; b=b+1) begin : correlators_inner_block
+				for (c=0; c<order+1; c=c+1) begin : order_block
+					for (y=0; y<CORRELATIONS_HEAD_TAIL_SIZE; y=y+1) begin : order_block
+						if(~reset) begin
+							if(!overflow[idx]) begin
+								if(~(leds[a][4]&leds[b+c][4])) begin
+									r[idx] <= r[idx] + cross_delayed_lines_r[a][y*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_r[a+c+1][y*WORD_WIDTH+:WORD_WIDTH];
+									i[idx] <= i[idx] + cross_delayed_lines_i[a][y*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_i[a+c+1][y*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
 								end else begin
-									r[idx] <= 0;
-									i[idx] <= 0;
+									r[idx] <= r[idx] + cross_delayed_lines_r[a][y*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_r[a+c+1][y*WORD_WIDTH+:WORD_WIDTH];
+									i[idx] <= i[idx] + cross_delayed_lines_i[a][y*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_i[a+c+1][y*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
 								end
 							end
-							idx <= idx+1;
+						end else begin
+							r[idx] <= 0;
+							i[idx] <= 0;
 						end
+						idx <= idx+1;
 					end
 				end
 			end
 		end
 	end
-		
 endmodule

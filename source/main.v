@@ -431,7 +431,6 @@ generate
 			for(y=z; y < z+512 && y < MAX_LAG*2; y=y+1) begin : jitter_inner_block
 				if(y<LAG_AUTO) begin
 					COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) spectra_block_r (
-
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+:RESOLUTION],
 						,
 						auto_delay_lines[1][a*WORD_WIDTH+:WORD_WIDTH],
