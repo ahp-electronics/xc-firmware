@@ -25,17 +25,19 @@ module COUNTER (
 	output reg signed [RESOLUTION-1:0] counter_out;
 	output wire overflow;
 	input wire reset;
-	input wire signed [WORD_WIDTH-1:0] in_p;
-	input wire signed [WORD_WIDTH-1:0] in_n;
+	input wire [WORD_WIDTH-1:0] in_p;
+	input wire [WORD_WIDTH-1:0] in_n;
 	input wire clk;
 	input wire refclk;
 	input wire cumulative;
 	input wire multiply;
+	wire signed [WORD_WIDTH:0] signal;
+	wire signed [WORD_WIDTH:0] nsignal;
 	assign overflow = (counter_out == ((1<<(RESOLUTION-1))|1) || counter_out == ~(1<<(RESOLUTION-1)));
 	reg signed [WORD_WIDTH:0] tmp_signal;
 	reg signed [WORD_WIDTH:0] tmp_nsignal;
-	assign signal = { 0, in_p };
-	assign nsignal = { 0, in_n };
+	assign signal = { 1'd0, in_p };
+	assign nsignal = { 1'd0, in_n };
 	reg _refclk;
 	wire clock;
 	assign clock = (USE_SOFT_CLOCK ? clk : refclk);
@@ -46,7 +48,7 @@ module COUNTER (
 			if(refclk || !USE_SOFT_CLOCK) begin
 				if(~reset) begin
 					if(!overflow) begin
-						if((cumulative | HAS_CUMULATIVE_ONLY) || (in_p != tmp_signal) || (in_n != tmp_nsignal)) begin
+						if((cumulative | HAS_CUMULATIVE_ONLY) || (signal != tmp_signal) || (nsignal != tmp_nsignal)) begin
 							tmp_signal <= signal;
 							tmp_nsignal <= nsignal;
 							if(multiply) begin

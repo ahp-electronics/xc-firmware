@@ -89,7 +89,7 @@ wire integrating;
 
 wire[NUM_INPUTS*WORD_WIDTH-1:0] pulse_in;
 wire[WORD_WIDTH-1:0] adc_data[0:NUM_INPUTS];
-wire[WORD_WIDTH-NUM_INPUTS-1:0] adc_data_a;
+wire[WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
 wire[NUM_INPUTS-1:0] adc_done;
 
 wire [NUM_INPUTS-1:0]auto_smpclk;
@@ -132,7 +132,7 @@ reg enable_tx;
 
 wire[7:0] current_line;
 wire[3:0] baud_rate;
-wire[3:0] order;
+wire[7:0] order;
 
 wire[7:0] leds[0:NUM_INPUTS];
 wire[3:0] test[0:NUM_INPUTS];
@@ -178,10 +178,10 @@ indicators #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(NUM_INPUTS*1000), .CHANNEL
 COUNTER #(.WORD_WIDTH(64)) timestamp_block(
 	timestamp,
 	timestamp_overflow,
-	1000000000/CLK_FREQUENCY,
-	1,
-	1,
-	1,
+	64'd1000000000/CLK_FREQUENCY,
+	64'd1,
+	1'd1,
+	1'd1,
 	refclk,
 	refclk,
 	(timestamp_reset&~integrating)|timestamp_overflow
@@ -272,7 +272,7 @@ if(HAS_CROSSCORRELATOR) begin
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
 	.BINARY(BINARY),
 	.MAX_ORDER(MAX_ORDER),
-	.USE_UART(USE_UART)) (
+	.USE_UART(USE_UART)) crosscorrelator (
 		pulses,
 		pllclk,
 		cross_a,
@@ -421,9 +421,9 @@ generate
 			pulses[(CORRELATIONS_SIZE*2+NUM_INPUTS*LAG_AUTO*2+NUM_INPUTS-1-a)*RESOLUTION+:RESOLUTION],
 			overflow[a],
 			auto_delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
-			0,
+			1'd0,
 			leds[a][3],
-			0,
+			1'd0,
 			pllclk,
 			pllclk,
 			reset_delayed

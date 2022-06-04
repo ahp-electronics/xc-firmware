@@ -65,17 +65,17 @@ module CORRELATOR (
 	localparam QUADRANT = (DELAY_SIZE == 4);
 	localparam SINGLE = (DELAY_SIZE == 0);
 
-	wire [WORD_WIDTH*DELAY_SIZE-1:0] cross_delay_lines [0:NUM_INPUTS];
-	output reg [PAYLOAD_SIZE-1:0] pulses;
+	wire [WORD_WIDTH*DELAY_SIZE:0] cross_delay_lines [0:NUM_INPUTS];
+	output wire [PAYLOAD_SIZE-1:0] pulses;
 	input wire reset;
 	input wire pllclk;
 	input wire [7:0] order;
 	input wire [WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
 	input wire [20*NUM_INPUTS-1:0] cross_a;
-	input wire [19:0] cross[0:NUM_INPUTS];
 	input wire [NUM_INPUTS-1:0] cross_smpclk;
 	input wire [NUM_INPUTS*8-1:0] leds_a;
 
+	wire [19:0] cross [0:NUM_INPUTS];
 	wire [19:0] delays_r [0:NUM_INPUTS];
 	wire [19:0] delays_i [0:NUM_INPUTS];
 	wire [WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE-1:0] cross_delayed_lines_r [0:NUM_INPUTS];
@@ -104,8 +104,8 @@ module CORRELATOR (
 		genvar _channels;
 
 		for (_idx = 0; _idx < CORRELATIONS_SIZE; _idx = _idx+1) begin : iteration_block
-			assign r[_idx] = pulses[_idx*RESOLUTION*2+:RESOLUTION];
-			assign i[_idx] = pulses[_idx*RESOLUTION*2+RESOLUTION+:RESOLUTION];
+			assign pulses[_idx*RESOLUTION*2+:RESOLUTION] = r[_idx];
+			assign pulses[_idx*RESOLUTION*2+RESOLUTION+:RESOLUTION] = i[_idx];
 			assign overflow[_idx] = (r[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || r[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)));
 		end
 
