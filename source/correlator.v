@@ -13,7 +13,7 @@ module CORRELATOR (
 		adc_data_a,
 		cross_smpclk,
 		leds_a,
-		in_order,
+		order,
 		reset
 	);
 
@@ -51,7 +51,7 @@ module CORRELATOR (
 	localparam HEADER_SIZE = 64;
 	localparam FOOTER_SIZE = 64;
 	localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+FOOTER_SIZE;
-	localparam MAX_ORDER = (NUM_INPUTS < 16 ? NUM_INPUTS : 16);
+	localparam MAX_ORDER = (NUM_INPUTS < 15 ? NUM_INPUTS : 15);
 
 	localparam LAG_SIZE_AUTO = DELAY_SIZE+LAG_AUTO+1;
 	localparam LAG_SIZE_CROSS = DELAY_SIZE+LAG_CROSS;
@@ -68,7 +68,7 @@ module CORRELATOR (
 	output reg [PAYLOAD_SIZE-1:0] pulses;
 	input wire reset;
 	input wire pllclk;
-	input wire [3:0] in_order;
+	input wire [3:0] order;
 	input wire [WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
 	input wire [20*NUM_INPUTS-1:0] cross_a;
 	input wire [19:0] cross[0:NUM_INPUTS];
@@ -77,8 +77,8 @@ module CORRELATOR (
 
 	wire [19:0] delays_r [0:NUM_INPUTS];
 	wire [19:0] delays_i [0:NUM_INPUTS];
-	wire [WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE-1:0] cross_delayed_lines_r [0:NUM_INPUTS+16];
-	wire [WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE-1:0] cross_delayed_lines_i [0:NUM_INPUTS+16];
+	wire [WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE-1:0] cross_delayed_lines_r [0:NUM_INPUTS];
+	wire [WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE-1:0] cross_delayed_lines_i [0:NUM_INPUTS];
 	reg signed [WORD_WIDTH-1:0] r[0:CORRELATIONS_SIZE];
 	reg signed [WORD_WIDTH-1:0] i[0:CORRELATIONS_SIZE];
 
@@ -116,16 +116,15 @@ module CORRELATOR (
 			assign delays_i[line] = (QUADRANT ? 2 : (SINGLE ? 1 : cross[line]));
 			assign cross_delayed_lines_r[line] = cross_delay_lines[line][(QUADRANT_OR_SINGLE ? 1 : cross[line])*WORD_WIDTH+:WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE];
 			assign cross_delayed_lines_i[line] = cross_delay_lines[line][(QUADRANT ? 2 : (SINGLE ? 1 : cross[line]))*WORD_WIDTH+:WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE];
-			assign order = (in_order < MAX_ORDER ? in_order : MAX_ORDER);
 		end
 	endgenerate
 
 	always @(posedge pllclk) begin
 		idx <= 0;
-		for (a=0; a<NUM_INPUTS-(order+1); a=a+1) begin : correlators_outer_block
-			for (b=a+order+1; b<NUM_INPUTS; b=b+1) begin : correlators_inner_block
-				for (c=0; c<order+1; c=c+1) begin : order_block
-					for (y=0; y<CORRELATIONS_HEAD_TAIL_SIZE; y=y+1) begin : order_block
+		for (a=0; a<NUM_INPUTS-((order < MAX_ORDER ? order : MAX_ORDER)+1); a=a+1) begin
+			for (b=a+(order < MAX_ORDER ? order : MAX_ORDER)+1; b<NUM_INPUTS; b=b+1) begin
+				for (c=0; c<(order < MAX_ORDER ? order : MAX_ORDER)+1; c=c+1) begin
+					for (y=0; y<CORRELATIONS_HEAD_TAIL_SIZE; y=y+1) begin
 						if(~reset) begin
 							if(!overflow[idx]) begin
 								if(~(leds[a][4]&leds[a+c][4])) begin
