@@ -41,6 +41,7 @@ parameter WORD_WIDTH = 1;
 parameter USE_UART = 1;
 parameter BINARY = 0;
 parameter USE_SOFT_CLOCK = 1;
+parameter MAX_ORDER = 2;
 
 localparam SHIFT = 1;
 localparam SECOND = 1000000000;
@@ -270,6 +271,7 @@ if(HAS_CROSSCORRELATOR) begin
 	.BAUD_RATE(BAUD_RATE),
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
 	.BINARY(BINARY),
+	.MAX_ORDER(MAX_ORDER),
 	.USE_UART(USE_UART)) (
 		pulses,
 		pllclk,

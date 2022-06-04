@@ -30,7 +30,7 @@ parameter WORD_WIDTH = _WORD_WIDTH;
 parameter USE_UART = _USE_UART;
 parameter BINARY = _BINARY;
 parameter USE_SOFT_CLOCK = _USE_SOFT_CLOCK;
-
+parameter MAX_ORDER = _MAX_ORDER;
 input wire sysclk;
 inout wire[19:0] jp1;
 inout wire[19:0] jp2;
@@ -78,7 +78,8 @@ main #(
 .BAUD_RATE(BAUD_RATE),
 .USE_SOFT_CLOCK(USE_SOFT_CLOCK),
 .BINARY(BINARY),
-.USE_UART(USE_UART)
+.USE_UART(USE_UART),
+.MAX_ORDER(MAX_ORDER)
 ) main_block(
        TX,
        RX,

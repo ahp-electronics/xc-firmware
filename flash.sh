@@ -149,6 +149,8 @@ prepare() {
         read NUM_LINES
 	echo "enter channels #:"
         read DELAY_SIZE
+	echo "enter the maximum correlation order:"
+        read MAX_ORDER
 	echo "enter single-shot baseline channels #:"
         read LAG_CROSS
 	echo "enter single-shot line channels #:"
@@ -194,6 +196,7 @@ prepare() {
         sed -e "s:_USE_UART:${USE_UART}:g" \
         sed -e "s:_BINARY:${BINARY}:g" \
         sed -e "s:_USE_SOFT_CLOCK:${USE_SOFT_CLOCK}:g" \
+        sed -e "s:_MAX_ORDER:${MAX_ORDER}:g" \
          > ${tmpfile}
 }
 
