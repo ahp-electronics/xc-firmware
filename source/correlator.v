@@ -83,7 +83,7 @@ module CORRELATOR (
 	reg signed [WORD_WIDTH-1:0] r[0:CORRELATIONS_SIZE];
 	reg signed [WORD_WIDTH-1:0] i[0:CORRELATIONS_SIZE];
 
-	wire [7:0] in_order;
+	wire [7:0] tmp_order;
 	wire [CORRELATIONS_SIZE-1:0] overflow;
 	wire [WORD_WIDTH-1:0] adc_data [0:NUM_INPUTS];
 	wire[7:0] leds[0:NUM_INPUTS];
@@ -118,15 +118,15 @@ module CORRELATOR (
 			assign delays_i[line] = (QUADRANT ? 2 : (SINGLE ? 1 : cross[line]));
 			assign cross_delayed_lines_r[line] = cross_delay_lines[line][(QUADRANT_OR_SINGLE ? 1 : cross[line])*WORD_WIDTH+:WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE];
 			assign cross_delayed_lines_i[line] = cross_delay_lines[line][(QUADRANT ? 2 : (SINGLE ? 1 : cross[line]))*WORD_WIDTH+:WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE];
-			assign in_order = (order+1 < MAX_ALLOWED_ORDER ? order+1 : MAX_ALLOWED_ORDER);
+			assign tmp_order = (order+1 < MAX_ALLOWED_ORDER ? order+1 : MAX_ALLOWED_ORDER);
 		end
 	endgenerate
 
 	always @(posedge pllclk) begin
 		idx <= 0;
-		for (a=0; a<NUM_INPUTS-(in_order+1); a=a+1) begin
-			for (b=a+in_order; b<NUM_INPUTS; b=b+1) begin
-				for (c=0; c<in_order; c=c+1) begin
+		for (a=0; a<NUM_INPUTS-tmp_order; a=a+1) begin
+			for (b=a+tmp_order; b<NUM_INPUTS; b=b+1) begin
+				for (c=0; c<tmp_order; c=c+1) begin
 					for (y=0; y<CORRELATIONS_HEAD_TAIL_SIZE; y=y+1) begin
 						if(~reset) begin
 							if(!overflow[idx]) begin
