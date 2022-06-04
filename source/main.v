@@ -92,10 +92,10 @@ wire[WORD_WIDTH-1:0] adc_data[0:NUM_INPUTS];
 wire[WORD_WIDTH-NUM_INPUTS-1:0] adc_data_a;
 wire[NUM_INPUTS-1:0] adc_done;
 
-wire auto_smpclk[NUM_INPUTS-1:0];
-wire cross_smpclk[NUM_INPUTS-1:0];
-wire auto_smpclk_pulse[NUM_INPUTS-1:0];
-wire cross_smpclk_pulse[NUM_INPUTS-1:0];
+wire [NUM_INPUTS-1:0]auto_smpclk;
+wire [NUM_INPUTS-1:0]cross_smpclk;
+wire [NUM_INPUTS-1:0]auto_smpclk_pulse;
+wire [NUM_INPUTS-1:0]cross_smpclk_pulse;
 
 localparam QUADRANT_OR_SINGLE = (DELAY_SIZE < 5);
 localparam QUADRANT = (DELAY_SIZE == 4);
@@ -117,8 +117,8 @@ wire[NUM_INPUTS*WORD_WIDTH-1:0] cross_delay_lines [0:LAG_SIZE_CROSS];
 
 reg[19:0] cross [0:NUM_INPUTS];
 reg[19:0] auto [0:NUM_INPUTS];
-reg[11:0] cross_increment [0:NUM_INPUTS];
-reg[11:0] auto_increment [0:NUM_INPUTS];
+wire[11:0] cross_increment [0:NUM_INPUTS];
+wire[11:0] auto_increment [0:NUM_INPUTS];
 
 reg[NUM_INPUTS-1:0] signal_in;
 
@@ -144,7 +144,7 @@ wire[19:0] auto_len [0:NUM_INPUTS];
 wire[8*NUM_INPUTS-1:0] leds_a;
 wire[8*NUM_INPUTS-1:0] test_a;
 wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
-wire[19:0] cross_a [NUM_INPUTS];
+wire[20*NUM_INPUTS-1:0] cross_a;
 wire[20*NUM_INPUTS-1:0] cross_tmp_a;
 wire[20*NUM_INPUTS-1:0] auto_tmp_a;
 wire[20*NUM_INPUTS-1:0] cross_len_a;

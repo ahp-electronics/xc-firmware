@@ -19,7 +19,6 @@ module CLK_GEN
 	input wire [RESOLUTION-1:0] div;
 	output reg clk_out;
 	input wire clk;
-	input wire refclk;
 	input wire enable;
 	
 	output wire overflow;
