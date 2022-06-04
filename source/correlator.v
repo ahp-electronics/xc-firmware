@@ -13,7 +13,7 @@ module CORRELATOR (
 		adc_data_a,
 		cross_smpclk,
 		leds_a,
-		order,
+		in_order,
 		reset
 	);
 
@@ -51,6 +51,7 @@ module CORRELATOR (
 	localparam HEADER_SIZE = 64;
 	localparam FOOTER_SIZE = 64;
 	localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+FOOTER_SIZE;
+	localparam MAX_ORDER = (NUM_INPUTS < 16 ? NUM_INPUTS : 16);
 
 	localparam LAG_SIZE_AUTO = DELAY_SIZE+LAG_AUTO+1;
 	localparam LAG_SIZE_CROSS = DELAY_SIZE+LAG_CROSS;
@@ -67,7 +68,7 @@ module CORRELATOR (
 	output reg [PAYLOAD_SIZE-1:0] pulses;
 	input wire reset;
 	input wire pllclk;
-	input wire [3:0] order;
+	input wire [3:0] in_order;
 	input wire [WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
 	input wire [20*NUM_INPUTS-1:0] cross_a;
 	input wire [19:0] cross[0:NUM_INPUTS];
@@ -81,6 +82,7 @@ module CORRELATOR (
 	reg signed [WORD_WIDTH-1:0] r[0:CORRELATIONS_SIZE];
 	reg signed [WORD_WIDTH-1:0] i[0:CORRELATIONS_SIZE];
 
+	wire [3:0] order;
 	wire [CORRELATIONS_SIZE-1:0] overflow;
 	wire [WORD_WIDTH-1:0] adc_data [0:NUM_INPUTS];
 	wire[7:0] leds[0:NUM_INPUTS];
@@ -114,6 +116,7 @@ module CORRELATOR (
 			assign delays_i[line] = (QUADRANT ? 2 : (SINGLE ? 1 : cross[line]));
 			assign cross_delayed_lines_r[line] = cross_delay_lines[line][(QUADRANT_OR_SINGLE ? 1 : cross[line])*WORD_WIDTH+:WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE];
 			assign cross_delayed_lines_i[line] = cross_delay_lines[line][(QUADRANT ? 2 : (SINGLE ? 1 : cross[line]))*WORD_WIDTH+:WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE];
+			assign order = (in_order < MAX_ORDER ? in_order : MAX_ORDER);
 		end
 	endgenerate
 
