@@ -277,7 +277,7 @@ if(HAS_CROSSCORRELATOR) begin
 		adc_data_a,
 		cross_smpclk,
 		leds_a,
-		0,
+		order,
 		reset
 );
 end
