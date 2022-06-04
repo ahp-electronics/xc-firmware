@@ -82,7 +82,7 @@ module CORRELATOR (
 	reg signed [WORD_WIDTH-1:0] r[0:CORRELATIONS_SIZE];
 	reg signed [WORD_WIDTH-1:0] i[0:CORRELATIONS_SIZE];
 
-	wire [3:0] order;
+	wire [3:0] cur_order;
 	wire [CORRELATIONS_SIZE-1:0] overflow;
 	wire [WORD_WIDTH-1:0] adc_data [0:NUM_INPUTS];
 	wire[7:0] leds[0:NUM_INPUTS];
@@ -116,23 +116,24 @@ module CORRELATOR (
 			assign delays_i[line] = (QUADRANT ? 2 : (SINGLE ? 1 : cross[line]));
 			assign cross_delayed_lines_r[line] = cross_delay_lines[line][(QUADRANT_OR_SINGLE ? 1 : cross[line])*WORD_WIDTH+:WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE];
 			assign cross_delayed_lines_i[line] = cross_delay_lines[line][(QUADRANT ? 2 : (SINGLE ? 1 : cross[line]))*WORD_WIDTH+:WORD_WIDTH*CORRELATIONS_HEAD_TAIL_SIZE];
+			assign cur_order = (order+1 < MAX_ORDER ? order+1 : MAX_ORDER);
 		end
 	endgenerate
 
 	always @(posedge pllclk) begin
 		idx <= 0;
-		for (a=0; a<NUM_INPUTS-((order < MAX_ORDER ? order : MAX_ORDER)+1); a=a+1) begin
-			for (b=a+(order < MAX_ORDER ? order : MAX_ORDER)+1; b<NUM_INPUTS; b=b+1) begin
-				for (c=0; c<(order < MAX_ORDER ? order : MAX_ORDER)+1; c=c+1) begin
+		for (a=0; a<NUM_INPUTS-(cur_order+1); a=a+1) begin
+			for (b=a+cur_order; b<NUM_INPUTS; b=b+1) begin
+				for (c=1; c<cur_order+1; c=c+1) begin
 					for (y=0; y<CORRELATIONS_HEAD_TAIL_SIZE; y=y+1) begin
 						if(~reset) begin
 							if(!overflow[idx]) begin
 								if(~(leds[a][4]&leds[a+c][4])) begin
-									r[idx] <= r[idx] + cross_delayed_lines_r[a][y*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_r[a+c+1][y*WORD_WIDTH+:WORD_WIDTH];
-									i[idx] <= i[idx] + cross_delayed_lines_i[a][y*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_i[a+c+1][y*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
+									r[idx] <= r[idx] + cross_delayed_lines_r[a][y*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_r[a+c][y*WORD_WIDTH+:WORD_WIDTH];
+									i[idx] <= i[idx] + cross_delayed_lines_i[a][y*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_i[a+c][y*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
 								end else begin
-									r[idx] <= r[idx] + cross_delayed_lines_r[a][y*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_r[a+c+1][y*WORD_WIDTH+:WORD_WIDTH];
-									i[idx] <= i[idx] + cross_delayed_lines_i[a][y*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_i[a+c+1][y*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
+									r[idx] <= r[idx] + cross_delayed_lines_r[a][y*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_r[a+c][y*WORD_WIDTH+:WORD_WIDTH];
+									i[idx] <= i[idx] + cross_delayed_lines_i[a][y*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_i[a+c][y*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
 								end
 							end
 						end else begin
