@@ -97,8 +97,8 @@ module CORRELATOR (
 		genvar channel;
 		genvar _channels;
 		for (_idx = 0; _idx < CORRELATIONS_SIZE; _idx = _idx+1) begin : iteration_block
-			assign r[_idx*2] = pulses[_idx*RESOLUTION*2+:RESOLUTION];
-			assign i[_idx*2+1] = pulses[_idx*RESOLUTION*2+RESOLUTION+:RESOLUTION];
+			assign r[_idx] = pulses[_idx*RESOLUTION*2+:RESOLUTION];
+			assign i[_idx] = pulses[_idx*RESOLUTION*2+RESOLUTION+:RESOLUTION];
 			assign overflow[_idx] = (r[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || r[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)));
 		end
 
