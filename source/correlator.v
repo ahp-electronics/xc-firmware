@@ -76,7 +76,7 @@ module CORRELATOR (
 	reg signed [WORD_WIDTH-1:0] r[0:CORRELATIONS_SIZE];
 	reg signed [WORD_WIDTH-1:0] i[0:CORRELATIONS_SIZE];
 
-	wire [CORRELATIONS_SIZE*CORRELATIONS_HEAD_TAIL_SIZE-1:0] overflow;
+	wire [CORRELATIONS_SIZE-1:0] overflow;
 	wire [WORD_WIDTH-1:0] adc_data [0:NUM_INPUTS];
 	wire[7:0] leds[0:NUM_INPUTS];
 	reg[7:0] a;
@@ -96,7 +96,7 @@ module CORRELATOR (
 		genvar line2;
 		genvar channel;
 		genvar _channels;
-		for (_idx = 0; _idx < CORRELATIONS_HEAD_TAIL_SIZE; _idx = _idx+1) begin : iteration_block
+		for (_idx = 0; _idx < CORRELATIONS_SIZE; _idx = _idx+1) begin : iteration_block
 			assign r[_idx*2] = pulses[_idx*RESOLUTION*2+:RESOLUTION];
 			assign i[_idx*2+1] = pulses[_idx*RESOLUTION*2+RESOLUTION+:RESOLUTION];
 			assign overflow[_idx] = (r[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || r[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)));
