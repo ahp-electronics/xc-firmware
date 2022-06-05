@@ -127,7 +127,7 @@ module CORRELATOR (
 		for (a=0; a<NUM_INPUTS; a=a+1) begin
 			for (b=a+tmp_order; b<NUM_INPUTS; b=b+1) begin
 				for (c=0; c<tmp_order; c=c+1) begin
-					for (d=-LAG_CROSS; d<LAG_CROSS; d=d+1) begin
+					for (d=-LAG_CROSS+1; d<LAG_CROSS; d=d+1) begin
 						if(~reset) begin
 							if(!overflow[idx]) begin
 								if(~(leds[a][4]&leds[b+c][4])) begin
