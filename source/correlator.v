@@ -124,10 +124,10 @@ module CORRELATOR (
 
 	always @(posedge pllclk) begin
 		idx <= 0;
-		for (a=0; a<NUM_INPUTS-tmp_order; a<=a+1) begin
-			for (b=a+tmp_order; b<NUM_INPUTS; b<=b+1) begin
-				for (c=0; c<tmp_order; c<=c+1) begin
-					for (y=0; y<CORRELATIONS_HEAD_TAIL_SIZE; y<=y+1) begin
+		for (a<=0; a<NUM_INPUTS-tmp_order; a<=a+1) begin
+			for (b<=a+tmp_order; b<NUM_INPUTS; b<=b+1) begin
+				for (c<=0; c<tmp_order; c<=c+1) begin
+					for (y<=0; y<CORRELATIONS_HEAD_TAIL_SIZE; y<=y+1) begin
 						if(~reset) begin
 							if(!overflow[idx]) begin
 								if(~(leds[a][4]&leds[b+c][4])) begin
