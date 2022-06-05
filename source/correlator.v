@@ -92,16 +92,10 @@ module CORRELATOR (
 	reg[8:0] c;
 	reg signed[12:0] d;
 	reg[15:0] idx;
-	reg[11:0] z;
 
 	generate
 		genvar _idx;
-		genvar x;
-		genvar j;
 		genvar line;
-		genvar line2;
-		genvar channel;
-		genvar _channels;
 
 		for (_idx = 0; _idx < CORRELATIONS_SIZE; _idx = _idx+1) begin : iteration_block
 			assign pulses[_idx*RESOLUTION*2+:RESOLUTION] = r[_idx];
@@ -123,7 +117,7 @@ module CORRELATOR (
 	endgenerate
 
 	always @(posedge pllclk) begin
-		idx <= 0;
+		idx = 0;
 		for (a=0; a<NUM_INPUTS; a=a+1) begin
 			for (b=a+tmp_order; b<NUM_INPUTS; b=b+1) begin
 				for (c=0; c<tmp_order; c=c+1) begin
@@ -144,7 +138,7 @@ module CORRELATOR (
 						end
 					end
 				end
-				idx <= idx+1;
+				idx = idx+1;
 			end
 		end
 	end
