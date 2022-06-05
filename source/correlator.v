@@ -65,7 +65,7 @@ module CORRELATOR (
 	localparam QUADRANT = (DELAY_SIZE == 4);
 	localparam SINGLE = (DELAY_SIZE == 0);
 
-	wire [WORD_WIDTH*LAG_SIZE_CROSS:0] cross_delay_lines [0:NUM_INPUTS];
+	wire [WORD_WIDTH*LAG_SIZE_CROSS-1:0] cross_delay_lines [0:NUM_INPUTS];
 	output wire [PAYLOAD_SIZE-1:0] pulses;
 	input wire reset;
 	input wire pllclk;
