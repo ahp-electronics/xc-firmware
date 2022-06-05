@@ -52,7 +52,7 @@ module CORRELATOR (
 	localparam HEADER_SIZE = 64;
 	localparam FOOTER_SIZE = 64;
 	localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+FOOTER_SIZE;
-	localparam MAX_ALLOWED_ORDER = (NUM_INPUTS < MAX_ORDER) ? NUM_INPUTS : (MAX_ORDER-1);
+	localparam MAX_ALLOWED_ORDER = ((NUM_INPUTS < MAX_ORDER) ? NUM_INPUTS : (MAX_ORDER-1));
 
 	localparam LAG_SIZE_AUTO = DELAY_SIZE+LAG_AUTO+1;
 	localparam LAG_SIZE_CROSS = DELAY_SIZE+LAG_CROSS+1;
@@ -65,7 +65,6 @@ module CORRELATOR (
 	localparam QUADRANT = (DELAY_SIZE == 4);
 	localparam SINGLE = (DELAY_SIZE == 0);
 
-	wire [WORD_WIDTH*LAG_SIZE_CROSS-1:0] cross_delay_lines [0:NUM_INPUTS];
 	output wire [PAYLOAD_SIZE-1:0] pulses;
 	input wire reset;
 	input wire pllclk;
@@ -75,6 +74,7 @@ module CORRELATOR (
 	input wire [NUM_INPUTS-1:0] cross_smpclk;
 	input wire [NUM_INPUTS*8-1:0] leds_a;
 
+	wire [WORD_WIDTH*LAG_SIZE_CROSS-1:0] cross_delay_lines [0:NUM_INPUTS];
 	wire [19:0] cross [0:NUM_INPUTS];
 	wire [19:0] delays_r [0:NUM_INPUTS];
 	wire [19:0] delays_i [0:NUM_INPUTS];
@@ -118,13 +118,13 @@ module CORRELATOR (
 
 	always @(posedge pllclk) begin
 		idx = 0;
-		for (a=0; a<NUM_INPUTS; a=a+1) begin
-			for (b=a+tmp_order; b<NUM_INPUTS; b=b+1) begin
+		for (a=0; a<NUM_INPUTS-1; a=a+1) begin
+			for (b=a+1; b<NUM_INPUTS; b=b+1) begin
 				for (c=0; c<MAX_ALLOWED_ORDER; c=c+1) begin
 					for (d=-LAG_CROSS+1; d<LAG_CROSS; d=d+1) begin
 						if(~reset) begin
-							if(!overflow[idx]) begin
-								if(c < tmp_order) begin
+							if(b > a+tmp_order && c < tmp_order) begin
+								if(!overflow[idx]) begin
 									if(~(leds[a][4]&leds[b+c][4])) begin
 										r[idx] <= r[idx] + cross_delayed_lines_r[a][(d < 0 ? -d : d)*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_r[b+c][(d < 0 ? -d : d)*WORD_WIDTH+:WORD_WIDTH];
 										i[idx] <= i[idx] + cross_delayed_lines_i[a][(d < 0 ? -d : d)*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_i[b+c][(d < 0 ? -d : d)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
