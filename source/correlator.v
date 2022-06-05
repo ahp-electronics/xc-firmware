@@ -123,7 +123,7 @@ module CORRELATOR (
 				for (c=0; c<MAX_ALLOWED_ORDER; c=c+1) begin
 					for (d=-LAG_CROSS+1; d<LAG_CROSS; d=d+1) begin
 						if(~reset) begin
-							if(b > a+tmp_order && c < tmp_order) begin
+							if(b >= a+tmp_order && c < tmp_order) begin
 								if(!overflow[idx]) begin
 									if(~(leds[a][4]&leds[b+c][4])) begin
 										r[idx] <= r[idx] + cross_delayed_lines_r[a][(d < 0 ? -d : d)*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_r[b+c][(d < 0 ? -d : d)*WORD_WIDTH+:WORD_WIDTH];
