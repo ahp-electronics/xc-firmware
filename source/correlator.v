@@ -135,10 +135,10 @@ module CORRELATOR (
 											i[idx] <= i[idx] + cross_delayed_lines_i[a][(d < 0 ? -d : d)*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_i[b+c][(d < 0 ? -d : d)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
 										end
 									end
+								end else begin
+									r[idx] <= 0;
+									i[idx] <= 0;
 								end
-							end else begin
-								r[idx] <= 0;
-								i[idx] <= 0;
 							end
 						end
 					end
