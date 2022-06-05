@@ -100,7 +100,7 @@ module CORRELATOR (
 		for (_idx = 0; _idx < CORRELATIONS_SIZE; _idx = _idx+1) begin : iteration_block
 			assign pulses[_idx*RESOLUTION*2+:RESOLUTION] = r[_idx];
 			assign pulses[_idx*RESOLUTION*2+RESOLUTION+:RESOLUTION] = i[_idx];
-			assign overflow[_idx] = (r[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || r[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)));
+			assign overflow[_idx] = (r[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || r[_idx] < -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] >= (((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)) || i[_idx] < -(((1<<RESOLUTION)-1)-(1<<WORD_WIDTH)));
 		end
 
 		for (line = 0; line < NUM_INPUTS; line = line+1) begin : correlator_outer_block
