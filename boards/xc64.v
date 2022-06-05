@@ -30,7 +30,7 @@ parameter WORD_WIDTH = 1;
 parameter USE_UART = 1;
 parameter BINARY = 0;
 parameter USE_SOFT_CLOCK = 1;
-parameter MAX_ORDER = NUM_LINES*MUX_LINES;
+parameter MAX_ORDER = 4;
 
 input wire sysclk;
 inout wire[19:0] jp1;
