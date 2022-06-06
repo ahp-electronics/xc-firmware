@@ -280,7 +280,7 @@ if(HAS_CROSSCORRELATOR) begin
 		cross_smpclk,
 		leds_a,
 		order,
-		reset
+		reset_delayed
 );
 end
 always@(*) begin
