@@ -79,6 +79,8 @@ module CORRELATOR (
 	wire [19:0] cross [0:NUM_INPUTS];
 	wire [19:0] delays_r [0:NUM_INPUTS];
 	wire [19:0] delays_i [0:NUM_INPUTS];
+	reg [WORD_WIDTH*LAG_CROSS-1:0] old_delayed_lines_r [0:NUM_INPUTS];
+	reg [WORD_WIDTH*LAG_CROSS-1:0] old_delayed_lines_i [0:NUM_INPUTS];
 	wire [WORD_WIDTH*LAG_CROSS-1:0] cross_delayed_lines_r [0:NUM_INPUTS];
 	wire [WORD_WIDTH*LAG_CROSS-1:0] cross_delayed_lines_i [0:NUM_INPUTS];
 	reg signed [WORD_WIDTH-1:0] r[0:CORRELATIONS_SIZE];
@@ -127,12 +129,22 @@ module CORRELATOR (
 							if(d < tmp_order) begin
 								if(~reset) begin
 									if(~overflow[idx]) begin
-										if(~(leds[a][4]&leds[b+d][4])) begin
-											r[idx] <= r[idx] + cross_delayed_lines_r[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_r[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH];
-											i[idx] <= i[idx] + cross_delayed_lines_i[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_i[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
-										end else begin
-											r[idx] <= r[idx] + cross_delayed_lines_r[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_r[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH];
-											i[idx] <= i[idx] + cross_delayed_lines_i[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_i[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
+										if(((leds[a][3]&leds[b+d][3]) | HAS_CUMULATIVE_ONLY) ||
+											(cross_delayed_lines_r[a] != old_delayed_lines_r[a]) ||
+											(cross_delayed_lines_r[b+d] != old_delayed_lines_r[b+d]) ||
+											(cross_delayed_lines_i[a] != old_delayed_lines_i[a]) ||
+											(cross_delayed_lines_i[b+d] != old_delayed_lines_i[b+d])) begin
+											old_delayed_lines_r[a] <= cross_delayed_lines_r[a];
+											old_delayed_lines_r[b+d] <= cross_delayed_lines_r[b+d];
+											old_delayed_lines_i[a] <= cross_delayed_lines_i[a];
+											old_delayed_lines_i[b+d] <= cross_delayed_lines_i[b+d];
+											if(~(leds[a][4]&leds[b+d][4])) begin
+												r[idx] <= r[idx] + cross_delayed_lines_r[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_r[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH];
+												i[idx] <= i[idx] + cross_delayed_lines_i[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_i[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
+											end else begin
+												r[idx] <= r[idx] + cross_delayed_lines_r[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_r[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH];
+												i[idx] <= i[idx] + cross_delayed_lines_i[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_i[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
+											end
 										end
 									end
 								end else begin
