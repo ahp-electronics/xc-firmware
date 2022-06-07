@@ -52,7 +52,7 @@ module CORRELATOR (
 	localparam HEADER_SIZE = 64;
 	localparam FOOTER_SIZE = 64;
 	localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+FOOTER_SIZE;
-	localparam MAX_ALLOWED_ORDER = ((NUM_INPUTS < MAX_ORDER) ? NUM_INPUTS : (MAX_ORDER-1));
+	localparam MAX_ALLOWED_ORDER = ((NUM_INPUTS < MAX_ORDER) ? NUM_INPUTS : MAX_ORDER);
 	localparam MAX_COUNTS = (((1<<RESOLUTION)-1)-((1<<WORD_WIDTH)-1));
 
 	localparam LAG_SIZE_AUTO = DELAY_SIZE+LAG_AUTO+1;
@@ -86,24 +86,22 @@ module CORRELATOR (
 	reg signed [WORD_WIDTH-1:0] r[0:CORRELATIONS_SIZE];
 	reg signed [WORD_WIDTH-1:0] i[0:CORRELATIONS_SIZE];
 
-	wire [7:0] tmp_order;
+	wire [7:0] m_order;
 	wire [CORRELATIONS_SIZE-1:0] overflow;
 	wire [WORD_WIDTH-1:0] adc_data [0:NUM_INPUTS];
 	wire[7:0] leds[0:NUM_INPUTS];
-	reg[8:0] a;
-	reg[8:0] b;
-	reg[8:0] c;
-	reg signed[12:0] d;
-	reg[15:0] idx;
 
 	generate
-		genvar _idx;
+		genvar a;
+		genvar b;
+		genvar c;
+		genvar idx;
 		genvar line;
 
-		for (_idx = 0; _idx < CORRELATIONS_SIZE; _idx = _idx+1) begin : iteration_block
-			assign pulses[_idx*RESOLUTION*2+:RESOLUTION] = r[CORRELATIONS_SIZE-_idx-1];
-			assign pulses[_idx*RESOLUTION*2+RESOLUTION+:RESOLUTION] = i[CORRELATIONS_SIZE-_idx-1];
-			assign overflow[_idx] = ~(r[_idx] < MAX_COUNTS && r[_idx] > -MAX_COUNTS && i[_idx] < MAX_COUNTS && i[_idx] > -MAX_COUNTS);
+		for (idx = 0; idx < CORRELATIONS_SIZE; idx = idx+1) begin : iteration_block
+			assign pulses[idx*RESOLUTION*2+:RESOLUTION] = r[CORRELATIONS_SIZE-idx-1];
+			assign pulses[idx*RESOLUTION*2+RESOLUTION+:RESOLUTION] = i[CORRELATIONS_SIZE-idx-1];
+			assign overflow[idx] = ~(r[idx] < MAX_COUNTS && r[idx] > -MAX_COUNTS && i[idx] < MAX_COUNTS && i[idx] > -MAX_COUNTS);
 		end
 
 		for (line = 0; line < NUM_INPUTS; line = line+1) begin : correlator_outer_block
@@ -115,48 +113,44 @@ module CORRELATOR (
 			assign delays_i[line] = (QUADRANT ? 2 : (SINGLE ? 1 : cross[line]));
 			assign cross_delayed_lines_r[line] = cross_delay_lines[line][(QUADRANT_OR_SINGLE ? 1 : cross[line])*WORD_WIDTH+:WORD_WIDTH*LAG_CROSS];
 			assign cross_delayed_lines_i[line] = cross_delay_lines[line][(QUADRANT ? 2 : (SINGLE ? 1 : cross[line]))*WORD_WIDTH+:WORD_WIDTH*LAG_CROSS];
-			assign tmp_order = (order+1 < MAX_ALLOWED_ORDER ? order+1 : MAX_ALLOWED_ORDER);
+			assign m_order = (order < MAX_ALLOWED_ORDER ? order+2 : MAX_ALLOWED_ORDER);
 		end
-	endgenerate
-
-	always @(posedge pllclk) begin
-		idx = 0;
+	
 		for (a=0; a<NUM_INPUTS-1; a=a+1) begin
 			for (b=a+1; b<NUM_INPUTS; b=b+1) begin
 				for (c=-LAG_CROSS+1; c<LAG_CROSS; c=c+1) begin
-					if(a < b && b > (a+tmp_order-1)) begin
+					always @(posedge pllclk) begin : crosscorrelator_block
+						reg [12:0] d;
+						reg signed [WORD_WIDTH-1:0] old_r;
+						reg signed [WORD_WIDTH-1:0] old_i;
 						for (d=0; d<MAX_ALLOWED_ORDER; d=d+1) begin
-							if(d < tmp_order) begin
-								if(~reset) begin
-									if(~overflow[idx]) begin
-										if(((leds[a][3]&leds[b+d][3]) | HAS_CUMULATIVE_ONLY) ||
-											(cross_delayed_lines_r[a] != old_delayed_lines_r[a]) ||
-											(cross_delayed_lines_r[b+d] != old_delayed_lines_r[b+d]) ||
-											(cross_delayed_lines_i[a] != old_delayed_lines_i[a]) ||
-											(cross_delayed_lines_i[b+d] != old_delayed_lines_i[b+d])) begin
-											old_delayed_lines_r[a] <= cross_delayed_lines_r[a];
-											old_delayed_lines_r[b+d] <= cross_delayed_lines_r[b+d];
-											old_delayed_lines_i[a] <= cross_delayed_lines_i[a];
-											old_delayed_lines_i[b+d] <= cross_delayed_lines_i[b+d];
-											if(~(leds[a][4]&leds[b+d][4])) begin
-												r[idx] <= r[idx] + cross_delayed_lines_r[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_r[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH];
-												i[idx] <= i[idx] + cross_delayed_lines_i[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] * cross_delayed_lines_i[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
-											end else begin
-												r[idx] <= r[idx] + cross_delayed_lines_r[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_r[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH];
-												i[idx] <= i[idx] + cross_delayed_lines_i[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH] - cross_delayed_lines_i[b+d][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
-											end
+							if(d < m_order && b < NUM_INPUTS - m_order + 1) begin
+								if(~overflow[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*CORRELATIONS_HEAD_TAIL_SIZE+(c+LAG_CROSS-1))]) begin
+									if(d == 0) begin
+										old_r <= cross_delayed_lines_r[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH];
+										old_i <= cross_delayed_lines_i[a][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH];
+									end else begin
+										if(~(leds[a][4]&leds[b+d-1][4])) begin
+											old_r <= old_r * cross_delayed_lines_r[b+d-1][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH];
+											old_i <= old_i * cross_delayed_lines_i[b+d-1][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
+										end else begin
+											old_r <= old_r - cross_delayed_lines_r[b+d-1][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH];
+											old_i <= old_i - cross_delayed_lines_i[b+d-1][(c < 0 ? -c : c)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?((1<<WORD_WIDTH)-1):0);
 										end
 									end
-								end else begin
-									r[idx] <= 0;
-									i[idx] <= 0;
 								end
 							end
 						end
-						idx = idx+1;
+						if(~reset) begin
+							r[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*CORRELATIONS_HEAD_TAIL_SIZE+(c+LAG_CROSS-1))] <= r[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*CORRELATIONS_HEAD_TAIL_SIZE+(c+LAG_CROSS-1))] + old_r;
+							i[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*CORRELATIONS_HEAD_TAIL_SIZE+(c+LAG_CROSS-1))] <= i[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*CORRELATIONS_HEAD_TAIL_SIZE+(c+LAG_CROSS-1))] + old_i;
+						end else begin
+							r[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*CORRELATIONS_HEAD_TAIL_SIZE+(c+LAG_CROSS-1))] <= 0;
+							i[((((a*(NUM_INPUTS+NUM_INPUTS-a-1))>>1)+b-a-1)*CORRELATIONS_HEAD_TAIL_SIZE+(c+LAG_CROSS-1))] <= 0;
+						end
 					end
 				end
 			end
 		end
-	end
+	endgenerate
 endmodule
