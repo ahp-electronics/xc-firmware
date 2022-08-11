@@ -31,6 +31,7 @@ parameter USE_SOFT_CLOCK = 1;			//Limit usage of gated clocks
 parameter MAX_ORDER = 2;			//Maximum crosscorrelation order
 ```
 
+
 The generated SVF file can be downloaded to the device using urJTAG http://urjtag.org/
 
 The cross-platform driver library: https://github.com/ahp-electronics/libahp-xc
