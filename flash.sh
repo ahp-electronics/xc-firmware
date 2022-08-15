@@ -36,8 +36,8 @@ environment() {
 svf() {
 	svf="${PWD}/output/${implementation}/${1}.svf"
 	tmpfile="${PWD}/output/${implementation}/${1}.xcf"
-	binsize=$(( $(wc -c ${PWD}/build/${implementation}/${project}_${implementation}.bit | cut -d ' ' -f 1) - 1 ))
-	endaddr=$(printf '0x%05X000' $(( ${binsize}/32768 )) )
+	binsize=$(( $( wc -c build/xc8/fpga_firmware_xc8.bit | cut -d ' ' -f 1 ) ))
+	endaddr=$(printf '0x%08X' $(( ${binsize} / 65536 + 1)) )
 	echo $project ${implementation} $1
 	sed -e "s:PART:${part}:g" "${PWD}/boards/flash_${1}.xcf" | \
 	sed -e "s:LUTSIZE:${size}:g" | \
