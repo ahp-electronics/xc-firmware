@@ -198,10 +198,10 @@ prepare() {
 }
 
 build() {
-#	synthesize;
-#	translate;
-#	mapper;
-#	route;
+	synthesize;
+	translate;
+	mapper;
+	route;
 	generate;
 }
 
