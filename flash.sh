@@ -37,7 +37,7 @@ svf() {
 	svf="${PWD}/output/${implementation}/${1}.svf"
 	tmpfile="${PWD}/output/${implementation}/${1}.xcf"
 	binsize=$(( $( wc -c build/xc8/fpga_firmware_xc8.bit | cut -d ' ' -f 1 ) ))
-	endaddr=$(printf '0x%08X' $(( ${binsize} / 65536 + 1)) )
+	endaddr=$(printf '0x%08X' $(( ${binsize} ))  )
 	echo $project ${implementation} $1
 	sed -e "s:PART:${part}:g" "${PWD}/boards/flash_${1}.xcf" | \
 	sed -e "s:LUTSIZE:${size}:g" | \
@@ -57,7 +57,7 @@ svf() {
 
 program() {
 	_svf="${PWD}/output/${implementation}/flash.svf"
-	program_jtag -i"${_svf}" -d"${programmer}" -f${frequency}|| true
+	program_jtag -i<(bit2program "${PWD}/build/${implementation}/fpga_firmware_${implementation}.bit" 2>/dev/null) -d"${programmer}" -f${frequency}|| true
 }
 
 synthesize() {
@@ -132,14 +132,11 @@ generate() {
 	_svf="${PWD}/output/${implementation}/flash.svf"
 	rm -f "${_svf}"
 	echo "" > "${_svf}"
-	for t in $targets; do
-		svf $t
-		cat "${PWD}/output/${implementation}/${t}.svf" >> "${_svf}"
-	done
-	sed -i "s/SDR 16 TDI(00A0)//g" "${_svf}"
-        sed -i "s/		TDO(00FF)//g" "${_svf}"
-        sed -i "s/		MASK(C100) ;//g" "${_svf}"
-	sed -i "s/\(FREQUENCY\).*$/\1\t$(($frequency/1000000)).00e+06 HZ ;/g" "${_svf}"
+	bit2program "${PWD}/build/${implementation}/fpga_firmware_${implementation}.bit" ${frequency} 2>/dev/null > "${_svf}"
+#	for t in $targets; do
+#		svf $t
+#		cat "${PWD}/output/${implementation}/${t}.svf" >> "${_svf}"
+#	done
 }
 
 prepare() {
@@ -201,10 +198,10 @@ prepare() {
 }
 
 build() {
-	synthesize;
-	translate;
-	mapper;
-	route;
+#	synthesize;
+#	translate;
+#	mapper;
+#	route;
 	generate;
 }
 

@@ -13,7 +13,7 @@ module main (
 	line_out,
 	mux_out,
 	sysclk,
-	refclk,
+	refclk, 
 	extclk,
 	intclk,
 	pllclk,
