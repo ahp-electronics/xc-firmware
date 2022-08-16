@@ -1,5 +1,6 @@
 //One device per line
 //NAME  |   ID    | IDMASK  | ALG_TPL   | BSIZE | MSIZE
+ERASE, f0431112, 0fffffff, alg_erase, VOID, 0l
 DATA, f0431112, 0fffffff, alg_data, VOID, 0l
 VERIFY, f0431112, 0fffffff, alg_verify, VOID, 0l
 

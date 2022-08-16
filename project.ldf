@@ -4,40 +4,40 @@
     <Implementation title="ac1" dir="build/ac1" description="ac1" synthesis="synplify" default_strategy="AHP XC">
         <Options def_top="top_module"/>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/boards/pc03.v" type="Verilog" type_short="Verilog">
-            <Options top_module="pll"/>
+            <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/main.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/uart_rx.v" type="Verilog" type_short="Verilog">
-            <Options top_module="uart_rx"/>
+            <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/uart_tx.v" type="Verilog" type_short="Verilog">
-            <Options top_module="uart_tx"/>
+            <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/tx_word.v" type="Verilog" type_short="Verilog">
-            <Options top_module="TX_WORD"/>
+            <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/counter.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/dff.v" type="Verilog" type_short="Verilog">
-            <Options top_module="fifo"/>
+            <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/clock_divider.v" type="Verilog" type_short="Verilog">
-            <Options top_module="CLK_GEN"/>
+            <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/pwm.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/indicators.v" type="Verilog" type_short="Verilog">
-            <Options top_module="indicators"/>
+            <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/cmd_parser.v" type="Verilog" type_short="Verilog">
-            <Options top_module="CMD_PARSER"/>
+            <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/spi_slave.v" type="Verilog" type_short="Verilog">
-            <Options top_module="spi_slave"/>
+            <Options/>
         </Source>
         <Source name="../../../../../../../home/plato/dev/github/ahp/xc-correlators/xc-firmware/source/correlator.v" type="Verilog" type_short="Verilog">
             <Options/>

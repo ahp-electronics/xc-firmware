@@ -37,6 +37,7 @@ module CORRELATOR (
 	parameter USE_SOFT_CLOCK = 0;
 	parameter MAX_ORDER = 2;
 
+	localparam SIGNED_WIDTH = WORD_WIDTH + 1;
 	localparam SHIFT = 1;
 	localparam SECOND = 1000000000;
 	localparam TICK_CYCLES = CLK_DIVISOR*MUX_LINES;
@@ -77,25 +78,22 @@ module CORRELATOR (
 
 	wire [WORD_WIDTH*LAG_SIZE_CROSS-1:0] cross_delay_lines [0:NUM_INPUTS];
 	wire [19:0] cross [0:NUM_INPUTS];
-	wire [WORD_WIDTH-1:0] cross_delayed_lines [0:NUM_INPUTS];
 
 
 	wire [7:0] m_order;
 	wire [WORD_WIDTH-1:0] adc_data [0:NUM_INPUTS];
 	wire[7:0] leds[0:NUM_INPUTS];
-	reg [WORD_WIDTH*NUM_BASELINES*2-1:0] old_signal;
+	reg [WORD_WIDTH*NUM_INPUTS-1:0] old_signal;
+	assign m_order = (order+2 < MAX_ALLOWED_ORDER ? order+2 : MAX_ALLOWED_ORDER);
 
 	generate
 		genvar line;
-
 		for (line = 0; line < NUM_INPUTS; line = line+1) begin : correlator_outer_block
 			fifo #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_CROSS)) cross_delay_line(pllclk, cross_smpclk[line], adc_data[line], cross_delay_lines[line]);
 			assign adc_data[line] = adc_data_a[line*WORD_WIDTH+:WORD_WIDTH];
 			assign leds[line] = leds_a[line*8+:8];
-			assign cross[line] = cross_a[line*20+:20];
-			assign cross_delayed_lines[line] = cross_delay_lines[line][(QUADRANT ? 2 : (SINGLE ? 1 : cross[line]))*WORD_WIDTH+:WORD_WIDTH*LAG_CROSS];
-			assign m_order = (order+2 < MAX_ALLOWED_ORDER ? order+2 : MAX_ALLOWED_ORDER);
-		end 
+			assign cross[line] = cross_a[a*20+:20];
+		end  
 	endgenerate
 	
 	reg[11:0] a;
@@ -103,47 +101,41 @@ module CORRELATOR (
 	reg signed [11:0] c;
 
 	always @(posedge clk) begin : crosscorrelator_block
+		reg signed [WORD_WIDTH:0] tmp_r;
+		reg signed [WORD_WIDTH:0] tmp_i;
+		reg [12:0] d;
 		for (a=0; a<NUM_INPUTS; a=a+1) begin
-			for (b=a+1; b<NUM_INPUTS; b=b+1) begin
-				for (c=-LAG_CROSS+1; c<LAG_CROSS; c=c+1) begin :crosscorrelator_inner_block
-					reg [12:0] d;
-					reg signed [WORD_WIDTH:0] tmp_r;
-					reg signed [WORD_WIDTH:0] tmp_i;
-					reg signed [WORD_WIDTH:0] signal[0:2];
-					if(b < NUM_INPUTS-m_order+2 && a < NUM_INPUTS-m_order+1) begin
-						if(((leds[a][3]&leds[b+d-1][3]) | HAS_CUMULATIVE_ONLY) ||
-						(old_signal[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2*WORD_WIDTH+:WORD_WIDTH] != cross_delay_lines[a][0+:WORD_WIDTH]) || 
-						(old_signal[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2*WORD_WIDTH+WORD_WIDTH+:WORD_WIDTH] != cross_delay_lines[b+d-1][0+:WORD_WIDTH])
-						) begin
-							old_signal[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2*WORD_WIDTH+:WORD_WIDTH] <= cross_delay_lines[a][0+:WORD_WIDTH];
-							old_signal[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2*WORD_WIDTH+WORD_WIDTH+:WORD_WIDTH] <= cross_delay_lines[b+d-1][0+:WORD_WIDTH];
-							for (d=0; d<MAX_ALLOWED_ORDER; d=d+1) begin
-								if(d < m_order) begin
-									if(d == 0) begin
-										signal[0] <= {0, cross_delayed_lines[a][0+:WORD_WIDTH] };
-										signal[1] <= {0, cross_delayed_lines[a][WORD_WIDTH+:WORD_WIDTH] };
-										tmp_r <= signal[0];
-										tmp_i <= signal[1 ];
-									end else begin
-										signal[0] <= {0, cross_delayed_lines[b+d-1][(QUADRANT ? d[0] : 0)*WORD_WIDTH+:WORD_WIDTH]};
-										signal[1] <= {0, cross_delayed_lines[b+d-1][(QUADRANT ? d[0]^1 : 0)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)};
-										if(~(leds[a][4]&leds[b+d-1][4])) begin
-											tmp_r <= tmp_r * signal[0];
-											tmp_i <= tmp_i * signal[1];
-										end else begin
-											tmp_r <= tmp_r - signal[0];
-											tmp_i <= tmp_i - signal[1];
-										end 
+			for (b=1; b<NUM_INPUTS; b=b+1) begin
+				if(b < NUM_INPUTS-m_order && b < a) begin
+					for (c=-LAG_CROSS+1; c<LAG_CROSS; c=c+1) begin
+						for (d=0; d<MAX_ALLOWED_ORDER; d=d+1) begin
+							if(d < m_order) begin
+								if(d == 0) begin  
+									if (leds[a][3] || HAS_CUMULATIVE_ONLY || old_signal[a*WORD_WIDTH+:WORD_WIDTH] != cross_delay_lines[a][0+:WORD_WIDTH]) begin
+										old_signal[a*WORD_WIDTH+:WORD_WIDTH] <= cross_delay_lines[a][0+:WORD_WIDTH];
+										tmp_r <= {SIGNED_WIDTH{1'd0, cross_delay_lines[a][(QUADRANT ? 2 : (SINGLE ? 1 : cross[a]))*WORD_WIDTH+:WORD_WIDTH] }};
+										tmp_i <= {SIGNED_WIDTH{1'd0, cross_delay_lines[a][(QUADRANT ? 2 : (SINGLE ? 1 : cross[a]))*WORD_WIDTH+:WORD_WIDTH] }};
 									end
-								end
+								end else begin
+									if (leds[b+d-1][3] || HAS_CUMULATIVE_ONLY || old_signal[(b+d-1)*WORD_WIDTH+:WORD_WIDTH] != cross_delay_lines[b+d-1][0+:WORD_WIDTH]) begin
+										old_signal[(b+d-1)*WORD_WIDTH+:WORD_WIDTH] <= cross_delay_lines[b+d-1][0+:WORD_WIDTH];
+										if(~(leds[a][4]&leds[b+d-1][4])) begin
+											tmp_r <= tmp_r * {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d-1][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d-1)]))*WORD_WIDTH+(QUADRANT ? d[0] : 0)*WORD_WIDTH+:WORD_WIDTH]}};
+											tmp_i <= tmp_i * {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d-1][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d-1)]))*WORD_WIDTH+(QUADRANT ? d[0]^1 : 0)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)}};
+										end else begin
+											tmp_r <= tmp_r - {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d-1][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d-1)]))*WORD_WIDTH+(QUADRANT ? d[0] : 0)*WORD_WIDTH+:WORD_WIDTH]}};
+											tmp_i <= tmp_i - {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d-1][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d-1)]))*WORD_WIDTH+(QUADRANT ? d[0]^1 : 0)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)}};
+										end
+									end
+								end 
 							end
-							if(~reset) begin
-								pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+:RESOLUTION] <= pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+:RESOLUTION] + tmp_r;
-								pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+RESOLUTION+:RESOLUTION] <= pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+RESOLUTION+:RESOLUTION] + tmp_i;
-							end else begin
-								pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+:RESOLUTION] <= 0;
-								pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+RESOLUTION+:RESOLUTION] <= 0;
-							end
+						end
+						if(~reset) begin
+							pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+:RESOLUTION] <= pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+:RESOLUTION] + tmp_r;
+							pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+RESOLUTION+:RESOLUTION] <= pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+RESOLUTION+:RESOLUTION] + tmp_i;
+						end else begin
+							pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+:RESOLUTION] <= 0;
+							pulses[((((((NUM_INPUTS-a)*(NUM_INPUTS-a-1))>>1)-b+a)*CORRELATIONS_HEAD_TAIL_SIZE-(c+LAG_CROSS-1)))*RESOLUTION*2+RESOLUTION+:RESOLUTION] <= 0;
 						end
 					end
 				end
