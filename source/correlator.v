@@ -120,11 +120,11 @@ module CORRELATOR (
 									if (leds[b+d][3] || HAS_CUMULATIVE_ONLY || old_signal[(b+d)*WORD_WIDTH+:WORD_WIDTH] != cross_delay_lines[b+d][0+:WORD_WIDTH]) begin
 										old_signal[(b+d)*WORD_WIDTH+:WORD_WIDTH] <= cross_delay_lines[b+d][0+:WORD_WIDTH];
 										if(~(leds[a][4]&leds[b+d][4])) begin
-											tmp_r <= tmp_r * {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d)]))*WORD_WIDTH+(QUADRANT ? d[0] : 0)*WORD_WIDTH+:WORD_WIDTH]}};
-											tmp_i <= tmp_i * {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d)]))*WORD_WIDTH+(QUADRANT ? d[0]^1 : 0)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)}};
+											tmp_r <= tmp_r * {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d)]))*WORD_WIDTH+:WORD_WIDTH]}};
+											tmp_i <= tmp_i * {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d)]))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)}};
 										end else begin
-											tmp_r <= tmp_r - {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d)]))*WORD_WIDTH+(QUADRANT ? d[0] : 0)*WORD_WIDTH+:WORD_WIDTH]}};
-											tmp_i <= tmp_i - {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d)]))*WORD_WIDTH+(QUADRANT ? d[0]^1 : 0)*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)}};
+											tmp_r <= tmp_r - {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d)]))*WORD_WIDTH+:WORD_WIDTH]}};
+											tmp_i <= tmp_i - {SIGNED_WIDTH{1'd0, cross_delay_lines[b+d][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(b+d)]))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)}};
 										end
 									end
 								end 
