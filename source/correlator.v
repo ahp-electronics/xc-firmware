@@ -114,7 +114,7 @@ module CORRELATOR (
 									if (leds[a][3] || HAS_CUMULATIVE_ONLY || old_signal[a*WORD_WIDTH+:WORD_WIDTH] != cross_delay_lines[a][0+:WORD_WIDTH]) begin
 										old_signal[a*WORD_WIDTH+:WORD_WIDTH] <= cross_delay_lines[a][0+:WORD_WIDTH];
 										tmp_r <= {SIGNED_WIDTH{1'd0, cross_delay_lines[a][(QUADRANT ? 2 : (SINGLE ? 1 : cross[a]))*WORD_WIDTH+:WORD_WIDTH] }};
-										tmp_i <= {SIGNED_WIDTH{1'd0, cross_delay_lines[a][(QUADRANT ? 2 : (SINGLE ? 1 : cross[a]))*WORD_WIDTH+:WORD_WIDTH] }};
+										tmp_i <= {SIGNED_WIDTH{1'd0, cross_delay_lines[a][(QUADRANT ? 2 : (SINGLE ? 1 : cross[a]))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0) }};
 									end
 								end else begin
 									if (leds[b+d][3] || HAS_CUMULATIVE_ONLY || old_signal[(b+d)*WORD_WIDTH+:WORD_WIDTH] != cross_delay_lines[b+d][0+:WORD_WIDTH]) begin
