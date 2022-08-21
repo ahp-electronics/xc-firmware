@@ -60,7 +60,7 @@
 					<Name>FLASH</Name>
 					<IDCode>JTAGID</IDCode>
 					<Package>8-pin SOIC</Package>
-					<Operation>SPI Flash Erase,Program,Verify</Operation>
+					<Operation>SPI Flash Erase,Program</Operation>
 					<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
 					<AddressBase>0x00000000</AddressBase>
 					<EndAddress>END-ADDR</EndAddress>

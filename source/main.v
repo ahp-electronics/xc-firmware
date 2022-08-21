@@ -82,8 +82,6 @@ output wire intclk;
 output wire pllclk;
 input wire strobe;
 
-wire smpclk_full;
-wire smpclk_pulse;
 wire external_clock;
 wire integrating;
 
@@ -254,8 +252,7 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 	RXIF
 );
 
-if(HAS_CROSSCORRELATOR) begin
-	CORRELATOR #(
+CORRELATOR #(
 	.CLK_FREQUENCY(CLK_FREQUENCY),
 	.SIN_FREQUENCY(SIN_FREQUENCY),
 	.RESOLUTION(RESOLUTION),
@@ -269,20 +266,21 @@ if(HAS_CROSSCORRELATOR) begin
 	.LAG_AUTO(LAG_AUTO),
 	.WORD_WIDTH(WORD_WIDTH),
 	.BAUD_RATE(BAUD_RATE),
-	.USE_SOFT_CLOCK(0),
+	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
 	.BINARY(BINARY),
 	.MAX_ORDER(MAX_ORDER),
 	.USE_UART(USE_UART)) crosscorrelator (
-		pulses,
-		pllclk,
-		cross_a,
-		adc_data_a,
-		cross_smpclk,
-		leds_a,
-		order,
-		reset_delayed
+	pulses,
+	pllclk,
+	cross_a,
+	adc_data_a,
+	cross_smpclk,
+	leds_a,
+	order,
+	reset_delayed,
+	HAS_CROSSCORRELATOR
 );
-end
+
 always@(*) begin
 	signal_in[mux_line*NUM_LINES*WORD_WIDTH+:NUM_LINES*WORD_WIDTH] <= line_in;
 	if(HAS_LEDS) begin
@@ -321,8 +319,6 @@ end
 
 generate
 	genvar a;
-	genvar b;
-	genvar c;
 	genvar j;
 	genvar x;
 	genvar y;
