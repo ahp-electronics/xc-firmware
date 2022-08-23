@@ -60,11 +60,11 @@
 					<Package>8-pin SOIC</Package>
 					<Operation>SPI Flash Erase All</Operation>
 					<AddressBase>0x00000000</AddressBase>
-					<EndAddress>END-ADDR</EndAddress>
+					<EndAddress>0x00FFFFFF</EndAddress>
 					<DeviceSize>128</DeviceSize>
-					<DataSize>BINSIZE</DataSize>
+					<DataSize>134217727</DataSize>
 					<NumberOfDevices>1</NumberOfDevices>
-					<ReInitialize value="FALSE"/>
+				<ReInitialize value="FALSE"/>
 				</Device>
 			</FlashDevice>
 			<FPGADevice>
