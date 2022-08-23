@@ -19,7 +19,7 @@
 			</Bypass>
 			<File>PWD/build/IMPLEMENTATION/PROJECT_IMPLEMENTATION.bit</File>
 			<FileTime>07/31/21 10:45:51</FileTime>
-			<Operation>SPI Flash Erase,Program</Operation>
+			<Operation>SPI Flash Erase,Program,Verify</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
 				<Usercode>0x00000000</Usercode>
