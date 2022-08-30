@@ -74,7 +74,7 @@ always@(posedge clk) begin
 	end else if (cmd[3:0] == SET_LEDS && HAS_LEDS) begin
 		leds[current_line*8+4*extra_commands+:4] <= cmd[7:4];
 	end else if (cmd[3:0] == SET_BAUD_RATE) begin
-		if (cmd[7])
+		if (extra_commands)
 			order[cmd[7:6]] <= cmd[5:4];
 		else
 			baud_rate <= cmd[7:4];
