@@ -105,9 +105,9 @@ module CORRELATOR (
 		reg signed [RESOLUTION:0] tmp_r;
 		reg signed [RESOLUTION:0] tmp_i;
 		if(enable) begin
-			for (a=0; a<NUM_INPUTS-1; a=a+1) begin
+			for (a=0; a<NUM_INPUTS; a=a+1) begin
 				for (b=0; b<NUM_INPUTS; b=b+1) begin
-					if(b > a) begin
+					if(b > a && a < (NUM_INPUTS - order - 1)) begin
 						for (_c=-LAG_CROSS+1; _c<LAG_CROSS; _c=_c+512) begin
 							for (c=_c; c<_c+512 && c < LAG_CROSS; c=c+1) begin
 								for (d=-1; d<MAX_ORDER; d=d+1) begin
