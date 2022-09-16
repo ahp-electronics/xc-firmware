@@ -133,7 +133,7 @@ wire[3:0] baud_rate;
 wire[7:0] order;
 
 wire[7:0] leds[0:NUM_INPUTS];
-wire[3:0] test[0:NUM_INPUTS];
+wire[7:0] test[0:NUM_INPUTS];
 wire[8:0] voltage_pwm[0:NUM_INPUTS];
 wire[19:0] cross_tmp [0:NUM_INPUTS];
 wire[19:0] auto_tmp [0:NUM_INPUTS];
