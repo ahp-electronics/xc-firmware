@@ -338,7 +338,7 @@ generate
 
 		always@(posedge intclk) begin
 			if (!QUADRANT_OR_SINGLE) begin
-				if(test[a][1]&&(auto[a][0+:12] != (auto_tmp[a][0+:12]+auto_len[a][0+:12]) && auto[a][12+:4] != (auto_tmp[a][12+:4]+auto_len[a][12+:4]))) begin
+				if(test[a][1]&&(auto[a][0+:12] < (auto_tmp[a][0+:12]+auto_len[a][0+:12]) && auto[a][12+:4] != (auto_tmp[a][12+:4]+auto_len[a][12+:4]))) begin
 					if(auto[a][0+:12] >= DELAY_SIZE) begin
 						auto[a][0+:12] <= auto[a][0+:12]-(DELAY_SIZE>>1);
 						auto[a][12+:4] <= auto[a][12+:4];
@@ -350,7 +350,7 @@ generate
 					auto[a][0+:12] <= auto_tmp[a][0+:12];
 				end
 			end else begin
-				if(test[a][1]&&(auto[a] != (cross_len[a]+cross_tmp[a]))) begin
+				if(test[a][1]&&(auto[a] < (auto_len[a]+auto_tmp[a]))) begin
 					auto[a] <= auto[a]+auto_increment[a];
 				end else begin
 					auto[a] <= auto_tmp[a];
@@ -358,7 +358,7 @@ generate
 			end
 
 			if (!QUADRANT_OR_SINGLE) begin
-				if(test[a][2]&&(cross[a][0+:12] != (cross_tmp[a][0+:12]+cross_len[a][0+:12]) && cross[a][12+:4] != (cross_tmp[a][12+:4]+cross_len[a][12+:4]))) begin
+				if(test[a][2]&&(cross[a][0+:12] < (cross_tmp[a][0+:12]+cross_len[a][0+:12]) && cross[a][12+:4] != (cross_tmp[a][12+:4]+cross_len[a][12+:4]))) begin
 					if(cross[a][0+:12] >= DELAY_SIZE) begin
 						cross[a][0+:12] <= cross[a][0+:12]-(DELAY_SIZE>>1);
 						cross[a][12+:4] <= cross[a][12+:4]+cross_increment[a];
@@ -370,7 +370,7 @@ generate
 					cross[a][0+:12] <= cross_tmp[a][0+:12];
 				end
 			end else begin
-				if(test[a][2]&&(cross[a] != (cross_len[a]+cross_tmp[a]))) begin
+				if(test[a][2]&&(cross[a] < (cross_len[a]+cross_tmp[a]))) begin
 					cross[a] <= cross[a]+cross_increment[a];
 				end else begin
 					cross[a] <= cross_tmp[a];

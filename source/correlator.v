@@ -106,7 +106,7 @@ module CORRELATOR (
 				if(enable) begin
 					for (_c=0; _c<CORRELATIONS_HEAD_TAIL_SIZE; _c=_c+512) begin
 						for (c=_c; c<_c+512 && c < CORRELATIONS_HEAD_TAIL_SIZE; c=c+1) begin
-							for (d=0; d<MAX_ORDER; d=d+1) begin
+							for (d=0; d<MAX_ORDER+1; d=d+1) begin
 								if(d == 0) begin
 									if (HAS_CUMULATIVE_ONLY || leds[((a + d * (a / NUM_INPUTS + 1)) % NUM_INPUTS)][3] || old_signal[a*WORD_WIDTH+:WORD_WIDTH] != cross_delay_lines[((a + d * (a / NUM_INPUTS + 1)) % NUM_INPUTS)][0+:WORD_WIDTH]) begin
 										old_signal[a*WORD_WIDTH+:WORD_WIDTH] <= cross_delay_lines[((a + d * (a / NUM_INPUTS + 1)) % NUM_INPUTS)][0+:WORD_WIDTH];
@@ -124,16 +124,17 @@ module CORRELATOR (
 											tmp_i <= tmp_i * cross_delay_lines[((a + d * (a / NUM_INPUTS + 1)) % NUM_INPUTS)][(QUADRANT ? 2 : (SINGLE ? 1 : cross[(((a + d * (a / NUM_INPUTS + 1)) % NUM_INPUTS)+((c < LAG_CROSS ? LAG_CROSS-c : c-LAG_CROSS)-1))]))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
 										end
 									end
+								end else begin
+									if(~reset) begin
+										if(pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-1)*RESOLUTION*2+:RESOLUTION] < MAX_COUNTS && pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] < MAX_COUNTS) begin
+											pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] <= pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] + tmp_r;
+											pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] <= pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] + tmp_i;
+										end
+									end else begin
+										pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] <= 0;
+										pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] <= 0;
+									end
 								end
-							end
-							if(~reset) begin
-								if(pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-1)*RESOLUTION*2+:RESOLUTION] < MAX_COUNTS && pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] < MAX_COUNTS) begin
-									pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] <= pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] + tmp_r;
-									pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] <= pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] + tmp_i;
-								end
-							end else begin
-								pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] <= 0;
-								pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] <= 0;
 							end
 						end
 					end
