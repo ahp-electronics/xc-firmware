@@ -86,9 +86,16 @@ wire external_clock;
 wire integrating;
 
 wire[NUM_INPUTS*WORD_WIDTH-1:0] pulse_in;
-wire[WORD_WIDTH-1:0] adc_data[0:NUM_INPUTS];
-wire[WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
+reg[WORD_WIDTH-1:0] tmp_adc_data[0:NUM_INPUTS];
+reg[WORD_WIDTH-1:0] tmp_adc_data_auto[0:NUM_INPUTS];
+reg[WORD_WIDTH-1:0] tmp_adc_data_cross[0:NUM_INPUTS];
+reg[WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
+reg[WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a_auto;
+reg[WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a_cross;
 wire[NUM_INPUTS-1:0] adc_done;
+
+reg [NUM_INPUTS-1:0]auto_smpclk_tmp;
+reg [NUM_INPUTS-1:0]cross_smpclk_tmp;
 
 wire [NUM_INPUTS-1:0]auto_smpclk;
 wire [NUM_INPUTS-1:0]cross_smpclk;
@@ -177,10 +184,8 @@ COUNTER #(.WORD_WIDTH(64)) timestamp_block(
 	timestamp,
 	timestamp_overflow,
 	64'd1000000000/CLK_FREQUENCY,
-	64'd1,
-	1'd1,
-	1'd1,
-	refclk,
+	64'd0,
+	1'd0,
 	refclk,
 	(timestamp_reset&~integrating)|timestamp_overflow
 );
@@ -273,7 +278,7 @@ CORRELATOR #(
 	pulses,
 	pllclk,
 	cross_a,
-	adc_data_a,
+	adc_data_a_cross,
 	cross_smpclk,
 	leds_a,
 	order,
@@ -382,10 +387,37 @@ generate
 			for(j = x; j < x + 512 && j < LAG_SIZE_AUTO; j=j+1) begin
 				assign auto_delay_lines[j][a*WORD_WIDTH+:WORD_WIDTH] = auto_delays[a][j*WORD_WIDTH+:WORD_WIDTH];
 			end
-				
-		assign adc_data[a] = pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-		assign adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] = pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-		
+
+		always @ (negedge pllclk) begin
+			if(~leds[a][3]) begin
+				if(tmp_adc_data[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
+					tmp_adc_data[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+					adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+				end else
+					adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
+				if(auto_smpclk_tmp[a] != auto_smpclk[a]) begin
+					auto_smpclk_tmp[a] <= auto_smpclk[a];
+					if(tmp_adc_data_auto[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
+						tmp_adc_data_auto[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+						adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+					end else
+						adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
+				end
+				if(cross_smpclk_tmp[a] != cross_smpclk[a]) begin
+					cross_smpclk_tmp[a] <= cross_smpclk[a];
+					if(tmp_adc_data_cross[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
+						tmp_adc_data_cross[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+						adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+					end else
+						adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
+				end
+			end else begin
+				adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+				adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+				adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+			end
+		end
+
 		assign pulse_in[a] = (leds[a][2]?~signal_in[a*WORD_WIDTH+:WORD_WIDTH] : signal_in[a*WORD_WIDTH+:WORD_WIDTH]);
 		
 		if(HAS_LEDS) begin
@@ -395,7 +427,7 @@ generate
 			assign lineout[NUM_INPUTS*3+a] = HAS_PSU ? voltage[a] : leds[a][1];
 		end
 
-		fifo #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_AUTO)) auto_delay_line(pllclk, auto_smpclk[a], adc_data[a], auto_delays[a]);
+		fifo #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_AUTO)) auto_delay_line(pllclk, auto_smpclk[a], adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH], auto_delays[a]);
 
 		CLK_GEN auto_sampling_clock_block(
 			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES << auto[a][12+:4] : TICK_CYCLES*auto[a],
@@ -416,11 +448,9 @@ generate
 		COUNTER #(.USE_SOFT_CLOCK(0), .RESOLUTION(RESOLUTION), .WORD_WIDTH(WORD_WIDTH), .HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY)) counters_block (
 			pulses[(CORRELATIONS_SIZE*2+NUM_INPUTS*LAG_AUTO*2+NUM_INPUTS-1-a)*RESOLUTION+:RESOLUTION],
 			overflow[a],
-			auto_delay_lines[0][a*WORD_WIDTH+:WORD_WIDTH],
+			adc_data_a[a*WORD_WIDTH+:WORD_WIDTH],
 			1'd0,
-			leds[a][3],
 			1'd0,
-			pllclk,
 			pllclk,
 			reset_delayed
 		);
@@ -433,9 +463,7 @@ generate
 						,
 						auto_delay_lines[1][a*WORD_WIDTH+:WORD_WIDTH],
 						auto_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 3 : 1 ) : auto[a])+y][a*WORD_WIDTH+:WORD_WIDTH],
-						leds[a][3],
 						~leds[a][4],
-						pllclk,
 						pllclk,
 						reset_delayed
 					);
@@ -445,9 +473,7 @@ generate
 						,
 						auto_delay_lines[(QUADRANT ? 2 : 1)][a*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0)),
 						auto_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 4 : 1 ) : auto[a])+y][a*WORD_WIDTH+:WORD_WIDTH],
-						leds[a][3],
 						~leds[a][4],
-						pllclk,
 						pllclk,
 						reset_delayed
 					);
