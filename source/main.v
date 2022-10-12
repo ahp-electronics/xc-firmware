@@ -257,6 +257,7 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 	RXIF
 );
 
+if(HAS_CROSSCORRELATOR) begin
 CORRELATOR #(
 	.CLK_FREQUENCY(CLK_FREQUENCY),
 	.SIN_FREQUENCY(SIN_FREQUENCY),
@@ -283,8 +284,9 @@ CORRELATOR #(
 	leds_a,
 	order,
 	reset_delayed,
-	HAS_CROSSCORRELATOR
+	enable
 );
+end
 
 always@(*) begin
 	signal_in[mux_line*NUM_LINES*WORD_WIDTH+:NUM_LINES*WORD_WIDTH] <= line_in;
