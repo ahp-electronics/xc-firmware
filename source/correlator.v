@@ -91,7 +91,7 @@ module CORRELATOR (
 		for (line = 0; line < NUM_INPUTS; line = line+1) begin : correlator_outer_block
 			fifo #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_CROSS)) cross_delay_line(clk, cross_smpclk[line], adc_data_a[line*WORD_WIDTH+:WORD_WIDTH], cross_delay_lines[line]);
 			assign leds[line] = leds_a[line*8+:8];
-			assign cross[line] = cross_a[line*20+:20];
+			assign cross[line] = (QUADRANT_OR_SINGLE ? cross_a[line*20+:20] : cross_a[line*20+:12]);
 		end 
 		for (a=0; a<NUM_BASELINES; a=a+1) begin
 			always @(posedge clk) begin : crosscorrelator_sum_block

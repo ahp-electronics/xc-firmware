@@ -464,7 +464,7 @@ generate
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+:RESOLUTION],
 						,
 						auto_delay_lines[1][a*WORD_WIDTH+:WORD_WIDTH],
-						auto_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 3 : 1 ) : auto[a])+y][a*WORD_WIDTH+:WORD_WIDTH],
+						auto_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 3 : 1 ) : (QUADRANT_OR_SINGLE ? auto[a] : auto[a][0+12]))+y][a*WORD_WIDTH+:WORD_WIDTH],
 						~leds[a][4],
 						pllclk,
 						reset_delayed
@@ -474,7 +474,7 @@ generate
 						pulses[((CORRELATIONS_SIZE+NUM_INPUTS-a)*LAG_AUTO-1-y)*RESOLUTION*2+RESOLUTION+:RESOLUTION],
 						,
 						auto_delay_lines[(QUADRANT ? 2 : 1)][a*WORD_WIDTH+:WORD_WIDTH]^(QUADRANT ? 0 : (~0)),
-						auto_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 4 : 1 ) : auto[a])+y][a*WORD_WIDTH+:WORD_WIDTH],
+						auto_delay_lines[((QUADRANT_OR_SINGLE) ? (QUADRANT ? 4 : 1 ) : (QUADRANT_OR_SINGLE ? auto[a] : auto[a][0+12]))+y][a*WORD_WIDTH+:WORD_WIDTH],
 						~leds[a][4],
 						pllclk,
 						reset_delayed
