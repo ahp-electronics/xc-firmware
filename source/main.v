@@ -432,7 +432,7 @@ generate
 		fifo #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(LAG_SIZE_AUTO)) auto_delay_line(pllclk, auto_smpclk[a], adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH], auto_delays[a]);
 
 		CLK_GEN auto_sampling_clock_block(
-			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES << auto[a][12+:4] : TICK_CYCLES*auto[a],
+			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES * auto[a][12+:4] : TICK_CYCLES*auto[a],
 			auto_smpclk[a],
 			pllclk,
 			auto_smpclk_pulse[a],
@@ -440,7 +440,7 @@ generate
 		);
 
 		CLK_GEN cross_sampling_clock_block(
-			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES << cross[a][12+:4] : TICK_CYCLES*cross[a],
+			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES * cross[a][12+:4] : TICK_CYCLES*cross[a],
 			cross_smpclk[a],
 			pllclk,
 			cross_smpclk_pulse[a],

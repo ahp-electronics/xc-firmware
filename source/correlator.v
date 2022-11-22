@@ -114,12 +114,13 @@ module CORRELATOR (
 							for (log=7; log>=0; log=log+1)
 								if(NUM_INPUTS[log]) break;
 							log = log+1;
-							idx = ((a + d * (a >> log + 1)) & (log-1));
 							for (d=0; d<MAX_ORDER; d=d+1) begin
 								if(d == 0) begin
+									idx = ((a + d * (a >> log + 1)) & (log-1));
 									tmp_r = cross_delay_lines[idx][(QUADRANT ? 1 : (SINGLE ? 1 : cross[idx]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
 									tmp_i = cross_delay_lines[idx][(QUADRANT ? 3 : (SINGLE ? 1 : cross[idx]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
 								end else if(d < (order+2)) begin
+									idx = ((a + d * (a >> log + 1)) & (log-1));
 									if(multiply) begin
 										tmp_r = tmp_r * cross_delay_lines[idx][(QUADRANT ? 1 : (SINGLE ? 1 : cross[idx]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
 										tmp_i = tmp_i * cross_delay_lines[idx][(QUADRANT ? 3 : (SINGLE ? 1 : cross[idx]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
