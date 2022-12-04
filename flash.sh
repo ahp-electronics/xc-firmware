@@ -52,7 +52,7 @@ svf() {
 	sed -e "s:BINSIZE:${binsize}:g" \
 	> "${tmpfile}"
 	rm -f "${svf}"
-	ddtcmd -oft -svfchain -revd -of "${svf}" -if "${tmpfile}"
+	ddtcmd -oft -svfchain -revd -reset -of "${svf}" -if "${tmpfile}"
 }
 
 program() {

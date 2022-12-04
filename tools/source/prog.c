@@ -45,6 +45,7 @@ int program_jtag(const char *svf_file, const char *drivername, const char *bsdl_
 {
     int ret = 1;
     urj_chain_t *chain;
+    urj_part_t *part;
     const urj_cable_driver_t *driver;
     chain = urj_tap_chain_alloc ();
     if(bsdl_path != NULL)
@@ -52,15 +53,21 @@ int program_jtag(const char *svf_file, const char *drivername, const char *bsdl_
     driver = urj_tap_cable_find (drivername);
     urj_cable_t *cable = urj_tap_cable_usb_connect (chain, driver, NULL);
     urj_tap_cable_set_frequency (cable, frequency);
-    int ndevs = urj_tap_detect(chain, 32);
-    if(ndevs == URJ_STATUS_OK) {
-        FILE *svf = fopen(svf_file, "r");
-        if(svf != NULL) {
-            urj_svf_run (chain, svf, 0, 0);
-            if(URJ_STATUS_OK)
-                ret = 0;
-            fclose (svf);
+    int err = urj_tap_detect(chain, 0);
+    chain->active_part = 0;
+    FILE *svf = fopen(svf_file, "r");
+    if(svf != NULL) {
+        while(err == URJ_STATUS_OK) {
+            part = urj_tap_chain_active_part (chain);
+            err = (part == NULL);
+            if(err == URJ_STATUS_OK) {
+                err = urj_svf_run (chain, svf, 0, frequency);
+                if(err == URJ_STATUS_OK)
+                    ret = 0;
+            }
+            chain->active_part++;
         }
+        fclose (svf);
     }
     urj_tap_chain_free(chain);
     return ret;

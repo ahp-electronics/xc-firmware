@@ -83,8 +83,16 @@ module CORRELATOR (
 	wire [WORD_WIDTH-1:0] adc_data [0:NUM_INPUTS];
 	wire[7:0] leds[0:NUM_INPUTS];
 
+	reg signed [2:0] _log;
 	reg[2:0] log;
 
+	always @(posedge clk) begin
+		for (_log=7; _log>=0; _log=_log-1) begin
+			if(NUM_INPUTS[_log])
+				log <= _log+1;
+		end
+	end
+	
 	generate
 		genvar a;
 		genvar line;
@@ -103,24 +111,21 @@ module CORRELATOR (
 				reg multiply;
 				reg [7:0] idx;
 				reg [7:0] x;
+				multiply = 0;
+				for (d=0; d<MAX_ORDER; d=d+1) begin
+					idx = ((a + d * (a >> log + 1)) & (log-1));
+					if(d < (order+2))
+						multiply = multiply | ~leds[idx][4];
+				end
 				if(enable) begin
 					for (_c=0; _c<CORRELATIONS_HEAD_TAIL_SIZE; _c=_c+512) begin
 						for (c=_c; c<_c+512 && c < CORRELATIONS_HEAD_TAIL_SIZE; c=c+1) begin
-							multiply = 0;
 							for (d=0; d<MAX_ORDER; d=d+1) begin
-								if(d < (order+2))
-									multiply = multiply | ~leds[idx][4];
-							end
-							for (log=7; log>=0; log=log+1)
-								if(NUM_INPUTS[log]) break;
-							log = log+1;
-							for (d=0; d<MAX_ORDER; d=d+1) begin
+								idx = ((a + d * (a >> log + 1)) & (log-1));
 								if(d == 0) begin
-									idx = ((a + d * (a >> log + 1)) & (log-1));
 									tmp_r = cross_delay_lines[idx][(QUADRANT ? 1 : (SINGLE ? 1 : cross[idx]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
 									tmp_i = cross_delay_lines[idx][(QUADRANT ? 3 : (SINGLE ? 1 : cross[idx]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
 								end else if(d < (order+2)) begin
-									idx = ((a + d * (a >> log + 1)) & (log-1));
 									if(multiply) begin
 										tmp_r = tmp_r * cross_delay_lines[idx][(QUADRANT ? 1 : (SINGLE ? 1 : cross[idx]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
 										tmp_i = tmp_i * cross_delay_lines[idx][(QUADRANT ? 3 : (SINGLE ? 1 : cross[idx]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
