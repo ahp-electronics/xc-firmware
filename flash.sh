@@ -57,7 +57,9 @@ svf() {
 
 program() {
 	_svf="${PWD}/output/${implementation}/flash.svf"
-	program_jtag -i"${_svf}" -d"${programmer}" -f${frequency}|| true
+	for i in $(seq 0 127); do
+		program_jtag -i"${_svf}" -d"${programmer}" -f${frequency} -n $i|| break
+	done
 }
 
 synthesize() {
