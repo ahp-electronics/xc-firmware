@@ -104,43 +104,46 @@ module CROSSCORRELATOR (
 	endgenerate
 
 	always @(posedge clk) begin : crosscorrelator_block
-		reg [7:0] a;
-		for (a=0; a<NUM_BASELINES; a=a+1) begin : crosscorrelator_sum_block
-			reg signed [RESOLUTION:0] tmp_r;
-			reg signed [RESOLUTION:0] tmp_i;
-			reg [12:0] _c;
-			reg [12:0] c;
-			reg [8:0] d;
-			reg multiply;
-			multiply = 0;
-			for (d=0; d<MAX_ORDER; d=d+1) begin
-				if(d < (order+2))
-					multiply = multiply | ~leds[((a + d * (a >> log + 1)) & (log-1))][4];
-			end
-			if(enable) begin
-				for (_c=0; _c<CORRELATIONS_HEAD_TAIL_SIZE; _c=_c+512) begin
-					for (c=_c; c<_c+512 && c < CORRELATIONS_HEAD_TAIL_SIZE; c=c+1) begin
-						for (d=0; d<MAX_ORDER; d=d+1) begin
-							if(d == 0) begin
-								tmp_r = cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
-								tmp_i = cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
-							end else if(d < (order+2)) begin
-								if(multiply) begin
-									tmp_r = tmp_r * cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
-									tmp_i = tmp_i * cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
-								end else begin
-									tmp_r = tmp_r - {1'd0, cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]};
-									tmp_i = tmp_i - {1'd0, cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)};
+		reg [15:0] _a;
+		reg [15:0] a;
+		for (_a=0; _a<NUM_BASELINES; _a=_a+512) begin
+			for (a=_a; a<_a+512 && a < NUM_BASELINES; a=a+1) begin : crosscorrelator_sum_block
+				reg signed [RESOLUTION:0] tmp_r;
+				reg signed [RESOLUTION:0] tmp_i;
+				reg [12:0] _c;
+				reg [12:0] c;
+				reg [8:0] d;
+				reg multiply;
+				multiply = 0;
+				for (d=0; d<MAX_ORDER; d=d+1) begin
+					if(d < (order+2))
+						multiply = multiply | ~leds[((a + d * (a >> log + 1)) & (log-1))][4];
+				end
+				if(enable) begin
+					for (_c=0; _c<CORRELATIONS_HEAD_TAIL_SIZE; _c=_c+512) begin
+						for (c=_c; c<_c+512 && c < CORRELATIONS_HEAD_TAIL_SIZE; c=c+1) begin
+							for (d=0; d<MAX_ORDER; d=d+1) begin
+								if(d == 0) begin
+									tmp_r = cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
+									tmp_i = cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
+								end else if(d < (order+2)) begin
+									if(multiply) begin
+										tmp_r = tmp_r * cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
+										tmp_i = tmp_i * cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
+									end else begin
+										tmp_r = tmp_r - {1'd0, cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]};
+										tmp_i = tmp_i - {1'd0, cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)};
+									end
 								end
 							end
-						end
-						if(reset|~enable) begin
-							pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] = 0;
-							pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] = 0;
-						end else begin
-							if(pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-1)*RESOLUTION*2+:RESOLUTION] < MAX_COUNTS && pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] < MAX_COUNTS) begin
-								pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] = pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] + tmp_r;
-								pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] = pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] + tmp_i;
+							if(reset|~enable) begin
+								pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] = 0;
+								pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] = 0;
+							end else begin
+								if(pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-1)*RESOLUTION*2+:RESOLUTION] < MAX_COUNTS && pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] < MAX_COUNTS) begin
+									pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] = pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+:RESOLUTION] + tmp_r;
+									pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] = pulses[((NUM_BASELINES-a)*CORRELATIONS_HEAD_TAIL_SIZE-c-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] + tmp_i;
+								end
 							end
 						end
 					end

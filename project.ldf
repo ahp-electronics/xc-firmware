@@ -39,11 +39,14 @@
         <Source name="source/spi_slave.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="source/correlator.v" type="Verilog" type_short="Verilog">
+        <Source name="boards/xc32.v" type="Verilog" type_short="Verilog">
+            <Options top_module="top_module"/>
+        </Source>
+        <Source name="source/autocorrelator.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="boards/xc8.v" type="Verilog" type_short="Verilog">
-            <Options top_module="top_module"/>
+        <Source name="source/crosscorrelator.v" type="Verilog" type_short="Verilog">
+            <Options/>
         </Source>
         <Source name="boards/chain.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
