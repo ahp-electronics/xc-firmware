@@ -52,14 +52,12 @@ svf() {
 	sed -e "s:BINSIZE:${binsize}:g" \
 	> "${tmpfile}"
 	rm -f "${svf}"
-	ddtcmd -oft -svfchain -revd -reset -of "${svf}" -if "${tmpfile}"
+	ddtcmd -oft -svfchain -revd -of "${svf}" -if "${tmpfile}"
 }
 
 program() {
 	_svf="${PWD}/output/${implementation}/flash.svf"
-	for i in $(seq 0 127); do
-		program_jtag -i"${_svf}" -d"${programmer}" -f${frequency} -n $i|| break
-	done
+	program_jtag -i"${_svf}" -d"${programmer}" -f${frequency} || true
 }
 
 synthesize() {

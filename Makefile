@@ -4,9 +4,9 @@ FOOTPRINT=CABGA256
 TECH=ECP5U
 FLASH=S25FL128S
 BOARD=pc03
-PROG_TARGETS=test,unlock,erase,program
+PROG_TARGETS=test
 PROG_FREQ=1000000
-PROGRAMMER=UsbBlaster
+PROGRAMMER=dirtyjtag
 INCLUDES=-Isources/ -Itools/ispfpga/verilog/data/`echo "$(CHIP)" | tr '[:upper:]' '[:lower:]'`/
 
 %:
