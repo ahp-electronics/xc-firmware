@@ -98,31 +98,29 @@ module AUTOCORRELATOR (
 			reg [12:0] _c;
 			reg [12:0] c;
 			reg d;
-			if(enable) begin
-				for (_c=0; _c<LAG_AUTO; _c=_c+512) begin
-					for (c=_c; c<_c+512 && c < LAG_AUTO; c=c+1) begin
-						for (d=0; d<1; d=d+1) begin
-							if(d == 0) begin
-								tmp_r = auto_delay_lines[a][(QUADRANT ? 1 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH];
-								tmp_i = auto_delay_lines[a][(QUADRANT ? 3 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
+			for (_c=0; _c<LAG_AUTO; _c=_c+512) begin
+				for (c=_c; c<_c+512 && c < LAG_AUTO; c=c+1) begin
+					for (d=0; d<1; d=d+1) begin
+						if(d == 0) begin
+							tmp_r = auto_delay_lines[a][(QUADRANT ? 1 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH];
+							tmp_i = auto_delay_lines[a][(QUADRANT ? 3 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
+						end else begin
+							if(~leds[a][4]) begin
+								tmp_r = tmp_r * auto_delay_lines[a][(QUADRANT ? 1 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH];
+								tmp_i = tmp_i * auto_delay_lines[a][(QUADRANT ? 3 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
 							end else begin
-								if(~leds[a][4]) begin
-									tmp_r = tmp_r * auto_delay_lines[a][(QUADRANT ? 1 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH];
-									tmp_i = tmp_i * auto_delay_lines[a][(QUADRANT ? 3 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
-								end else begin
-									tmp_r = tmp_r - {1'd0, auto_delay_lines[a][(QUADRANT ? 1 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH]};
-									tmp_i = tmp_i - {1'd0, auto_delay_lines[a][(QUADRANT ? 3 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)};
-								end
+								tmp_r = tmp_r - {1'd0, auto_delay_lines[a][(QUADRANT ? 1 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH]};
+								tmp_i = tmp_i - {1'd0, auto_delay_lines[a][(QUADRANT ? 3 : (SINGLE ? 1 : auto[a]+(c < LAG_AUTO ? LAG_AUTO-c : c+LAG_AUTO-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)};
 							end
 						end
-						if(reset|~enable) begin
-							pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+:RESOLUTION] = 0;
-							pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] = 0;
-						end else begin
-							if(pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+:RESOLUTION] < MAX_COUNTS && pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] < MAX_COUNTS) begin
-								pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+:RESOLUTION] = pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+:RESOLUTION] + tmp_r;
-								pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] = pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] + tmp_i;
-							end
+					end
+					if(reset|~enable) begin
+						pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+:RESOLUTION] = 0;
+						pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] = 0;
+					end else begin
+						if(pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+:RESOLUTION] < MAX_COUNTS && pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] < MAX_COUNTS) begin
+							pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+:RESOLUTION] = pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+:RESOLUTION] + tmp_r;
+							pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] = pulses[(NUM_INPUTS-a-1)*RESOLUTION*2+RESOLUTION+:RESOLUTION] + tmp_i;
 						end
 					end
 				end
