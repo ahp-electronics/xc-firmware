@@ -83,15 +83,8 @@ module CROSSCORRELATOR (
 	wire [WORD_WIDTH-1:0] adc_data [0:NUM_INPUTS];
 	wire[7:0] leds[0:NUM_INPUTS];
 
-	reg signed [2:0] _log;
+	reg[2:0] _log;
 	reg[2:0] log;
-
-	always @(posedge clk) begin
-		for (_log=7; _log>=0; _log=_log-1) begin
-			if(NUM_INPUTS[_log])
-				log <= _log+1;
-		end
-	end
 	
 	generate
 		genvar line;
@@ -105,32 +98,35 @@ module CROSSCORRELATOR (
 	always @(posedge clk) begin : crosscorrelator_block
 		reg [15:0] _a;
 		reg [15:0] a;
+		for (_log=1; _log!=7; _log=_log+1) begin
+			if(NUM_INPUTS[_log])
+				log <= _log;
+		end
 		for (_a=0; _a<NUM_BASELINES; _a=_a+512) begin
 			for (a=_a; a<_a+512 && a < NUM_BASELINES; a=a+1) begin : crosscorrelator_sum_block
-				reg signed [RESOLUTION:0] tmp_r;
-				reg signed [RESOLUTION:0] tmp_i;
 				reg [12:0] _c;
 				reg [12:0] c;
 				reg [8:0] d;
 				reg multiply;
-				multiply = 0;
 				for (d=0; d<MAX_ORDER; d=d+1) begin
 					if(d < (order+2))
-						multiply = multiply | ~leds[((a + d * (a >> log + 1)) & (log-1))][4];
+						multiply = multiply | ~leds[((a + d * ((a >> log) + 1)) % NUM_INPUTS)][4];
 				end
 				for (_c=0; _c<CORRELATIONS_HEAD_TAIL_SIZE; _c=_c+512) begin
-					for (c=_c; c<_c+512 && c < CORRELATIONS_HEAD_TAIL_SIZE; c=c+1) begin
+					for (c=_c; c<_c+512 && c < CORRELATIONS_HEAD_TAIL_SIZE; c=c+1) begin : crosscorrelator_generation_block
+						reg signed [RESOLUTION:0] tmp_r;
+						reg signed [RESOLUTION:0] tmp_i;
 						for (d=0; d<MAX_ORDER; d=d+1) begin
 							if(d == 0) begin
-								tmp_r = cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
-								tmp_i = cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
+								tmp_r = cross_delay_lines[((a + d * ((a >> log) + 1)) % NUM_INPUTS)][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * ((a >> log) + 1)) % NUM_INPUTS)]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
+								tmp_i = cross_delay_lines[((a + d * ((a >> log) + 1)) % NUM_INPUTS)][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * ((a >> log) + 1)) % NUM_INPUTS)]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
 							end else if(d < (order+2)) begin
 								if(multiply) begin
-									tmp_r = tmp_r * cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
-									tmp_i = tmp_i * cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
+									tmp_r = tmp_r * cross_delay_lines[((a + d * ((a >> log) + 1)) % NUM_INPUTS)][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * ((a >> log) + 1)) % NUM_INPUTS)]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH];
+									tmp_i = tmp_i * cross_delay_lines[((a + d * ((a >> log) + 1)) % NUM_INPUTS)][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * ((a >> log) + 1)) % NUM_INPUTS)]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0);
 								end else begin
-									tmp_r = tmp_r - {1'd0, cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]};
-									tmp_i = tmp_i - {1'd0, cross_delay_lines[((a + d * (a >> log + 1)) & (log-1))][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * (a >> log + 1)) & (log-1))]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)};
+									tmp_r = tmp_r - {1'd0, cross_delay_lines[((a + d * ((a >> log) + 1)) % NUM_INPUTS)][(QUADRANT ? 1 : (SINGLE ? 1 : cross[((a + d * ((a >> log) + 1)) % NUM_INPUTS)]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]};
+									tmp_i = tmp_i - {1'd0, cross_delay_lines[((a + d * ((a >> log) + 1)) % NUM_INPUTS)][(QUADRANT ? 3 : (SINGLE ? 1 : cross[((a + d * ((a >> log) + 1)) % NUM_INPUTS)]+(c < LAG_CROSS ? LAG_CROSS-c : c+LAG_CROSS-1)))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)};
 								end
 							end
 						end

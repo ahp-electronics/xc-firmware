@@ -151,6 +151,7 @@ wire[8*NUM_INPUTS-1:0] test_a;
 wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
 wire[20*NUM_INPUTS-1:0] cross_a;
 wire[20*NUM_INPUTS-1:0] cross_tmp_a;
+wire[20*NUM_INPUTS-1:0] auto_a;
 wire[20*NUM_INPUTS-1:0] auto_tmp_a;
 wire[20*NUM_INPUTS-1:0] cross_len_a;
 wire[20*NUM_INPUTS-1:0] auto_len_a;
@@ -389,6 +390,7 @@ generate
 		assign leds[a] = leds_a[a*8+:8];
 		assign test[a] = test_a[a*8+:8];
 		assign voltage_pwm[a][7:0] = voltage_pwm_a[a*8+:8];
+		assign auto_a[a*20+:20] = auto[a];
 		assign cross_a[a*20+:20] = cross[a];
 		assign cross_tmp[a] = cross_tmp_a[a*20+:20];
 		assign auto_tmp[a] = auto_tmp_a[a*20+:20];
@@ -439,10 +441,11 @@ generate
 			end
 		end
 
-		for(x = 0; x < LAG_SIZE_AUTO; x=x+512)
+		for(x = 0; x < LAG_SIZE_AUTO; x=x+512) begin
 			for(j = x; j < x + 512 && j < LAG_SIZE_AUTO; j=j+1) begin
 				assign auto_delay_lines[j][a*WORD_WIDTH+:WORD_WIDTH] = auto_delays[a][j*WORD_WIDTH+:WORD_WIDTH];
 			end
+		end
 
 		always @ (negedge pllclk) begin
 			if(~leds[a][3]) begin
