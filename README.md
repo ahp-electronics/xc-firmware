@@ -1,6 +1,6 @@
-# AHP XC Quantum correlators firmware
+# AHP XC Quantum correlators firmware 
 
-[![DOI](https://www.zenodo.org/badge/311073125.svg)](https://www.zenodo.org/badge/latestdoi/311073125)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7211818.svg)](https://doi.org/10.5281/zenodo.7211818)
 
 #### This repository contains code of the XC series multichannel multi-order cross-correlators
 
