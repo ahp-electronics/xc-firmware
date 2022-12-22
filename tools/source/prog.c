@@ -47,29 +47,33 @@ int main(int argc, char **argv)
 
 int program_jtag(const char *svf_file, const char *drivername, const char *bsdl_path, long frequency, int device_n)
 {
-    int ret = 1;
+    int ret = 1, err = 0;
     urj_chain_t *chain;
     urj_part_t *part;
     const urj_cable_driver_t *driver;
+    FILE *svf = fopen(svf_file, "r");
+    err = (svf == NULL);
+    if(err) return ENOENT;
     chain = urj_tap_chain_alloc ();
+    chain->active_part = device_n;
     if(bsdl_path != NULL)
         urj_bsdl_set_path (chain, bsdl_path);
     driver = urj_tap_cable_find (drivername);
+    int ntries = 5;
     urj_cable_t *cable = urj_tap_cable_usb_connect (chain, driver, NULL);
-    urj_tap_cable_set_frequency (cable, frequency);
-    int err = urj_tap_detect(chain, 0);
-    chain->active_part = device_n;
-    FILE *svf = fopen(svf_file, "r");
-    if(svf != NULL) {
+    while(ntries-- > 0) {
+        urj_tap_cable_set_frequency (cable, frequency);
+        err = urj_tap_detect(chain, 0);
+        if(err) continue;
         part = urj_tap_chain_active_part (chain);
         err = (part == NULL);
-        if(err == URJ_STATUS_OK) {
-            err = urj_svf_run (chain, svf, 0, frequency);
-            if(err == URJ_STATUS_OK)
-                ret = 0;
-        }
-        fclose (svf);
+        if(err) continue;
+        err = urj_svf_run (chain, svf, 0, frequency);
+        if(err) continue;
+        ret = err;
+        break;
     }
+    fclose (svf);
     urj_tap_chain_free(chain);
     return ret;
 }

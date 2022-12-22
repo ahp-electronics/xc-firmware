@@ -42,6 +42,7 @@ parameter USE_UART = 1;
 parameter BINARY = 0;
 parameter USE_SOFT_CLOCK = 1;
 parameter MAX_ORDER = 2;
+parameter LOG = 3;
 
 localparam SHIFT = 1;
 localparam SECOND = 1000000000;
@@ -133,6 +134,8 @@ wire[(LAG_SIZE_AUTO)*WORD_WIDTH-1:0] auto_delays[0:NUM_INPUTS];
 wire[(LAG_SIZE_CROSS)*WORD_WIDTH-1:0] cross_delays[0:NUM_INPUTS];
 wire integrate;
 wire in_capture;
+reg old_in_capture;
+reg capture_start;
 reg enable_tx;
 
 wire[7:0] current_line;
@@ -284,62 +287,53 @@ COUNTER #(
 	enable
 );
 	
-AUTOCORRELATOR #(
-	.CLK_FREQUENCY(CLK_FREQUENCY),
-	.SIN_FREQUENCY(SIN_FREQUENCY),
-	.RESOLUTION(RESOLUTION),
+CORRELATOR #(
 	.MUX_LINES(MUX_LINES),
 	.NUM_LINES(NUM_LINES),
 	.DELAY_SIZE(DELAY_SIZE),
-	.HAS_LEDS(HAS_LEDS),
-	.HAS_PSU(HAS_PSU),
-	.HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY),
-	.LAG_CROSS(LAG_CROSS),
-	.LAG_AUTO(LAG_AUTO),
+	.NUM_BASELINES(NUM_INPUTS),
+	.TAIL_SIZE(LAG_AUTO),
+	.HEAD_SIZE(1),
+	.RESOLUTION(RESOLUTION),
 	.WORD_WIDTH(WORD_WIDTH),
-	.BAUD_RATE(BAUD_RATE),
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
-	.BINARY(BINARY),
-	.MAX_ORDER(MAX_ORDER),
-	.USE_UART(USE_UART)) autocorrelator (
+	.MAX_ORDER(1),
+	.LOG(LOG)
+	) autocorrelator (
 	pulses[CORRELATIONS_SIZE*RESOLUTION*2+:SPECTRA_SIZE*RESOLUTION*2],
 	pllclk,
 	auto_a,
 	adc_data_a_auto,
 	auto_smpclk,
 	leds_a,
+	8'd0,
 	reset_delayed,
 	enable
 );
-	
+
 if(HAS_CROSSCORRELATOR) begin
-CROSSCORRELATOR #(
-	.CLK_FREQUENCY(CLK_FREQUENCY),
-	.SIN_FREQUENCY(SIN_FREQUENCY),
-	.RESOLUTION(RESOLUTION),
+CORRELATOR #(
 	.MUX_LINES(MUX_LINES),
 	.NUM_LINES(NUM_LINES),
 	.DELAY_SIZE(DELAY_SIZE),
-	.HAS_LEDS(HAS_LEDS),
-	.HAS_PSU(HAS_PSU),
-	.HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY),
-	.LAG_CROSS(LAG_CROSS),
-	.LAG_AUTO(LAG_AUTO),
+	.NUM_BASELINES(NUM_BASELINES),
+	.TAIL_SIZE(LAG_CROSS),
+	.HEAD_SIZE(LAG_CROSS),
+	.RESOLUTION(RESOLUTION),
 	.WORD_WIDTH(WORD_WIDTH),
-	.BAUD_RATE(BAUD_RATE),
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
-	.BINARY(BINARY),
 	.MAX_ORDER(MAX_ORDER),
-	.USE_UART(USE_UART)) crosscorrelator (
+	.LOG(LOG)
+	) crosscorrelator (
 	pulses[0+:CORRELATIONS_SIZE*RESOLUTION*2],
 	pllclk,
 	cross_a,
 	adc_data_a_cross,
 	cross_smpclk,
 	leds_a,
-	order,
+	order+8'd1,
 	reset_delayed,
-	HAS_CROSSCORRELATOR
+	enable
 );
 end
 
@@ -377,6 +371,14 @@ always@(posedge intclk) begin
 	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
 	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
 	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
+	if(old_in_capture != in_capture) begin
+		old_in_capture <= in_capture;
+		if(old_in_capture) begin
+			capture_start <= 1;
+		end
+	end else begin
+		capture_start <= 0;
+	end
 end
 
 generate
@@ -399,44 +401,44 @@ generate
 		assign cross_increment[a] = cross_increment_a[a*12+:12];
 		assign auto_increment[a] = auto_increment_a[a*12+:12];
 
-		always@(posedge intclk) begin
+		always@(negedge intclk) begin
 			if (!QUADRANT_OR_SINGLE) begin
-				if(test[a][1]&&(auto[a][0+:12] < (auto_tmp[a][0+:12]+auto_len[a][0+:12]) && auto[a][12+:4] != (auto_tmp[a][12+:4]+auto_len[a][12+:4]))) begin
+				if(capture_start) begin
+					auto[a][12+:4] <= auto_tmp[a][12+:4];
+					auto[a][0+:12] <= auto_tmp[a][0+:12];
+				end else if(test[a][1] && (auto[a][0+:12] < (auto_tmp[a][0+:12]+auto_len[a][0+:12]) && auto[a][12+:4] != (auto_tmp[a][12+:4]+auto_len[a][12+:4]))) begin
 					if(auto[a][0+:12] >= DELAY_SIZE) begin
 						auto[a][0+:12] <= auto[a][0+:12]-(DELAY_SIZE>>1);
 						auto[a][12+:4] <= auto[a][12+:4];
 					end else begin
 						auto[a][0+:12] <= auto[a][0+:12]+auto_increment[a];
 					end
-				end else begin
-					auto[a][12+:4] <= auto_tmp[a][12+:4];
-					auto[a][0+:12] <= auto_tmp[a][0+:12];
 				end
 			end else begin
-				if(test[a][1]&&(auto[a] < (auto_len[a]+auto_tmp[a]))) begin
-					auto[a] <= auto[a]+auto_increment[a];
-				end else begin
+				if(capture_start) begin
 					auto[a] <= auto_tmp[a];
+				end else if(test[a][1] && (auto[a] < (auto_len[a]+auto_tmp[a]))) begin
+					auto[a] <= auto[a]+auto_increment[a];
 				end
 			end
 
 			if (!QUADRANT_OR_SINGLE) begin
-				if(test[a][2]&&(cross[a][0+:12] < (cross_tmp[a][0+:12]+cross_len[a][0+:12]) && cross[a][12+:4] != (cross_tmp[a][12+:4]+cross_len[a][12+:4]))) begin
+				if(capture_start) begin
+					cross[a][12+:4] <= cross_tmp[a][12+:4];
+					cross[a][0+:12] <= cross_tmp[a][0+:12];
+				end else if(test[a][2] && (cross[a][0+:12] < (cross_tmp[a][0+:12]+cross_len[a][0+:12]) && cross[a][12+:4] != (cross_tmp[a][12+:4]+cross_len[a][12+:4]))) begin
 					if(cross[a][0+:12] >= DELAY_SIZE) begin
 						cross[a][0+:12] <= cross[a][0+:12]-(DELAY_SIZE>>1);
 						cross[a][12+:4] <= cross[a][12+:4]+cross_increment[a];
 					end else begin
 						cross[a][0+:12] <= cross[a][0+:12]+cross_increment[a];
 					end
-				end else begin
-					cross[a][12+:4] <= cross_tmp[a][12+:4];
-					cross[a][0+:12] <= cross_tmp[a][0+:12];
 				end
 			end else begin
-				if(test[a][2]&&(cross[a] < (cross_len[a]+cross_tmp[a]))) begin
-					cross[a] <= cross[a]+cross_increment[a];
-				end else begin
+				if(capture_start) begin
 					cross[a] <= cross_tmp[a];
+				end else if(test[a][2] && (cross[a] < (cross_len[a]+cross_tmp[a]))) begin
+					cross[a] <= cross[a]+cross_increment[a];
 				end
 			end
 		end

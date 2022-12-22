@@ -24,16 +24,15 @@ module CLK_GEN
 	output wire overflow;
 
 	reg [RESOLUTION-1:0] cycles;
-	assign overflow = cycles == (div>>1);
+	assign overflow = cycles == div[RESOLUTION-1:1];
 	always @(posedge clk)
 	begin
 		if(enable) begin
-			if(cycles < (div>>1))
-				cycles <= cycles+1;
-			else begin
+			if(overflow) begin
 				clk_out <= ~clk_out;
 				cycles <= 0;
-			end
+			end else
+				cycles <= cycles+1;
 		end else begin
 			clk_out <= 0;
 		end
