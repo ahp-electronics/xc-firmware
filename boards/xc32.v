@@ -17,7 +17,7 @@ parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
 parameter NUM_LINES = 32;
-parameter DELAY_SIZE = 0;
+parameter DELAY_SIZE = 4;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
 parameter RESOLUTION = 8;
@@ -31,7 +31,6 @@ parameter USE_UART = 1;
 parameter BINARY = 0;
 parameter USE_SOFT_CLOCK = 1;
 parameter MAX_ORDER = 2;
-parameter LOG = 5;
 
 input wire sysclk;
 inout wire[19:0] jp1;
@@ -43,13 +42,13 @@ wire refclk;
 wire enable;
 wire extclk;
 wire intclk;
-wire smpclk;
+wire pllclk;
 wire strobe;
 
 assign extclk = jp1[16];
 assign jp1[17] = intclk;
 assign strobe = jp1[18];
-assign jp1[19] = smpclk;
+assign jp1[19] = pllclk;
 
 assign jp2[16] = refclk;
 assign jp2[17] = 1'd0;
@@ -60,7 +59,7 @@ wire[NUM_LINES-1:0] line_in;
 wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 
-assign line_in[15:0] = jp1[15:0];
+assign line_in[7:0] = jp1[15:0];
 assign line_in[31:16] = jp2[15:0];
 
 main #(
@@ -80,8 +79,7 @@ main #(
 .BAUD_RATE(BAUD_RATE),
 .USE_SOFT_CLOCK(USE_SOFT_CLOCK),
 .BINARY(BINARY),
-.MAX_ORDER(MAX_ORDER),
-.LOG(LOG)
+.MAX_ORDER(MAX_ORDER)
 ) main_block(
        TX,
        RX,
@@ -92,7 +90,7 @@ main #(
        refclk,
        extclk,
        intclk,
-       smpclk,
+       pllclk,
        ,
        strobe,
        1'd1
