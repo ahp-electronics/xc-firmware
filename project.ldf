@@ -42,11 +42,8 @@
         <Source name="source/correlator.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="boards/xc32.v" type="Verilog" type_short="Verilog">
+        <Source name="boards/xc8.v" type="Verilog" type_short="Verilog">
             <Options top_module="top_module"/>
-        </Source>
-        <Source name="boards/chain.xcf" type="Programming Project File" type_short="Programming">
-            <Options/>
         </Source>
         <Source name="boards/flash_bypass.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
             <Options/>
@@ -58,9 +55,6 @@
             <Options/>
         </Source>
         <Source name="boards/flash_program4.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
-            <Options/>
-        </Source>
-        <Source name="boards/flash_quadpsi.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="boards/flash_test.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">

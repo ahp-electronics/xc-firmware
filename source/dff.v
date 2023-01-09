@@ -24,11 +24,15 @@ module dff (
 	assign clock = (USE_SOFT_CLOCK ? clk : refclk);
 
 	always @ ( posedge clock) begin
-		if(refclk != _refclk || !USE_SOFT_CLOCK) begin
-			_refclk <= refclk;
-			if(refclk || !USE_SOFT_CLOCK) begin
-				q <= d;
+		if(USE_SOFT_CLOCK) begin
+			if(refclk != _refclk) begin
+				_refclk <= refclk;
+				if(refclk) begin
+					q <= d;
+				end
 			end
+		end else begin
+			q <= d;
 		end
 	end
 endmodule

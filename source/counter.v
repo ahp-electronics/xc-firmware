@@ -113,7 +113,7 @@ module COUNTER (
 	input wire [NUM_INPUTS*8-1:0] leds_a;
 
 	always @(posedge clk) begin : counter_sum_block
-		reg [7:0] a;
+		integer a;
 		for (a=0; a<NUM_INPUTS; a=a+1) begin
 			if(enable) begin
 				if(reset|~enable) begin

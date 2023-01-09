@@ -18,8 +18,7 @@ module CORRELATOR (
 		enable
 	);
 	
-	parameter MUX_LINES=1;
-	parameter NUM_LINES=8;
+	parameter NUM_INPUTS=8;
 	parameter DELAY_SIZE=0;
 	parameter NUM_BASELINES=8;
 	parameter TAIL_SIZE=1;
@@ -29,7 +28,6 @@ module CORRELATOR (
 	parameter USE_SOFT_CLOCK=0;
 	parameter MAX_ORDER=2;
 	
-	localparam NUM_INPUTS=NUM_LINES*MUX_LINES;
 	localparam CORRELATIONS_HEAD_TAIL_SIZE=(HEAD_SIZE+TAIL_SIZE)-1;
 	localparam MAX_LAG=(HEAD_SIZE > CORRELATIONS_HEAD_TAIL_SIZE) ? HEAD_SIZE : CORRELATIONS_HEAD_TAIL_SIZE;
 	localparam CORRELATIONS_SIZE=(NUM_BASELINES*CORRELATIONS_HEAD_TAIL_SIZE);
@@ -72,10 +70,10 @@ module CORRELATOR (
 				for (_c=0; _c<CORRELATIONS_HEAD_TAIL_SIZE; _c=_c+512) begin
 					for (c=_c; c<_c+512 && c < CORRELATIONS_HEAD_TAIL_SIZE; c=c+1) begin : correlator_generation_block
 						always @(posedge clk) begin : correlator_block
-							reg signed [RESOLUTION:0] tmp_r;	
-							reg signed [RESOLUTION:0] tmp_i;
-							reg [8:0] d;
-							reg multiply;
+							integer tmp_r;	
+							integer tmp_i;
+							integer d;
+							integer multiply;
 							for (d=0; d<MAX_ORDER; d=d+1) begin : correlator_multiplier_block
 								reg [7:0] idx;
 								idx = (a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS;
@@ -95,7 +93,7 @@ module CORRELATOR (
 								tmp_i = {1'd0, delay_lines[(a % NUM_INPUTS)][(delay[(a % NUM_INPUTS)]>>1)*WORD_WIDTH+:WORD_WIDTH]};
 							end
 							for (d=0; d<MAX_ORDER; d=d+1) begin : correlator_order_block
-								reg [7:0] idx;
+								integer idx;
 								idx = (a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS;
 								if(d<=order) begin
 									if(QUADRANT) begin

@@ -287,8 +287,7 @@ COUNTER #(
 );
 	
 CORRELATOR #(
-	.MUX_LINES(MUX_LINES),
-	.NUM_LINES(NUM_LINES),
+	.NUM_INPUTS(NUM_INPUTS),
 	.DELAY_SIZE(DELAY_SIZE),
 	.NUM_BASELINES(NUM_INPUTS),
 	.TAIL_SIZE(LAG_AUTO),
@@ -296,7 +295,7 @@ CORRELATOR #(
 	.RESOLUTION(RESOLUTION),
 	.WORD_WIDTH(WORD_WIDTH),
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
-	.MAX_ORDER(1)
+	.MAX_ORDER(0)
 	) autocorrelator (
 	pulses[CORRELATIONS_SIZE*RESOLUTION*2+:SPECTRA_SIZE*RESOLUTION*2],
 	pllclk,
@@ -304,15 +303,14 @@ CORRELATOR #(
 	adc_data_a_auto,
 	auto_smpclk,
 	leds_a,
-	8'd0,
+	0,
 	reset_delayed,
 	enable
 );
 
 if(HAS_CROSSCORRELATOR) begin
 CORRELATOR #(
-	.MUX_LINES(MUX_LINES),
-	.NUM_LINES(NUM_LINES),
+	.NUM_INPUTS(NUM_INPUTS),
 	.DELAY_SIZE(DELAY_SIZE),
 	.NUM_BASELINES(NUM_BASELINES),
 	.TAIL_SIZE(LAG_CROSS),
@@ -320,7 +318,7 @@ CORRELATOR #(
 	.RESOLUTION(RESOLUTION),
 	.WORD_WIDTH(WORD_WIDTH),
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
-	.MAX_ORDER(MAX_ORDER)
+	.MAX_ORDER(1)
 	) crosscorrelator (
 	pulses[0+:CORRELATIONS_SIZE*RESOLUTION*2],
 	pllclk,
@@ -328,7 +326,7 @@ CORRELATOR #(
 	adc_data_a_cross,
 	cross_smpclk,
 	leds_a,
-	order+8'd1,
+	order,
 	reset_delayed,
 	enable
 );
@@ -450,14 +448,14 @@ generate
 			if(~leds[a][3]) begin
 				if(tmp_adc_data[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
 					tmp_adc_data[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-					adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+					adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= tmp_adc_data[a];
 				end else
 					adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
 				if(auto_smpclk_tmp[a] != auto_smpclk[a]) begin
 					auto_smpclk_tmp[a] <= auto_smpclk[a];
 					if(tmp_adc_data_auto[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
 						tmp_adc_data_auto[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-						adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+						adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= tmp_adc_data_auto[a];
 					end else
 						adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
 				end
@@ -465,7 +463,7 @@ generate
 					cross_smpclk_tmp[a] <= cross_smpclk[a];
 					if(tmp_adc_data_cross[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
 						tmp_adc_data_cross[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-						adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+						adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= tmp_adc_data_cross[a];
 					end else
 						adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
 				end
