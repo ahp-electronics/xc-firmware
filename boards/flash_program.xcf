@@ -67,7 +67,7 @@
 					<DeviceSize>128</DeviceSize>
 					<DataSize>BINSIZE</DataSize>
 					<NumberOfDevices>1</NumberOfDevices>
-					<ReInitialize value="FALSE"/>
+					<ReInitialize value="TRUE"/>
 				</Device>
 			</FlashDevice>
 			<FPGADevice>

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+binsize=$(( $(wc -c $1 | cut -d ' ' -f 1) * 8 ))
+data=$(bit2svf -p tools/data/ $1 - DATA 2>/dev/null | tr -d ' ')
+
+bit2svf -p tools/data/ $1 - ERASE 2>/dev/null
+
+echo '// Programming...'
+for (( addr = 0; ${addr} < ${binsize}; addr=${addr}+520 )); do
+    echo 'SDR 8 TDI(60) ;'
+    echo 'SDR 2080 TDI('$(echo ${data} | tail -c+${addr} | head -c 520)');'
+    echo 'RUNTEST DRPAUSE 1.00E-01 SEC ;'
+    echo 'SDR 16 TDI(00A0) TDO(00FF) MASK(C100) ;'
+    echo 'SDR 8 TDI(60) ;'
+done
+echo '// Verifying...'
+bit2svf -p tools/data/ $1 - VERIFY 2>/dev/null

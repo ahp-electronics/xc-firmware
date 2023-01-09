@@ -19,7 +19,7 @@ parameter MUX_LINES = 1;
 parameter NUM_LINES = 1;
 parameter DELAY_SIZE = 4;
 parameter LAG_CROSS = 1;
-parameter LAG_AUTO = 256;
+parameter LAG_AUTO = 1;
 parameter RESOLUTION = 20;
 parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 0;
@@ -30,6 +30,7 @@ parameter WORD_WIDTH = 1;
 parameter USE_UART = 1;
 parameter BINARY = 0;
 parameter USE_SOFT_CLOCK = 1;
+parameter MAX_ORDER = 1;
 
 input wire sysclk;
 inout wire[19:0] jp1;

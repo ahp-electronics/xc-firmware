@@ -1,15 +1,15 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <!DOCTYPE		ispXCF	SYSTEM	"IspXCF.dtd" >
-<ispXCF version="3.11.0">
+<ispXCF version="3.12">
 	<Comment></Comment>
 	<Chain>
 		<Comm>JTAG</Comm>
 		<Device>
 			<SelectedProg value="TRUE"/>
 			<Pos>1</Pos>
-			<Vendor>VENDOR</Vendor>
-			<Family>TECHNOLOGY</Family>
-			<Name>PART-LUTSIZE</Name>
+			<Vendor>WinBond</Vendor>
+			<Family>ECP5U</Family>
+			<Name>LFE5U-45F</Name>
 			<Package>All</Package>
 			<Bypass>
 				<InstrLen>8</InstrLen>
@@ -17,7 +17,9 @@
 				<BScanLen>1</BScanLen>
 				<BScanVal>0</BScanVal>
 			</Bypass>
-			<FileTime>02/04/22 18:22:49</FileTime>
+			<File>/home/plato/dev/github/ahp/xc-firmware/build/xc32/fpga_firmware_xc32.bit</File>
+			<FileTime>12/02/22 00:59:24</FileTime>
+			<JedecChecksum>0x</JedecChecksum>
 			<Operation>SPI Flash Unlock Device</Operation>
 			<Option>
 				<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -28,18 +30,18 @@
 				<Device>
 					<Pos>1</Pos>
 					<Vendor>Lattice</Vendor>
-					<Family>TECHNOLOGY</Family>
-					<Name>PART-LUTSIZE</Name>
+					<Family>ECP5U</Family>
+					<Name>LFE5U-45F</Name>
 					<IDCode>0x41112043</IDCode>
 					<Package>All</Package>
-					<PON>PART-LUTSIZE</PON>
+					<PON>LFE5U-45F</PON>
 					<Bypass>
 						<InstrLen>8</InstrLen>
 						<InstrVal>11111111</InstrVal>
 						<BScanLen>1</BScanLen>
 						<BScanVal>0</BScanVal>
 					</Bypass>
-					<MaskFile>PWD/tools//data/vmdata/database/xpga/ecp5/PART-LUTSIZE.msk</MaskFile>
+					<MaskFile>/opt/lattice/diamond/data/vmdata/database/xpga/ecp5/LFE5U-45F.msk</MaskFile>
 					<Operation>Bypass</Operation>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -53,30 +55,30 @@
 			<FlashDevice>
 				<Device>
 					<Pos>1</Pos>
-					<Vendor>VENDOR</Vendor>
+					<Vendor>WinBond</Vendor>
 					<Family>SPI Serial Flash</Family>
-					<Name>FLASH</Name>
-					<IDCode>JTAGID</IDCode>
+					<Name>W25Q128JW</Name>
+					<IDCode>0x17</IDCode>
 					<Package>8-pin SOIC</Package>
 					<Operation>SPI Flash Unlock Device</Operation>
-					<File>PWD/output/flash_IMPLEMENTATION_unlock.svf</File>
+					<File>/home/plato/dev/github/ahp/xc-firmware/build/xc32/fpga_firmware_xc32.bit</File>
 					<AddressBase>0x00000000</AddressBase>
-					<EndAddress>0x006A0000</EndAddress>
+					<EndAddress>0x000F0000</EndAddress>
 					<DeviceSize>128</DeviceSize>
-					<DataSize>7010726</DataSize>
+					<DataSize>1032635</DataSize>
 					<NumberOfDevices>1</NumberOfDevices>
-					<ReInitialize value="FALSE"/>
+					<ReInitialize value="TRUE"/>
 				</Device>
 			</FlashDevice>
 			<FPGADevice>
 				<Device>
 					<Pos>1</Pos>
 					<Name></Name>
-					<File>PWD/output/flash_IMPLEMENTATION_unlock.svf</File>
+					<File>/home/plato/dev/github/ahp/xc-firmware/build/xc32/fpga_firmware_xc32.bit</File>
 					<LocalChainList>
 						<LocalDevice index="-99"
 							name="Unknown"
-							file="PWD/output/flash_IMPLEMENTATION_UNLOCK.svf"/>
+							file="/home/plato/dev/github/ahp/xc-firmware/build/xc32/fpga_firmware_xc32.bit"/>
 					</LocalChainList>
 					<Option>
 						<SVFVendor>JTAG STANDARD</SVFVendor>
@@ -92,13 +94,11 @@
 		<OperationOverride>No Override</OperationOverride>
 		<StartTAP>TLR</StartTAP>
 		<EndTAP>TLR</EndTAP>
-		<DisableCheckBoard value="TRUE"/>
 		<VerifyUsercode value="FALSE"/>
 		<TCKDelay>1</TCKDelay>
 	</ProjectOptions>
 	<CableOptions>
-		<CableName>USB2</CableName>
-		<PortAdd>FTUSB-0</PortAdd>
-		<USBID>TTL232R Location 0000 Serial TTL232R</USBID>
+		<CableName>LATTICE</CableName>
+		<PortAdd>0x0378</PortAdd>
 	</CableOptions>
 </ispXCF>

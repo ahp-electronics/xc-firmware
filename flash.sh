@@ -36,8 +36,8 @@ environment() {
 svf() {
 	svf="${PWD}/output/${implementation}/${1}.svf"
 	tmpfile="${PWD}/output/${implementation}/${1}.xcf"
-	binsize=$(( $(wc -c ${PWD}/build/${implementation}/${project}_${implementation}.bit | cut -d ' ' -f 1) - 1 ))
-	endaddr=$(printf '0x%05X000' $(( ${binsize}/32768 )) )
+	binsize=$(( $( wc -c build/${implementation}/${project}_${implementation}.bit | cut -d ' ' -f 1 ) ))
+	endaddr=$(printf '0x%08X' $(( ${binsize} / 8 + 1)) )
 	echo $project ${implementation} $1
 	sed -e "s:PART:${part}:g" "${PWD}/boards/flash_${1}.xcf" | \
 	sed -e "s:LUTSIZE:${size}:g" | \
@@ -57,7 +57,7 @@ svf() {
 
 program() {
 	_svf="${PWD}/output/${implementation}/flash.svf"
-	program_jtag -i"${_svf}" -d"${programmer}" -f${frequency}|| true
+	program_jtag -i"${_svf}" -d"${programmer}" -f${frequency} || true
 }
 
 synthesize() {
@@ -149,6 +149,8 @@ prepare() {
         read NUM_LINES
 	echo "enter channels #:"
         read DELAY_SIZE
+	echo "enter the maximum correlation order:"
+        read MAX_ORDER
 	echo "enter single-shot baseline channels #:"
         read LAG_CROSS
 	echo "enter single-shot line channels #:"
@@ -194,6 +196,7 @@ prepare() {
         sed -e "s:_USE_UART:${USE_UART}:g" \
         sed -e "s:_BINARY:${BINARY}:g" \
         sed -e "s:_USE_SOFT_CLOCK:${USE_SOFT_CLOCK}:g" \
+        sed -e "s:_MAX_ORDER:${MAX_ORDER}:g" \
          > ${tmpfile}
 }
 

@@ -1,8 +1,10 @@
-# XC Quantum correlators firmware
+# AHP XC Quantum correlators firmware 
 
-#### This repository contains code of the XC series correlators
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7211818.svg)](https://doi.org/10.5281/zenodo.7211818)
 
-![AHP XC8 cross-correlator](https://github.com/ahp-electronics/pictures/blob/master/XC8_small.png "XC8")
+#### This repository contains code of the XC series multichannel multi-order cross-correlators
+
+![AHP XC8 cross-correlator](https://github.com/ahp-electronics/pictures/blob/master/XC32_small.png "XC32")
 
 
 You'll find board and device specific files into the boards/ folder, device files contain some custom parameters that can characterize the device:
@@ -26,7 +28,9 @@ parameter WORD_WIDTH = 1;		//Word width (greater than 1 when using ADC - must be
 parameter BINARY = 0;		//use binary packet transmission instead of ASCII
 parameter USE_UART = 1;			//Use UART or SPI communication?
 parameter USE_SOFT_CLOCK = 1;			//Limit usage of gated clocks
+parameter MAX_ORDER = 2;			//Maximum crosscorrelation order
 ```
+
 
 The generated SVF file can be downloaded to the device using urJTAG http://urjtag.org/
 
@@ -41,7 +45,7 @@ Here below is defined the communication protocol:
     0x0d: Set integration parameters: bit 4 => enable capture, bit 5 => use external clock, bit 6 => reset timestamp when enabling capture, bit 7 => enable extra commands
     0x01: select active line: bits [7:6] => indexer, bits [5:4] => value (if extra commands bits [5:4] are routed to 4 extra lines)
     0x02: activate leds or power lines using bits [5:4], invert pulse reading with bit 6, single clock cycle pulse width with bit 7
-    0x03: baudrate 57600 left-shifted by bits [7:4]
+    0x03: baudrate 57600 left-shifted by bits [7:4] (if extra commands bits [5:4] are routed to crosscorrelation order [7:4])
     0x04: bits [1:0] => indexer, bits [6:4] => delay value. If bit 7 is 0, then start delay for cross-correlations is set, if bit 4 is 1, then start delay for autocorrelations is set, if extra commands these values define the size of the correlation scan).
     0x08: sampling clock tau = bits [7:4] are the clock tau power of two exponent or the upper 4 bits of the delay. If bit 7 is 0, this applies to cross-correlations, if bit 4 is 1, this applies to autocorrelations, if extra commands these values apply to the size of the correlation scan. if tests[7] is set, these commands sets the step increment.
     0x09: power voltage = bits [7:4]
@@ -63,8 +67,8 @@ header
 payload
 
     bytes +lines#: pulses count of each line within the integration time
-    bytes +lines#: autocorrelations count of each line by the selected autocorrelation line delayed by crosscorrelation lag zero
-    bytes +baselines#: crosscorrelations count of pulses of each line with others by the selected delay amount
+    bytes +lines#: autocorrelations real/imaginary count of each line within the packet time
+    bytes +baselines#: crosscorrelations real/imaginary count of pulses of each line with others ones within the packet time
     bytes +16: 8-byte timestamp of current packet
 
 checksum
