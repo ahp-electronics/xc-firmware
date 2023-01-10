@@ -42,13 +42,15 @@ wire refclk;
 wire enable;
 wire extclk;
 wire intclk;
+wire smpclk;
 wire pllclk;
 wire strobe;
 
+assign smpclk = pllclk ^ intclk;
 assign extclk = jp1[16];
 assign jp1[17] = intclk;
 assign strobe = jp1[18];
-assign jp1[19] = pllclk;
+assign jp1[19] = smpclk;
 
 assign jp2[16] = refclk;
 assign jp2[17] = 1'd0;

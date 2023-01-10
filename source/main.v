@@ -82,6 +82,7 @@ output wire intclk;
 output wire pllclk;
 input wire strobe;
 
+wire pllclk;
 wire external_clock;
 wire integrating;
 
