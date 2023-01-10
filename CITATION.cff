@@ -5,7 +5,7 @@ authors:
   given-names: "Ilia"
   orcid: "https://orcid.org/0000-0002-8527-4611"
 title: "xc-firmware"
-version: 2.5
+version: 2.6
 doi: 10.5281/zenodo.311073125
 date-released: 2022-12-22
 url: "https://github.com/ahp-electronics/xc-firmware"
