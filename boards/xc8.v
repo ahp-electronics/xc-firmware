@@ -43,8 +43,10 @@ wire enable;
 wire extclk;
 wire intclk;
 wire smpclk;
+wire pllclk;
 wire strobe;
 
+assign smpclk = pllclk ^ intclk;
 assign extclk = jp1[16];
 assign jp1[17] = intclk;
 assign strobe = jp1[18];
@@ -122,7 +124,7 @@ main #(
        refclk,
        extclk,
        intclk,
-       smpclk,
+       pllclk,
        ,
        strobe,
        1'd1
