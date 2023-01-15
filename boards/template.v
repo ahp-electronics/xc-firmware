@@ -44,6 +44,7 @@ wire intclk;
 wire smpclk;
 wire strobe;
 
+assign smpclk = intclk;
 assign extclk = jp1[16];
 assign jp1[17] = intclk;
 assign strobe = jp1[18];
@@ -90,7 +91,7 @@ main #(
        refclk,
        extclk,
        intclk,
-       smpclk,
+       ,
        ,
        strobe,
        1'd1

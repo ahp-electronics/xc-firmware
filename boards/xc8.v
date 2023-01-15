@@ -46,7 +46,7 @@ wire smpclk;
 wire pllclk;
 wire strobe;
 
-assign smpclk = pllclk ^ intclk;
+assign smpclk = intclk;
 assign extclk = jp1[16];
 assign jp1[17] = intclk;
 assign strobe = jp1[18];
