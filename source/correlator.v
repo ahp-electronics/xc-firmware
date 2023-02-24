@@ -28,6 +28,8 @@ module CORRELATOR (
 	parameter USE_SOFT_CLOCK=0;
 	parameter MAX_ORDER=2;
 	
+	localparam DELAYS_SIZE=DELAY_SIZE < 4 ? 4 : DELAY_SIZE;
+	localparam NEGATIVE_MASK=(1<<WORD_WIDTH)-1;
 	localparam CORRELATIONS_HEAD_TAIL_SIZE=(HEAD_SIZE+TAIL_SIZE)-1;
 	localparam MAX_LAG=(HEAD_SIZE > CORRELATIONS_HEAD_TAIL_SIZE) ? HEAD_SIZE : CORRELATIONS_HEAD_TAIL_SIZE;
 	localparam CORRELATIONS_SIZE=(NUM_BASELINES*CORRELATIONS_HEAD_TAIL_SIZE);
@@ -47,7 +49,7 @@ module CORRELATOR (
 	input wire [NUM_INPUTS-1:0] sampling_clk;
 	input wire [NUM_INPUTS*8-1:0] led_lines;
 
-	wire [WORD_WIDTH*(DELAY_SIZE+TAIL_SIZE+1)-1:0] delay_lines [0:NUM_INPUTS];
+	wire [WORD_WIDTH*(DELAYS_SIZE+TAIL_SIZE+1)-1:0] delay_lines [0:NUM_INPUTS];
 	wire [19:0] delay [0:NUM_INPUTS];
 
 	wire [WORD_WIDTH-1:0] adc_data [0:NUM_INPUTS];
@@ -60,7 +62,7 @@ module CORRELATOR (
 		genvar c;
 		genvar _c;
 		for (line=0; line < NUM_INPUTS; line=line+1) begin
-			fifo #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(DELAY_SIZE+TAIL_SIZE+1)) delay_line(clk, sampling_clk[line], adc_data_a[line*WORD_WIDTH+:WORD_WIDTH], delay_lines[line]);
+			fifo #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(DELAYS_SIZE+TAIL_SIZE+1)) delay_line(clk, sampling_clk[line], adc_data_a[line*WORD_WIDTH+:WORD_WIDTH], delay_lines[line]);
 			assign leds[line]=led_lines[line*8+:8];
 			assign delay[line]=(QUADRANT_OR_SINGLE ? delay_arr[line*20+:20] : delay_arr[line*20+:12]);
 		end
@@ -75,7 +77,7 @@ module CORRELATOR (
 							integer d;
 							integer multiply;
 							for (d=0; d<MAX_ORDER; d=d+1) begin : correlator_multiplier_block
-								reg [7:0] idx;
+								integer idx;
 								idx = (a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS;
 								if(d == 0)
 									multiply = ~leds[idx][4];
@@ -87,7 +89,7 @@ module CORRELATOR (
 								tmp_i = {1'd0, delay_lines[(a % NUM_INPUTS)][2*WORD_WIDTH+:WORD_WIDTH]};
 							end else if(SINGLE) begin
 								tmp_r = {1'd0, delay_lines[(a % NUM_INPUTS)][1*WORD_WIDTH+:WORD_WIDTH]};
-								tmp_i = {1'd0, delay_lines[(a % NUM_INPUTS)][1*WORD_WIDTH+:WORD_WIDTH]^~0};
+								tmp_i = {1'd0, delay_lines[(a % NUM_INPUTS)][1*WORD_WIDTH+:WORD_WIDTH]^NEGATIVE_MASK};
 							end else begin
 								tmp_r = {1'd0, delay_lines[(a % NUM_INPUTS)][(delay[(a % NUM_INPUTS)]>>2)*WORD_WIDTH+:WORD_WIDTH]};
 								tmp_i = {1'd0, delay_lines[(a % NUM_INPUTS)][(delay[(a % NUM_INPUTS)]>>1)*WORD_WIDTH+:WORD_WIDTH]};
@@ -107,10 +109,10 @@ module CORRELATOR (
 									end else if(SINGLE) begin
 										if(multiply) begin
 											tmp_r = tmp_r * {1'd0, delay_lines[idx][(2+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]};
-											tmp_i = tmp_i * {1'd0, delay_lines[idx][(2+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]^~0};
+											tmp_i = tmp_i * {1'd0, delay_lines[idx][(2+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]^NEGATIVE_MASK};
 										end else begin
-											tmp_r = tmp_r - {1'd0, delay_lines[idx][(2+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]};
-											tmp_i = tmp_i - {1'd0, delay_lines[idx][(2+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]^~0};
+											tmp_r = tmp_r - {1'd0, delay_lines[idx][(1+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]};
+											tmp_i = tmp_i - {1'd0, delay_lines[idx][(1+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]^NEGATIVE_MASK};
 										end
 									end else begin
 										if(multiply) begin
@@ -118,7 +120,7 @@ module CORRELATOR (
 											tmp_i = tmp_i * {1'd0, delay_lines[idx][(delay[idx]+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]};
 										end else begin
 											tmp_r = tmp_r - {1'd0, delay_lines[idx][(((delay[idx]*3)>>2)+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]};
-											tmp_i = tmp_i - {1'd0, delay_lines[idx][(delay[idx]+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]^(SINGLE?~0:0)};
+											tmp_i = tmp_i - {1'd0, delay_lines[idx][(delay[idx]+(c < HEAD_SIZE ? HEAD_SIZE-c : c+HEAD_SIZE-1))*WORD_WIDTH+:WORD_WIDTH]};
 										end
 									end
 								end

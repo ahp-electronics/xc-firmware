@@ -82,7 +82,6 @@ output wire intclk;
 output wire pllclk;
 input wire strobe;
 
-wire pllclk;
 wire external_clock;
 wire integrating;
 
@@ -283,6 +282,7 @@ COUNTER #(
 	pllclk,
 	adc_data_a,
 	leds_a,
+	overflow,
 	reset_delayed,
 	enable
 );
@@ -333,7 +333,7 @@ CORRELATOR #(
 );
 end
 
-always@(*) begin
+always@(posedge pllclk) begin
 	signal_in[mux_line*NUM_LINES*WORD_WIDTH+:NUM_LINES*WORD_WIDTH] <= line_in;
 	if(HAS_LEDS) begin
 		line_out[0+:NUM_LINES] <= lineout[mux_line*NUM_LINES+:NUM_LINES];
@@ -381,8 +381,6 @@ generate
 	genvar a;
 	genvar j;
 	genvar x;
-	genvar y;
-	genvar z;
 
 	for (a=0; a<NUM_INPUTS; a=a+1) begin : correlators_initial_block
 		assign leds[a] = leds_a[a*8+:8];
