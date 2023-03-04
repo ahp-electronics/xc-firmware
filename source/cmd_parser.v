@@ -10,12 +10,14 @@ module CMD_PARSER(
 	cmd,
 	voltage_pwm,
 	test,
-	cross_idx,
+	cross_start,
 	cross_len,
 	cross_increment,
-	auto_idx,
+	cross_repeat,
+	auto_start,
 	auto_len,
 	auto_increment,
+	auto_repeat,
 	leds,
 	baud_rate,
 	order,
@@ -47,12 +49,14 @@ input wire [7:0] cmd;
 output reg[8*NUM_INPUTS-1:0] voltage_pwm = 0;
 output reg[8*NUM_INPUTS-1:0] test = 0;
 output reg[8*NUM_INPUTS-1:0] leds = 0;
-output reg[20*NUM_INPUTS-1:0] cross_idx = 0;
-output reg[20*NUM_INPUTS-1:0] auto_idx = 0;
+output reg[20*NUM_INPUTS-1:0] cross_start = 0;
+output reg[20*NUM_INPUTS-1:0] auto_start = 0;
 output reg[20*NUM_INPUTS-1:0] cross_len = 0;
 output reg[20*NUM_INPUTS-1:0] auto_len = 0;
 output reg[12*NUM_INPUTS-1:0] cross_increment = 1;
+output reg[12*NUM_INPUTS-1:0] cross_repeat = 1;
 output reg[12*NUM_INPUTS-1:0] auto_increment = 1;
+output reg[12*NUM_INPUTS-1:0] auto_repeat = 1;
 output reg[3:0] baud_rate = 0;
 output reg[7:0] order = 0;
 output reg[7:0] current_line = 0;
@@ -62,8 +66,8 @@ output reg timestamp_reset = 1;
 output reg extra_commands = 0;
 always@(posedge clk) begin
 	if (cmd[3:0] == CLEAR) begin
-		cross_idx[current_line*12+:12] <= 0;
-		auto_idx[current_line*12+:12] <= 0;
+		cross_start[current_line*12+:12] <= 0;
+		auto_start[current_line*12+:12] <= 0;
 	end else if (cmd[3:0] == ENABLE_CAPTURE) begin
 		integrating <= cmd[4];
 		external_clock <= cmd[5];
@@ -92,10 +96,17 @@ always@(posedge clk) begin
 					cross_len [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			end
 		end else begin
-			if (cmd[7])
-				auto_idx [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
-			else
-				cross_idx [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			if(test[current_line*8+7]) begin
+				if (cmd[7])
+					auto_start [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				else
+					cross_start [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			end else begin
+				if (cmd[7])
+					auto_repeat [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				else
+					cross_repeat [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			end
 		end
 	end else if (cmd[3:0] == SET_FREQ_DIV) begin
 		if(extra_commands) begin
@@ -105,9 +116,9 @@ always@(posedge clk) begin
 				cross_len [current_line*20+12+(cmd[6]*2)+:2] <= cmd[5:4];
 		end else begin
 			if (cmd[7])
-				auto_idx [current_line*20+12+(cmd[6]*2)+:2] <= cmd[5:4];
+				auto_start [current_line*20+12+(cmd[6]*2)+:2] <= cmd[5:4];
 			else
-				cross_idx [current_line*20+12+(cmd[6]*2)+:2] <= cmd[5:4];
+				cross_start [current_line*20+12+(cmd[6]*2)+:2] <= cmd[5:4];
 		end
 	end else if (cmd[3:0] == ENABLE_TEST) begin
 		test[current_line*8+4*extra_commands+:4] <= cmd[7:4];
