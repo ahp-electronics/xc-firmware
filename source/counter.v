@@ -52,6 +52,7 @@ module COUNTER (
 		clk,
 		adc_data_a,
 		leds_a,
+		overflow,
 		reset,
 		enable
 	);
@@ -111,7 +112,15 @@ module COUNTER (
 	input wire clk;
 	input wire [WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
 	input wire [NUM_INPUTS*8-1:0] leds_a;
-
+	output wire[NUM_INPUTS-1:0] overflow;
+	
+	generate
+		genvar i;
+		for(i = 0; i < NUM_INPUTS; i = i+1) begin
+			assign overflow[i] = pulses[(NUM_INPUTS-i-1)*RESOLUTION+:RESOLUTION] == MAX_COUNTS;
+		end
+	endgenerate
+	
 	always @(posedge clk) begin : counter_sum_block
 		integer a;
 		for (a=0; a<NUM_INPUTS; a=a+1) begin

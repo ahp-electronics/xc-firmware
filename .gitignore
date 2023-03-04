@@ -80,3 +80,5 @@ Thumbs.db
 *.dll
 *.exe
 
+promote.xml
+reportview.xml

@@ -16,7 +16,7 @@ module dff (
 	parameter USE_SOFT_CLOCK=0;
 	input wire clk;
 	input wire refclk;
-	reg _refclk;
+	reg _refclk = 0;
 	input wire[WORD_WIDTH-1:0] d;
 	output reg[WORD_WIDTH-1:0] q;
 
