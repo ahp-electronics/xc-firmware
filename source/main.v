@@ -412,7 +412,9 @@ generate
 					auto_current[a][0+:12] <= auto_start[a][0+:12];
 					auto_repeat_current <= 0;
 				end else if(test[a][1] && (auto_current[a][0+:12] < (auto_start[a][0+:12]+auto_len[a][0+:12]) && auto_current[a][12+:4] != (auto_start[a][12+:4]+auto_len[a][12+:4]))) begin
-					if(auto_repeat_current >= auto_repeat[a]) begin
+					if(auto_repeat_current < auto_repeat[a]) begin
+						auto_repeat_current <= auto_repeat_current+1;
+					end else begin
 						if(auto_current[a][0+:12] >= DELAY_SIZE) begin
 							auto_current[a][0+:12] <= auto_current[a][0+:12]-(DELAY_SIZE>>1);
 							auto_current[a][12+:4] <= auto_current[a][12+:4];
@@ -420,19 +422,19 @@ generate
 							auto_current[a][0+:12] <= auto_current[a][0+:12]+auto_increment[a];
 						end
 						auto_repeat_current <= 0;
-					end else
-						auto_repeat_current <= auto_repeat_current+1;
+					end
 				end
 			end else begin
 				if(capture_start) begin
 					auto_current[a] <= auto_start[a];
 					auto_repeat_current <= 0;
 				end else if(test[a][1] && (auto_current[a] < (auto_len[a]+auto_start[a]))) begin
-					if(auto_repeat_current >= auto_repeat[a]) begin
+					if(auto_repeat_current < auto_repeat[a]) begin
+						auto_repeat_current <= auto_repeat_current+1;
+					end else begin
 						auto_current[a] <= auto_current[a]+auto_increment[a];
 						auto_repeat_current <= 0;
-					end else
-						auto_repeat_current <= auto_repeat_current+1;
+					end
 				end
 			end
 
@@ -442,7 +444,9 @@ generate
 					cross_current[a][0+:12] <= cross_start[a][0+:12];
 					cross_repeat_current <= 0;
 				end else if(test[a][2] && (cross_current[a][0+:12] < (cross_start[a][0+:12]+cross_len[a][0+:12]) && cross_current[a][12+:4] != (cross_start[a][12+:4]+cross_len[a][12+:4]))) begin
-					if(cross_repeat_current >= cross_repeat[a]) begin
+					if(cross_repeat_current < cross_repeat[a]) begin
+						cross_repeat_current <= cross_repeat_current+1;
+					end else begin
 						if(cross_current[a][0+:12] >= DELAY_SIZE) begin
 							cross_current[a][0+:12] <= cross_current[a][0+:12]-(DELAY_SIZE>>1);
 							cross_current[a][12+:4] <= cross_current[a][12+:4];
@@ -450,19 +454,19 @@ generate
 							cross_current[a][0+:12] <= cross_current[a][0+:12]+cross_increment[a];
 						end
 						cross_repeat_current <= 0;
-					end else
-						cross_repeat_current <= cross_repeat_current+1;
+					end
 				end
 			end else begin
 				if(capture_start) begin
 					cross_current[a] <= cross_start[a];
 					cross_repeat_current <= 0;
 				end else if(test[a][2] && (cross_current[a] < (cross_len[a]+cross_start[a]))) begin
-					if(cross_repeat_current >= cross_repeat[a]) begin
+					if(cross_repeat_current < cross_repeat[a]) begin
+						cross_repeat_current <= cross_repeat_current+1;
+					end else begin
 						cross_current[a] <= cross_current[a]+cross_increment[a];
 						cross_repeat_current <= 0;
-					end else
-						cross_repeat_current <= cross_repeat_current+1;
+					end
 				end
 			end
 		end

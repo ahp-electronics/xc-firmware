@@ -61,7 +61,7 @@ wire[NUM_LINES-1:0] line_in;
 wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 
-assign line_in[7:0] = jp1[15:0];
+assign line_in[15:0] = jp1[15:0];
 assign line_in[31:16] = jp2[15:0];
 
 main #(
