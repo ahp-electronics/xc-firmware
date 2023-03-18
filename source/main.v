@@ -408,32 +408,32 @@ generate
 		always@(negedge intclk) begin
 			if (!QUADRANT_OR_SINGLE) begin
 				if(capture_start) begin
-					auto_current[a][12+:4] <= auto_start[a][12+:4];
-					auto_current[a][0+:12] <= auto_start[a][0+:12];
-					auto_repeat_current <= 0;
+					auto_current[a][12+:4] = auto_start[a][12+:4];
+					auto_current[a][0+:12] = auto_start[a][0+:12];
+					auto_repeat_current = 0;
 				end else if(test[a][1] && (auto_current[a][0+:12] < (auto_start[a][0+:12]+auto_len[a][0+:12]) && auto_current[a][12+:4] != (auto_start[a][12+:4]+auto_len[a][12+:4]))) begin
 					if(auto_repeat_current < auto_repeat[a]) begin
-						auto_repeat_current <= auto_repeat_current+1;
+						auto_repeat_current = auto_repeat_current+1;
 					end else begin
 						if(auto_current[a][0+:12] >= DELAY_SIZE) begin
-							auto_current[a][0+:12] <= auto_current[a][0+:12]-(DELAY_SIZE>>1);
-							auto_current[a][12+:4] <= auto_current[a][12+:4];
+							auto_current[a][0+:12] = auto_current[a][0+:12]-(DELAY_SIZE>>1);
+							auto_current[a][12+:4] = auto_current[a][12+:4];
 						end else begin
-							auto_current[a][0+:12] <= auto_current[a][0+:12]+auto_increment[a];
+							auto_current[a][0+:12] = auto_current[a][0+:12]+auto_increment[a];
 						end
-						auto_repeat_current <= 0;
+						auto_repeat_current = 0;
 					end
 				end
 			end else begin
 				if(capture_start) begin
-					auto_current[a] <= auto_start[a];
-					auto_repeat_current <= 0;
+					auto_current[a] = auto_start[a];
+					auto_repeat_current = 0;
 				end else if(test[a][1] && (auto_current[a] < (auto_len[a]+auto_start[a]))) begin
 					if(auto_repeat_current < auto_repeat[a]) begin
-						auto_repeat_current <= auto_repeat_current+1;
+						auto_repeat_current = auto_repeat_current+1;
 					end else begin
-						auto_current[a] <= auto_current[a]+auto_increment[a];
-						auto_repeat_current <= 0;
+						auto_current[a] = auto_current[a]+auto_increment[a];
+						auto_repeat_current = 0;
 					end
 				end
 			end
