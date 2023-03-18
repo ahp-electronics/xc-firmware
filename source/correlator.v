@@ -84,10 +84,10 @@ module CORRELATOR (
 						end
 						if (QUADRANT) begin
 							tmp_r = {32'd0, delay_lines[(a % NUM_INPUTS)][(1+(c < 0 ? 0 : c))*WORD_WIDTH+:WORD_WIDTH]};
-							tmp_i = {32'd0, delay_lines[(a % NUM_INPUTS)][(1+(c < 0 ? 0 : c))*WORD_WIDTH+:WORD_WIDTH]};
+							tmp_i = {32'd0, delay_lines[(a % NUM_INPUTS)][(3+(c < 0 ? 0 : c))*WORD_WIDTH+:WORD_WIDTH]};
 						end else if(SINGLE) begin
 							tmp_r = {32'd0, delay_lines[(a % NUM_INPUTS)][(1+(c < 0 ? 0 : c))*WORD_WIDTH+:WORD_WIDTH]};
-							tmp_i = {32'd0, delay_lines[(a % NUM_INPUTS)][(1+(c < 0 ? 0 : c))*WORD_WIDTH+:WORD_WIDTH]^NEGATIVE_MASK};
+							tmp_i = {32'd0, delay_lines[(a % NUM_INPUTS)][(1+(c < 0 ? 0 : c))*WORD_WIDTH+:WORD_WIDTH]};
 						end else begin
 							tmp_r = {32'd0, delay_lines[(a % NUM_INPUTS)][((delay[(a % NUM_INPUTS)]>>2)+(c < 0 ? 0 : c))*WORD_WIDTH+:WORD_WIDTH]};
 							tmp_i = {32'd0, delay_lines[(a % NUM_INPUTS)][((delay[(a % NUM_INPUTS)]>>1)+(c < 0 ? 0 : c))*WORD_WIDTH+:WORD_WIDTH]};
@@ -96,10 +96,10 @@ module CORRELATOR (
 							if(d<=order) begin
 								if(QUADRANT) begin
 									if(multiply) begin 
-										tmp_r = tmp_r * {32'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(3+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
+										tmp_r = tmp_r * {32'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(2+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
 										tmp_i = tmp_i * {32'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(4+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
 									end else begin
-										tmp_r = tmp_r - {32'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(3+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
+										tmp_r = tmp_r - {32'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(2+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
 										tmp_i = tmp_i - {32'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(4+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
 									end
 								end else if(SINGLE) begin
