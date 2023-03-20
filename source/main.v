@@ -113,7 +113,6 @@ wire[NUM_INPUTS-1:0] overflow;
 
 wire[NUM_INPUTS-1:0] voltage;
 
-wire tx_done;
 reg signed[PACKET_SIZE-1:0] tx_data;
 wire [PAYLOAD_SIZE-1:0] pulses;
 
@@ -133,8 +132,6 @@ wire[(LAG_SIZE_AUTO)*WORD_WIDTH-1:0] auto_delays[0:NUM_INPUTS];
 wire[(LAG_SIZE_CROSS)*WORD_WIDTH-1:0] cross_delays[0:NUM_INPUTS];
 wire integrate;
 wire in_capture;
-reg old_in_capture;
-reg capture_start;
 reg enable_tx;
 
 wire[7:0] current_line;
@@ -172,7 +169,6 @@ wire[7:0] TXREG;
 
 assign integrating = strobe | integrate;
 assign in_capture = enable_tx | integrating;
-assign intclk = tx_done;
 
 pll pll_block (refclk, pllclk);
 dff #(.USE_SOFT_CLOCK(0)) reset_delay(pllclk, TXIF, intclk, reset_delayed);
@@ -235,7 +231,7 @@ TX_WORD #(.BINARY(BINARY), .RESOLUTION(PACKET_SIZE)) packet_generator(
 	TXREG,
 	TXIF,
 	tx_data,
-	tx_done,
+	intclk,
 	in_capture
 );
 
@@ -367,14 +363,6 @@ always@(posedge intclk) begin
 	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
 	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
 	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
-	if(old_in_capture != in_capture) begin
-		old_in_capture <= in_capture;
-		if(old_in_capture) begin
-			capture_start <= 1;
-		end
-	end else begin
-		capture_start <= 0;
-	end
 end
 
 generate
@@ -397,19 +385,19 @@ generate
 
 		always@(negedge intclk) begin
 			if (!QUADRANT_OR_SINGLE) begin
-				if(!test[a][1]) begin
+				if(!test[a][1] || !in_capture) begin
 					auto_current[a][12+:4] <= auto_start[a][12+:4];
 					auto_current[a][0+:12] <= auto_start[a][0+:12];
-				end else if(auto_current[a][0+:12] < (auto_start[a][0+:12]+auto_len[a][0+:12]) && auto_current[a][12+:4] != (auto_start[a][12+:4]+auto_len[a][12+:4])) begin
+				end else if(auto_current[a][0+:12] < (auto_start[a][0+:12]+auto_len[a][0+:12]) && auto_current[a][12+:4] < (auto_start[a][12+:4]+auto_len[a][12+:4])) begin
 					if(auto_current[a][0+:12] >= DELAY_SIZE) begin
 						auto_current[a][0+:12] <= auto_current[a][0+:12]-(DELAY_SIZE>>1);
-						auto_current[a][12+:4] <= auto_current[a][12+:4];
+						auto_current[a][12+:4] <= auto_current[a][12+:4]+(1+auto_increment/(2*DELAY_SIZE));
 					end else begin
 						auto_current[a][0+:12] <= auto_current[a][0+:12]+auto_increment[a];
 					end
 				end
 			end else begin
-				if(!test[a][1]) begin
+				if(!test[a][1] || !in_capture) begin
 					auto_current[a] <= auto_start[a];
 				end else if(auto_current[a] < (auto_len[a]+auto_start[a])) begin
 					auto_current[a] <= auto_current[a]+auto_increment[a];
@@ -417,19 +405,19 @@ generate
 			end
 
 			if (!QUADRANT_OR_SINGLE) begin
-				if(!test[a][2]) begin
+				if(!test[a][2] || !in_capture) begin
 					cross_current[a][12+:4] <= cross_start[a][12+:4];
 					cross_current[a][0+:12] <= cross_start[a][0+:12];
-				end else if(cross_current[a][0+:12] < (cross_start[a][0+:12]+cross_len[a][0+:12]) && cross_current[a][12+:4] != (cross_start[a][12+:4]+cross_len[a][12+:4])) begin
+				end else if(cross_current[a][0+:12] < (cross_start[a][0+:12]+cross_len[a][0+:12]) && cross_current[a][12+:4] < (cross_start[a][12+:4]+cross_len[a][12+:4])) begin
 					if(cross_current[a][0+:12] >= DELAY_SIZE) begin
 						cross_current[a][0+:12] <= cross_current[a][0+:12]-(DELAY_SIZE>>1);
-						cross_current[a][12+:4] <= cross_current[a][12+:4];
+						cross_current[a][12+:4] <= cross_current[a][12+:4]+(1+cross_increment/(2*DELAY_SIZE));
 					end else begin
 						cross_current[a][0+:12] <= cross_current[a][0+:12]+cross_increment[a];
 					end
 				end
 			end else begin
-				if(!test[a][2]) begin
+				if(!test[a][2] || !in_capture) begin
 					cross_current[a] <= cross_start[a];
 				end else if(cross_current[a] < (cross_len[a]+cross_start[a])) begin
 					cross_current[a] <= cross_current[a]+cross_increment[a];
@@ -487,7 +475,7 @@ generate
 		end
 		
 		CLK_GEN auto_sampling_clock_block(
-			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES * auto_current[a][12+:4] : TICK_CYCLES*auto_current[a],
+			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES * auto_current[a][12+:4] : TICK_CYCLES * auto_current[a],
 			auto_smpclk[a],
 			pllclk,
 			auto_smpclk_pulse[a],
@@ -495,7 +483,7 @@ generate
 		);
 
 		CLK_GEN cross_sampling_clock_block(
-			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES * cross_current[a][12+:4] : TICK_CYCLES*cross_current[a],
+			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES * cross_current[a][12+:4] : TICK_CYCLES * cross_current[a],
 			cross_smpclk[a],
 			pllclk,
 			cross_smpclk_pulse[a],
