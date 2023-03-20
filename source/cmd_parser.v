@@ -13,11 +13,9 @@ module CMD_PARSER(
 	cross_start,
 	cross_len,
 	cross_increment,
-	cross_repeat,
 	auto_start,
 	auto_len,
 	auto_increment,
-	auto_repeat,
 	leds,
 	baud_rate,
 	order,
@@ -54,9 +52,7 @@ output reg[20*NUM_INPUTS-1:0] auto_start = 0;
 output reg[20*NUM_INPUTS-1:0] cross_len = 0;
 output reg[20*NUM_INPUTS-1:0] auto_len = 0;
 output reg[12*NUM_INPUTS-1:0] cross_increment = 1;
-output reg[12*NUM_INPUTS-1:0] cross_repeat = 1;
 output reg[12*NUM_INPUTS-1:0] auto_increment = 1;
-output reg[12*NUM_INPUTS-1:0] auto_repeat = 1;
 output reg[3:0] baud_rate = 0;
 output reg[7:0] order = 0;
 output reg[7:0] current_line = 0;
@@ -102,10 +98,6 @@ always@(posedge clk) begin
 				else
 					cross_start [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			end else begin
-				if (cmd[7])
-					auto_repeat [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
-				else
-					cross_repeat [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			end
 		end
 	end else if (cmd[3:0] == SET_FREQ_DIV) begin

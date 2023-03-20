@@ -124,8 +124,6 @@ reg[19:0] cross_current [0:NUM_INPUTS];
 reg[19:0] auto_current [0:NUM_INPUTS];
 wire[11:0] cross_increment [0:NUM_INPUTS];
 wire[11:0] auto_increment [0:NUM_INPUTS];
-wire[11:0] cross_repeat [0:NUM_INPUTS];
-wire[11:0] auto_repeat [0:NUM_INPUTS];
 
 reg[NUM_INPUTS-1:0] signal_in;
 
@@ -161,8 +159,6 @@ wire[20*NUM_INPUTS-1:0] cross_len_a;
 wire[20*NUM_INPUTS-1:0] auto_len_a;
 wire[12*NUM_INPUTS-1:0] cross_increment_a;
 wire[12*NUM_INPUTS-1:0] auto_increment_a;
-wire[12*NUM_INPUTS-1:0] cross_repeat_a;
-wire[12*NUM_INPUTS-1:0] auto_repeat_a;
 wire[63:0] timestamp;
 wire extra_commands;
 wire timestamp_reset;
@@ -250,11 +246,9 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 	cross_start_a,
 	cross_len_a,
 	cross_increment_a,
-	cross_repeat_a,
 	auto_start_a,
 	auto_len_a,
 	auto_increment_a,
-	auto_repeat_a,
 	leds_a,
 	baud_rate,
 	order,
@@ -400,73 +394,45 @@ generate
 		assign auto_len[a] = auto_len_a[a*20+:20];
 		assign cross_increment[a] = cross_increment_a[a*12+:12];
 		assign auto_increment[a] = auto_increment_a[a*12+:12];
-		assign cross_repeat[a] = cross_repeat_a[a*12+:12];
-		assign auto_repeat[a] = auto_repeat_a[a*12+:12];
-		integer auto_repeat_current;
-		integer cross_repeat_current;
 
 		always@(negedge intclk) begin
 			if (!QUADRANT_OR_SINGLE) begin
-				if(capture_start) begin
-					auto_current[a][12+:4] = auto_start[a][12+:4];
-					auto_current[a][0+:12] = auto_start[a][0+:12];
-					auto_repeat_current = 0;
-				end else if(test[a][1] && (auto_current[a][0+:12] < (auto_start[a][0+:12]+auto_len[a][0+:12]) && auto_current[a][12+:4] != (auto_start[a][12+:4]+auto_len[a][12+:4]))) begin
-					if(auto_repeat_current < auto_repeat[a]) begin
-						auto_repeat_current = auto_repeat_current+1;
+				if(!test[a][1]) begin
+					auto_current[a][12+:4] <= auto_start[a][12+:4];
+					auto_current[a][0+:12] <= auto_start[a][0+:12];
+				end else if(auto_current[a][0+:12] < (auto_start[a][0+:12]+auto_len[a][0+:12]) && auto_current[a][12+:4] != (auto_start[a][12+:4]+auto_len[a][12+:4])) begin
+					if(auto_current[a][0+:12] >= DELAY_SIZE) begin
+						auto_current[a][0+:12] <= auto_current[a][0+:12]-(DELAY_SIZE>>1);
+						auto_current[a][12+:4] <= auto_current[a][12+:4];
 					end else begin
-						if(auto_current[a][0+:12] >= DELAY_SIZE) begin
-							auto_current[a][0+:12] = auto_current[a][0+:12]-(DELAY_SIZE>>1);
-							auto_current[a][12+:4] = auto_current[a][12+:4];
-						end else begin
-							auto_current[a][0+:12] = auto_current[a][0+:12]+auto_increment[a];
-						end
-						auto_repeat_current = 0;
+						auto_current[a][0+:12] <= auto_current[a][0+:12]+auto_increment[a];
 					end
 				end
 			end else begin
-				if(capture_start) begin
-					auto_current[a] = auto_start[a];
-					auto_repeat_current = 0;
-				end else if(test[a][1] && (auto_current[a] < (auto_len[a]+auto_start[a]))) begin
-					if(auto_repeat_current < auto_repeat[a]) begin
-						auto_repeat_current = auto_repeat_current+1;
-					end else begin
-						auto_current[a] = auto_current[a]+auto_increment[a];
-						auto_repeat_current = 0;
-					end
+				if(!test[a][1]) begin
+					auto_current[a] <= auto_start[a];
+				end else if(auto_current[a] < (auto_len[a]+auto_start[a])) begin
+					auto_current[a] <= auto_current[a]+auto_increment[a];
 				end
 			end
 
 			if (!QUADRANT_OR_SINGLE) begin
-				if(capture_start) begin
+				if(!test[a][2]) begin
 					cross_current[a][12+:4] <= cross_start[a][12+:4];
 					cross_current[a][0+:12] <= cross_start[a][0+:12];
-					cross_repeat_current <= 0;
-				end else if(test[a][2] && (cross_current[a][0+:12] < (cross_start[a][0+:12]+cross_len[a][0+:12]) && cross_current[a][12+:4] != (cross_start[a][12+:4]+cross_len[a][12+:4]))) begin
-					if(cross_repeat_current < cross_repeat[a]) begin
-						cross_repeat_current <= cross_repeat_current+1;
+				end else if(cross_current[a][0+:12] < (cross_start[a][0+:12]+cross_len[a][0+:12]) && cross_current[a][12+:4] != (cross_start[a][12+:4]+cross_len[a][12+:4])) begin
+					if(cross_current[a][0+:12] >= DELAY_SIZE) begin
+						cross_current[a][0+:12] <= cross_current[a][0+:12]-(DELAY_SIZE>>1);
+						cross_current[a][12+:4] <= cross_current[a][12+:4];
 					end else begin
-						if(cross_current[a][0+:12] >= DELAY_SIZE) begin
-							cross_current[a][0+:12] <= cross_current[a][0+:12]-(DELAY_SIZE>>1);
-							cross_current[a][12+:4] <= cross_current[a][12+:4];
-						end else begin
-							cross_current[a][0+:12] <= cross_current[a][0+:12]+cross_increment[a];
-						end
-						cross_repeat_current <= 0;
+						cross_current[a][0+:12] <= cross_current[a][0+:12]+cross_increment[a];
 					end
 				end
 			end else begin
-				if(capture_start) begin
+				if(!test[a][2]) begin
 					cross_current[a] <= cross_start[a];
-					cross_repeat_current <= 0;
-				end else if(test[a][2] && (cross_current[a] < (cross_len[a]+cross_start[a]))) begin
-					if(cross_repeat_current < cross_repeat[a]) begin
-						cross_repeat_current <= cross_repeat_current+1;
-					end else begin
-						cross_current[a] <= cross_current[a]+cross_increment[a];
-						cross_repeat_current <= 0;
-					end
+				end else if(cross_current[a] < (cross_len[a]+cross_start[a])) begin
+					cross_current[a] <= cross_current[a]+cross_increment[a];
 				end
 			end
 		end
@@ -486,19 +452,23 @@ generate
 					adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
 				if(auto_smpclk_tmp[a] != auto_smpclk[a]) begin
 					auto_smpclk_tmp[a] <= auto_smpclk[a];
-					if(tmp_adc_data_auto_current[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
-						tmp_adc_data_auto_current[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-						adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= tmp_adc_data_auto_current[a];
-					end else
-						adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
+					if(auto_smpclk[a]) begin
+						if(tmp_adc_data_auto_current[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
+							tmp_adc_data_auto_current[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+							adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= tmp_adc_data_auto_current[a];
+						end else
+							adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
+					end
 				end
 				if(cross_smpclk_tmp[a] != cross_smpclk[a]) begin
 					cross_smpclk_tmp[a] <= cross_smpclk[a];
-					if(tmp_adc_data_cross_current[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
-						tmp_adc_data_cross_current[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-						adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= tmp_adc_data_cross_current[a];
-					end else
-						adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
+					if(cross_smpclk[a]) begin
+						if(tmp_adc_data_cross_current[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
+							tmp_adc_data_cross_current[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
+							adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= tmp_adc_data_cross_current[a];
+						end else
+							adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
+					end
 				end
 			end else begin
 				adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
