@@ -391,7 +391,7 @@ generate
 				end else if(auto_current[a][0+:12] < (auto_start[a][0+:12]+auto_len[a][0+:12]) && auto_current[a][12+:4] < (auto_start[a][12+:4]+auto_len[a][12+:4])) begin
 					if(auto_current[a][0+:12] >= DELAY_SIZE) begin
 						auto_current[a][0+:12] <= auto_current[a][0+:12]-(DELAY_SIZE>>1);
-						auto_current[a][12+:4] <= auto_current[a][12+:4]+(1+auto_increment/(2*DELAY_SIZE));
+						auto_current[a][12+:4] <= auto_current[a][12+:4]+(1+auto_increment[a]/(2*DELAY_SIZE));
 					end else begin
 						auto_current[a][0+:12] <= auto_current[a][0+:12]+auto_increment[a];
 					end
@@ -411,7 +411,7 @@ generate
 				end else if(cross_current[a][0+:12] < (cross_start[a][0+:12]+cross_len[a][0+:12]) && cross_current[a][12+:4] < (cross_start[a][12+:4]+cross_len[a][12+:4])) begin
 					if(cross_current[a][0+:12] >= DELAY_SIZE) begin
 						cross_current[a][0+:12] <= cross_current[a][0+:12]-(DELAY_SIZE>>1);
-						cross_current[a][12+:4] <= cross_current[a][12+:4]+(1+cross_increment/(2*DELAY_SIZE));
+						cross_current[a][12+:4] <= cross_current[a][12+:4]+(1+cross_increment[a]/(2*DELAY_SIZE));
 					end else begin
 						cross_current[a][0+:12] <= cross_current[a][0+:12]+cross_increment[a];
 					end
