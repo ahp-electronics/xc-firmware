@@ -27,7 +27,7 @@ module CMD_PARSER(
 	clk
 );
 
-parameter NUM_INPUTS=8;
+parameter NUM_INPUTS=256;
 parameter HAS_LEDS=0;
 
 parameter[3:0]

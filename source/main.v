@@ -116,9 +116,6 @@ wire[NUM_INPUTS-1:0] voltage;
 reg signed[PACKET_SIZE-1:0] tx_data;
 wire [PAYLOAD_SIZE-1:0] pulses;
 
-wire[NUM_INPUTS*WORD_WIDTH-1:0] auto_delay_lines [0:LAG_SIZE_AUTO];
-wire[NUM_INPUTS*WORD_WIDTH-1:0] cross_delay_lines [0:LAG_SIZE_CROSS];
-
 reg[19:0] cross_current [0:NUM_INPUTS];
 reg[19:0] auto_current [0:NUM_INPUTS];
 wire[11:0] cross_increment [0:NUM_INPUTS];
@@ -171,7 +168,7 @@ assign integrating = strobe | integrate;
 assign in_capture = enable_tx | integrating;
 
 pll pll_block (refclk, pllclk);
-dff #(.USE_SOFT_CLOCK(0)) reset_delay(pllclk, TXIF, intclk, reset_delayed);
+dff reset_delay(TXIF, pllclk, intclk, reset_delayed);
 
 indicators #(.CLK_FREQUENCY(CLK_FREQUENCY), .CYCLE_MS(NUM_INPUTS*1000), .CHANNELS(NUM_INPUTS), .RESOLUTION(8)) indicators_block(
 	pwm_out,
@@ -257,23 +254,9 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 );
 
 COUNTER #(
-	.CLK_FREQUENCY(CLK_FREQUENCY),
-	.SIN_FREQUENCY(SIN_FREQUENCY),
 	.RESOLUTION(RESOLUTION),
-	.MUX_LINES(MUX_LINES),
-	.NUM_LINES(NUM_LINES),
-	.DELAY_SIZE(DELAY_SIZE),
-	.HAS_LEDS(HAS_LEDS),
-	.HAS_PSU(HAS_PSU),
-	.HAS_CUMULATIVE_ONLY(HAS_CUMULATIVE_ONLY),
-	.LAG_CROSS(LAG_CROSS),
-	.LAG_AUTO(LAG_AUTO),
-	.WORD_WIDTH(WORD_WIDTH),
-	.BAUD_RATE(BAUD_RATE),
-	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
-	.BINARY(BINARY),
-	.MAX_ORDER(MAX_ORDER),
-	.USE_UART(USE_UART)) counter (
+	.NUM_INPUTS(NUM_INPUTS),
+	.WORD_WIDTH(WORD_WIDTH)) counter (
 	pulses[CORRELATIONS_SIZE*RESOLUTION*2+SPECTRA_SIZE*RESOLUTION*2+:NUM_INPUTS*RESOLUTION],
 	pllclk,
 	adc_data_a,
@@ -282,7 +265,7 @@ COUNTER #(
 	reset_delayed,
 	enable
 );
-	
+
 CORRELATOR #(
 	.NUM_INPUTS(NUM_INPUTS),
 	.DELAY_SIZE(DELAY_SIZE),
@@ -315,7 +298,7 @@ CORRELATOR #(
 	.RESOLUTION(RESOLUTION),
 	.WORD_WIDTH(WORD_WIDTH),
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
-	.MAX_ORDER(MAX_ORDER)
+	.MAX_ORDER(NUM_INPUTS-1)
 	) crosscorrelator (
 	pulses[0+:CORRELATIONS_SIZE*RESOLUTION*2],
 	pllclk,
@@ -370,7 +353,7 @@ generate
 	genvar j;
 	genvar x;
 
-	for (a=0; a<NUM_INPUTS; a=a+1) begin : correlators_initial_block
+	for (a=0; a<NUM_INPUTS; a=a+1) begin : lines_block
 		assign leds[a] = leds_a[a*8+:8];
 		assign test[a] = test_a[a*8+:8];
 		assign voltage_pwm[a][7:0] = voltage_pwm_a[a*8+:8];
@@ -425,12 +408,6 @@ generate
 			end
 		end
 
-		for(x = 0; x < LAG_SIZE_AUTO; x=x+512) begin
-			for(j = x; j < x + 512 && j < LAG_SIZE_AUTO; j=j+1) begin
-				assign auto_delay_lines[j][a*WORD_WIDTH+:WORD_WIDTH] = auto_delays[a][j*WORD_WIDTH+:WORD_WIDTH];
-			end
-		end
-
 		always @ (negedge pllclk) begin
 			if(~leds[a][3]) begin
 				if(tmp_adc_data[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
@@ -470,7 +447,7 @@ generate
 		if(HAS_LEDS) begin
 			assign lineout[a] = (pwm_out[a]|in_capture)&~overflow[a];
 			assign lineout[NUM_INPUTS+a] = adc_done[a];
-			assign lineout[NUM_INPUTS*2+a] = ~test[a][3] ? leds[a][0] : leds[a][0]&(auto_delay_lines[0][a*WORD_WIDTH] ^ refclk);
+			assign lineout[NUM_INPUTS*2+a] = ~test[a][3] ? leds[a][0] : leds[a][0]&(pulse_in[a*WORD_WIDTH+:WORD_WIDTH] ^ refclk);
 			assign lineout[NUM_INPUTS*3+a] = HAS_PSU ? voltage[a] : leds[a][1];
 		end
 		
