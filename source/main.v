@@ -118,6 +118,9 @@ wire [PAYLOAD_SIZE-1:0] pulses;
 
 reg[NUM_INPUTS-1:0] signal_in;
 
+reg capture_start;
+reg old_in_capture;
+
 reg[7:0] mux_line = 0;
 
 wire[(LAG_SIZE_AUTO)*WORD_WIDTH-1:0] auto_delays[0:NUM_INPUTS];
@@ -287,7 +290,7 @@ CORRELATOR #(
 	.RESOLUTION(RESOLUTION),
 	.WORD_WIDTH(WORD_WIDTH),
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
-	.MAX_ORDER(NUM_INPUTS-1)
+	.MAX_ORDER(NUM_INPUTS)
 	) crosscorrelator (
 	pulses[0+:CORRELATIONS_SIZE*RESOLUTION*2],
 	pllclk,
@@ -328,13 +331,22 @@ always@(posedge intclk) begin
 	enable_tx <= integrating;
 	tx_data[0+:FOOTER_SIZE] <= timestamp;
 	tx_data[FOOTER_SIZE+:PAYLOAD_SIZE] <= pulses;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:16] <= TICK;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+:8] <= LAG_CROSS-1;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+:8] <= LAG_AUTO-1;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
+	if(old_in_capture != in_capture) begin
+		old_in_capture <= in_capture;
+		if(old_in_capture) begin
+			capture_start <= 1;
+			tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:64] <= 64'hffffffffffffffff;
+		end
+	end else begin
+		capture_start <= 0;
+		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:16] <= TICK;
+		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
+		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+:8] <= LAG_CROSS-1;
+		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+:8] <= LAG_AUTO-1;
+		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
+		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
+		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
+	end
 end
 
 generate
@@ -372,7 +384,7 @@ generate
 
 		always@(negedge intclk) begin
 			if (!QUADRANT_OR_SINGLE) begin
-				if(!test[1] || !in_capture) begin
+				if(!test[1] || !in_capture || capture_start) begin
 					auto_current[12+:4] <= auto_start[12+:4];
 					auto_current[0+:12] <= auto_start[0+:12];
 				end else if(auto_current[0+:12] < (auto_start[0+:12]+auto_len[0+:12]) && auto_current[12+:4] < (auto_start[12+:4]+auto_len[12+:4])) begin
@@ -384,7 +396,7 @@ generate
 					end
 				end
 			end else begin
-				if(!test[1] || !in_capture) begin
+				if(!test[1] || !in_capture  || capture_start) begin
 					auto_current <= auto_start;
 				end else if(auto_current < (auto_len+auto_start)) begin
 					auto_current <= auto_current+auto_increment;
@@ -392,7 +404,7 @@ generate
 			end
 
 			if (!QUADRANT_OR_SINGLE) begin
-				if(!test[2] || !in_capture) begin
+				if(!test[2] || !in_capture || capture_start) begin
 					cross_current[12+:4] <= cross_start[12+:4];
 					cross_current[0+:12] <= cross_start[0+:12];
 				end else if(cross_current[0+:12] < (cross_start[0+:12]+cross_len[0+:12]) && cross_current[12+:4] < (cross_start[12+:4]+cross_len[12+:4])) begin
@@ -404,7 +416,7 @@ generate
 					end
 				end
 			end else begin
-				if(!test[2] || !in_capture) begin
+				if(!test[2] || !in_capture || capture_start) begin
 					cross_current <= cross_start;
 				end else if(cross_current < (cross_len+cross_start)) begin
 					cross_current <= cross_current+cross_increment;
