@@ -216,6 +216,19 @@ end else begin
 	assign TXIF = spi_done;
 end
 
+always@(posedge sysclk) begin
+	if(uart_clk || spiclk) begin
+		if(old_in_capture != in_capture) begin
+			old_in_capture <= in_capture;
+			if(old_in_capture) begin
+				capture_start <= 1;
+			end else begin
+				capture_start <= 0;
+			end
+		end
+	end
+end
+
 TX_WORD #(.BINARY(BINARY), .RESOLUTION(PACKET_SIZE)) packet_generator(
 	TXREG,
 	TXIF,
@@ -316,9 +329,6 @@ always@(posedge pllclk) begin
 		refclk <= extclk;
 	else
 		refclk <= sysclk;
-end
-
-always@(posedge pllclk) begin
 	mux_out <= 1<<mux_line;
 	if(mux_line < MUX_LINES-1) begin
 		mux_line <= mux_line+1;
@@ -331,22 +341,13 @@ always@(posedge intclk) begin
 	enable_tx <= integrating;
 	tx_data[0+:FOOTER_SIZE] <= timestamp;
 	tx_data[FOOTER_SIZE+:PAYLOAD_SIZE] <= pulses;
-	if(old_in_capture != in_capture) begin
-		old_in_capture <= in_capture;
-		if(old_in_capture) begin
-			capture_start <= 1;
-			tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:64] <= 64'hffffffffffffffff;
-		end
-	end else begin
-		capture_start <= 0;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:16] <= TICK;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+:8] <= LAG_CROSS-1;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+:8] <= LAG_AUTO-1;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
-	end
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:16] <= TICK;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+:8] <= LAG_CROSS-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+:8] <= LAG_AUTO-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
 end
 
 generate
