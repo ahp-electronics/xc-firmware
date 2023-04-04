@@ -216,6 +216,19 @@ end else begin
 	assign TXIF = spi_done;
 end
 
+always@(posedge sysclk) begin
+	if(uart_clk || spiclk) begin
+		if(old_in_capture != in_capture) begin
+			old_in_capture <= in_capture;
+			if(old_in_capture) begin
+				capture_start <= 1;
+			end else begin
+				capture_start <= 0;
+			end
+		end
+	end
+end
+
 TX_WORD #(.BINARY(BINARY), .RESOLUTION(PACKET_SIZE)) packet_generator(
 	TXREG,
 	TXIF,
@@ -316,9 +329,6 @@ always@(posedge pllclk) begin
 		refclk <= extclk;
 	else
 		refclk <= sysclk;
-end
-
-always@(posedge pllclk) begin
 	mux_out <= 1<<mux_line;
 	if(mux_line < MUX_LINES-1) begin
 		mux_line <= mux_line+1;
