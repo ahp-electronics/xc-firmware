@@ -23,7 +23,7 @@ module CORRELATOR (
 	parameter NUM_BASELINES=8;
 	parameter TAIL_SIZE=1;
 	parameter HEAD_SIZE=0;
-	parameter RESOLUTION=24;
+	parameter RESOLUTION=20;
 	parameter WORD_WIDTH=1;
 	parameter USE_SOFT_CLOCK=0;
 	parameter MAX_ORDER=2;

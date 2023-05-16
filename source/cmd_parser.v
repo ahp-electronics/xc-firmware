@@ -11,10 +11,8 @@ module CMD_PARSER(
 	voltage_pwm,
 	test,
 	cross_start,
-	cross_len,
 	cross_increment,
 	auto_start,
-	auto_len,
 	auto_increment,
 	leds,
 	baud_rate,
@@ -49,8 +47,6 @@ output reg[8*NUM_INPUTS-1:0] test = 0;
 output reg[8*NUM_INPUTS-1:0] leds = 0;
 output reg[20*NUM_INPUTS-1:0] cross_start = 0;
 output reg[20*NUM_INPUTS-1:0] auto_start = 0;
-output reg[20*NUM_INPUTS-1:0] cross_len = 0;
-output reg[20*NUM_INPUTS-1:0] auto_len = 0;
 output reg[12*NUM_INPUTS-1:0] cross_increment = 1;
 output reg[12*NUM_INPUTS-1:0] auto_increment = 1;
 output reg[3:0] baud_rate = 0;
@@ -86,10 +82,6 @@ always@(posedge clk) begin
 				else
 					cross_increment [current_line*12+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			end else begin
-				if (cmd[7])
-					auto_len [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
-				else
-					cross_len [current_line*20+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			end
 		end else begin
 			if(test[current_line*8+7]) begin
@@ -102,10 +94,6 @@ always@(posedge clk) begin
 		end
 	end else if (cmd[3:0] == SET_FREQ_DIV) begin
 		if(extra_commands) begin
-			if (cmd[7])
-				auto_len [current_line*20+12+(cmd[6]*2)+:2] <= cmd[5:4];
-			else
-				cross_len [current_line*20+12+(cmd[6]*2)+:2] <= cmd[5:4];
 		end else begin
 			if (cmd[7])
 				auto_start [current_line*20+12+(cmd[6]*2)+:2] <= cmd[5:4];
