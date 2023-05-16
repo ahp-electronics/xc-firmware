@@ -42,7 +42,7 @@
         <Source name="source/correlator.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="boards/xc16.v" type="Verilog" type_short="Verilog">
+        <Source name="boards/xc20.v" type="Verilog" type_short="Verilog">
             <Options top_module="top_module"/>
         </Source>
         <Source name="boards/flash_bypass.xcf" type="Programming Project File" type_short="Programming" excluded="TRUE">

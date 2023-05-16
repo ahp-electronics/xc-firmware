@@ -141,8 +141,6 @@ wire[20*NUM_INPUTS-1:0] cross_current_a;
 wire[20*NUM_INPUTS-1:0] cross_start_a;
 wire[20*NUM_INPUTS-1:0] auto_current_a;
 wire[20*NUM_INPUTS-1:0] auto_start_a;
-wire[20*NUM_INPUTS-1:0] cross_len_a;
-wire[20*NUM_INPUTS-1:0] auto_len_a;
 wire[12*NUM_INPUTS-1:0] cross_increment_a;
 wire[12*NUM_INPUTS-1:0] auto_increment_a;
 wire[63:0] timestamp;
@@ -242,10 +240,8 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 	voltage_pwm_a,
 	test_a,
 	cross_start_a,
-	cross_len_a,
 	cross_increment_a,
 	auto_start_a,
-	auto_len_a,
 	auto_increment_a,
 	leds_a,
 	baud_rate,
@@ -375,8 +371,6 @@ generate
 		wire[7:0] test;
 		wire[19:0] cross_start;
 		wire[19:0] auto_start;
-		wire[19:0] cross_len;
-		wire[19:0] auto_len;
 		wire[11:0] cross_increment;
 		wire[11:0] auto_increment;
 
@@ -387,8 +381,6 @@ generate
 		assign cross_current_a[a*20+:20] = cross_current;
 		assign cross_start = cross_start_a[a*20+:20];
 		assign auto_start = auto_start_a[a*20+:20];
-		assign cross_len = cross_len_a[a*20+:20];
-		assign auto_len = auto_len_a[a*20+:20];
 		assign cross_increment = cross_increment_a[a*12+:12];
 		assign auto_increment = auto_increment_a[a*12+:12];
 
@@ -397,7 +389,7 @@ generate
 				if(!test[1] || !in_capture || capture_start) begin
 					auto_current[12+:4] <= auto_start[12+:4];
 					auto_current[0+:12] <= auto_start[0+:12];
-				end else if(auto_current[0+:12] < (auto_start[0+:12]+auto_len[0+:12]) && auto_current[12+:4] < (auto_start[12+:4]+auto_len[12+:4])) begin
+				end else begin
 					if(auto_current[0+:12] >= DELAY_SIZE) begin
 						auto_current[0+:12] <= auto_current[0+:12]-(DELAY_SIZE>>1);
 						auto_current[12+:4] <= auto_current[12+:4]+(1+auto_increment/(2*DELAY_SIZE));
@@ -408,7 +400,7 @@ generate
 			end else begin
 				if(!test[1] || !in_capture  || capture_start) begin
 					auto_current <= auto_start;
-				end else if(auto_current < (auto_len+auto_start)) begin
+				end else begin
 					auto_current <= auto_current+auto_increment;
 				end
 			end
@@ -417,7 +409,7 @@ generate
 				if(!test[2] || !in_capture || capture_start) begin
 					cross_current[12+:4] <= cross_start[12+:4];
 					cross_current[0+:12] <= cross_start[0+:12];
-				end else if(cross_current[0+:12] < (cross_start[0+:12]+cross_len[0+:12]) && cross_current[12+:4] < (cross_start[12+:4]+cross_len[12+:4])) begin
+				end else begin
 					if(cross_current[0+:12] >= DELAY_SIZE) begin
 						cross_current[0+:12] <= cross_current[0+:12]-(DELAY_SIZE>>1);
 						cross_current[12+:4] <= cross_current[12+:4]+(1+cross_increment/(2*DELAY_SIZE));
@@ -428,7 +420,7 @@ generate
 			end else begin
 				if(!test[2] || !in_capture || capture_start) begin
 					cross_current <= cross_start;
-				end else if(cross_current < (cross_len+cross_start)) begin
+				end else begin
 					cross_current <= cross_current+cross_increment;
 				end
 			end
