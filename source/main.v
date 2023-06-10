@@ -218,11 +218,6 @@ always@(posedge sysclk) begin
 	if(uart_clk || spiclk) begin
 		if(old_in_capture != in_capture) begin
 			old_in_capture <= in_capture;
-			if(old_in_capture) begin
-				capture_start <= 1;
-			end else begin
-				capture_start <= 0;
-			end
 		end
 	end
 end
@@ -338,8 +333,11 @@ always@(posedge intclk) begin
 	tx_data[0+:FOOTER_SIZE] <= timestamp;
 	tx_data[FOOTER_SIZE+:PAYLOAD_SIZE] <= pulses;
 	if(old_in_capture != in_capture) begin
-		if(in_capture) begin
+		if(old_in_capture) begin
 			tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:64] <= 64'hffffffffffffffff;
+			capture_start <= 1;
+		end else begin
+			capture_start <= 0;
 		end
 	end else begin
 		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:16] <= TICK;
