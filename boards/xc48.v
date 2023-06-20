@@ -15,14 +15,14 @@ module top_module (
 parameter PLL_FREQUENCY = 400000000;
 parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
-parameter MUX_LINES = 1;
+parameter MUX_LINES = 3;
 parameter NUM_LINES = 16;
 parameter DELAY_SIZE = 0;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
 parameter RESOLUTION = 8;
 parameter HAS_LEDS = 1;
-parameter HAS_CROSSCORRELATOR = 1;
+parameter HAS_CROSSCORRELATOR = 0;
 parameter HAS_PSU = 0;
 parameter HAS_CUMULATIVE_ONLY = 0;
 parameter BAUD_RATE = 57600;
@@ -61,7 +61,7 @@ wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 
 assign line_in[15:0] = jp1[15:0];
-assign line_in[31:16] = jp2[15:0];
+assign jp2[15:0] = line_out[31:16];
 
 main #(
 .CLK_FREQUENCY(CLK_FREQUENCY),

@@ -16,13 +16,13 @@ parameter PLL_FREQUENCY = 400000000;
 parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
-parameter NUM_LINES = 32;
+parameter NUM_LINES = 14;
 parameter DELAY_SIZE = 0;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
-parameter RESOLUTION = 20;
-parameter HAS_LEDS = 0;
-parameter HAS_CROSSCORRELATOR = 0;
+parameter RESOLUTION = 12;
+parameter HAS_LEDS = 1;
+parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
 parameter HAS_CUMULATIVE_ONLY = 0;
 parameter BAUD_RATE = 57600;
@@ -43,7 +43,6 @@ wire enable;
 wire extclk;
 wire intclk;
 wire smpclk;
-wire pllclk;
 wire strobe;
 
 assign smpclk = intclk;
@@ -92,7 +91,7 @@ main #(
        refclk,
        extclk,
        intclk,
-       pllclk,
+       ,
        ,
        strobe,
        1'd1

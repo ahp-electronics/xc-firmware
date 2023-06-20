@@ -20,11 +20,11 @@ parameter NUM_LINES = 24;
 parameter DELAY_SIZE = 0;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
-parameter RESOLUTION = 20;
+parameter RESOLUTION = 4;
 parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
-parameter HAS_CUMULATIVE_ONLY = 1;
+parameter HAS_CUMULATIVE_ONLY = 0;
 parameter BAUD_RATE = 57600;
 parameter WORD_WIDTH = 1;
 parameter USE_UART = 1;
@@ -61,7 +61,7 @@ wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 
 assign line_in[15:0] = jp1[15:0];
-assign line_in[23:16] = jp2[7:0];
+assign line_in[31:16] = jp2[15:0];
 
 main #(
 .CLK_FREQUENCY(CLK_FREQUENCY),
