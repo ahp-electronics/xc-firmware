@@ -52,8 +52,8 @@ assign strobe = jp1[18];
 assign jp1[19] = smpclk;
 
 assign jp2[16] = refclk;
-assign jp2[17] = 1'd0;
-assign jp2[18] = TX;
+assign jp2[17] = TX;
+assign jp2[18] = 1'd0;
 assign RX = jp2[19];
 
 wire[NUM_LINES-1:0] line_in;

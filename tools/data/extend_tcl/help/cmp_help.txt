@@ -1,3 +1,0 @@
-[cmp]
-Compile Lattice FPGA simulation libraries.
-For more information, type cmpl_libs without any options.
