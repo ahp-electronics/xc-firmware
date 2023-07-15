@@ -20,8 +20,8 @@ parameter NUM_LINES = 32;
 parameter DELAY_SIZE = 0;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
-parameter RESOLUTION = 8;
-parameter HAS_LEDS = 1;
+parameter RESOLUTION = 20;
+parameter HAS_LEDS = 0;
 parameter HAS_CROSSCORRELATOR = 0;
 parameter HAS_PSU = 0;
 parameter HAS_CUMULATIVE_ONLY = 0;
@@ -52,8 +52,8 @@ assign strobe = jp1[18];
 assign jp1[19] = smpclk;
 
 assign jp2[16] = refclk;
-assign jp2[17] = TX;
-assign jp2[18] = 1'd0;
+assign jp2[17] = 1'd0;
+assign jp2[18] = TX;
 assign RX = jp2[19];
 
 wire[NUM_LINES-1:0] line_in;

@@ -2,10 +2,10 @@ CHIP=LFE5U
 SIZE=45F
 FOOTPRINT=CABGA256
 TECH=ECP5U
-FLASH=S25FL128L
+FLASH=W25Q128JV
 BOARD=pc03
-PROG_TARGETS=bypass,erase,program
-PROG_FREQ=12000000
+PROG_TARGETS=test,unlock,erase,program
+PROG_FREQ=1000000
 PROGRAMMER=UsbBlaster
 INCLUDES=-Isources/ -Itools/ispfpga/verilog/data/`echo "$(CHIP)" | tr '[:upper:]' '[:lower:]'`/
 
