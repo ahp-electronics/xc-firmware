@@ -40,12 +40,12 @@ module CORRELATOR (
 	localparam SINGLE=(DELAY_SIZE == 0);
 
 	output reg signed [CORRELATIONS_SIZE*RESOLUTION*2-1:0] pulses;
-	input wire enable;
+	input wire enable; 
 	input wire reset;
 	input wire clk;
 	input wire [7:0] order;
 	input wire [WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
-	input wire [20*NUM_INPUTS-1:0] delay_arr;
+	input wire [24*NUM_INPUTS-1:0] delay_arr;
 	input wire [NUM_INPUTS-1:0] sampling_clk;
 	input wire [NUM_INPUTS*8-1:0] led_lines;
 
@@ -88,8 +88,8 @@ module CORRELATOR (
 									if(d == 0) begin
 										if(SINGLE) begin
 											if(multiply[order]) begin
-												tmp_r[d] <= (MAX_ORDER == 1 ? delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0+:WORD_WIDTH] : 1) * {1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(1+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
-												tmp_i[d] <= (MAX_ORDER == 1 ? delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0+:WORD_WIDTH] : 1) * {1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(1+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
+												tmp_r[d] <= delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0+:WORD_WIDTH] * {1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(1+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
+												tmp_i[d] <= delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0+:WORD_WIDTH] * {1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(1+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
 											end else begin
 												tmp_r[d] <= {1'd0, (MAX_ORDER == 1 ? delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0+:WORD_WIDTH] : 1)} - {1'd0, ~delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(1+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};
 												tmp_i[d] <= {1'd0, (MAX_ORDER == 1 ? delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0+:WORD_WIDTH] : 1)} - {1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(1+(c < 0 ? -c : 0))*WORD_WIDTH+:WORD_WIDTH]};

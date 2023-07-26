@@ -105,6 +105,8 @@ wire [NUM_INPUTS-1:0]cross_smpclk_pulse;
 localparam QUADRANT_OR_SINGLE = (DELAY_SIZE < 5);
 localparam QUADRANT = (DELAY_SIZE == 4);
 
+reg comm_clk;
+
 wire uart_clk;
 wire reset_delayed;
  
@@ -137,14 +139,14 @@ wire[8:0] voltage_pwm[0:NUM_INPUTS];
 wire[8*NUM_INPUTS-1:0] leds_a;
 wire[8*NUM_INPUTS-1:0] test_a;
 wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
-wire[20*NUM_INPUTS-1:0] cross_current_a;
-wire[20*NUM_INPUTS-1:0] cross_start_a;
-wire[20*NUM_INPUTS-1:0] auto_current_a;
-wire[20*NUM_INPUTS-1:0] auto_start_a;
-wire[12*NUM_INPUTS-1:0] cross_increment_a;
-wire[12*NUM_INPUTS-1:0] auto_increment_a;
-wire[20*NUM_INPUTS-1:0] cross_len_a;
-wire[20*NUM_INPUTS-1:0] auto_len_a;
+wire[24*NUM_INPUTS-1:0] cross_current_a;
+wire[24*NUM_INPUTS-1:0] cross_start_a;
+wire[24*NUM_INPUTS-1:0] auto_current_a;
+wire[24*NUM_INPUTS-1:0] auto_start_a;
+wire[24*NUM_INPUTS-1:0] cross_increment_a;
+wire[24*NUM_INPUTS-1:0] auto_increment_a;
+wire[24*NUM_INPUTS-1:0] cross_len_a;
+wire[24*NUM_INPUTS-1:0] auto_len_a;
 wire[63:0] timestamp;
 wire extra_commands;
 wire timestamp_reset;
@@ -217,9 +219,11 @@ end else begin
 end
 
 always@(posedge sysclk) begin
-	if(uart_clk || spiclk) begin
+	if(TXIF != comm_clk) begin
+		comm_clk <= TXIF;
 		if(old_in_capture != in_capture) begin
 			old_in_capture <= in_capture;
+			if(old_in_capture) capture_start <= 1;
 		end
 	end
 end
@@ -336,22 +340,13 @@ always@(posedge intclk) begin
 	enable_tx <= integrating;
 	tx_data[0+:FOOTER_SIZE] <= timestamp;
 	tx_data[FOOTER_SIZE+:PAYLOAD_SIZE] <= pulses;
-	if(old_in_capture != in_capture) begin
-		if(old_in_capture) begin
-			tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:64] <= 64'hffffffffffffffff;
-			capture_start <= 1;
-		end else begin
-			capture_start <= 0;
-		end
-	end else begin
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:16] <= TICK;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+:8] <= LAG_CROSS-1;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+:8] <= LAG_AUTO-1;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
-		tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
-	end
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:16] <= TICK;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+:8] <= LAG_CROSS-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+:8] <= LAG_AUTO-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
 end
 
 generate
@@ -364,28 +359,28 @@ generate
 		reg cross_smpclk_tmp;
 		reg tmp_adc_data_auto_current;
 		reg tmp_adc_data_cross_current;
-		reg[19:0] cross_current;
-		reg[19:0] auto_current;
+		reg[23:0] cross_current;
+		reg[23:0] auto_current;
 		wire[7:0] leds;
 		wire[7:0] test;
-		wire[19:0] cross_start;
-		wire[19:0] auto_start;
-		wire[11:0] cross_increment;
-		wire[11:0] auto_increment;
-		wire[19:0] cross_len;
-		wire[19:0] auto_len;
+		wire[23:0] cross_start;
+		wire[23:0] auto_start;
+		wire[23:0] cross_increment;
+		wire[23:0] auto_increment;
+		wire[23:0] cross_len;
+		wire[23:0] auto_len;
 
 		assign leds = leds_a[a*8+:8];
 		assign test = test_a[a*8+:8];
 		assign voltage_pwm[a][7:0] = voltage_pwm_a[a*8+:8];
-		assign auto_current_a[a*20+:20] = auto_current;
-		assign cross_current_a[a*20+:20] = cross_current;
-		assign cross_start = cross_start_a[a*20+:20];
-		assign auto_start = auto_start_a[a*20+:20];
-		assign cross_increment = cross_increment_a[a*12+:12];
-		assign auto_increment = auto_increment_a[a*12+:12];
-		assign cross_len = cross_len_a[a*12+:12];
-		assign auto_len = auto_increment_a[a*12+:12];
+		assign auto_current_a[a*24+:24] = auto_current;
+		assign cross_current_a[a*24+:24] = cross_current;
+		assign cross_start = cross_start_a[a*24+:24];
+		assign auto_start = auto_start_a[a*24+:24];
+		assign cross_increment = cross_increment_a[a*24+:24];
+		assign auto_increment = auto_increment_a[a*24+:24];
+		assign cross_len = cross_len_a[a*24+:24];
+		assign auto_len = auto_increment_a[a*24+:24];
 
 		always@(negedge intclk) begin
 			if (!QUADRANT_OR_SINGLE) begin
