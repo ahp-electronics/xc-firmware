@@ -35,9 +35,8 @@ parameter[3:0]
 	SET_LINE = 1,
 	SET_LEDS = 2,
 	SET_BAUD_RATE = 3,
-	SET_DELAY = 4,
-	SET_FREQ_DIV = 8,
-	SET_VOLTAGE = 9,
+	SET_VOLTAGE = 4,
+	SET_DELAY = 8,
 	ENABLE_TEST = 12,
 	ENABLE_CAPTURE = 13;
 	
@@ -47,12 +46,12 @@ input wire [7:0] cmd;
 output reg[8*NUM_INPUTS-1:0] voltage_pwm = 0;
 output reg[8*NUM_INPUTS-1:0] test = 0;
 output reg[8*NUM_INPUTS-1:0] leds = 0;
-output reg[24*NUM_INPUTS-1:0] cross_start = 0;
-output reg[24*NUM_INPUTS-1:0] auto_start = 0;
-output reg[24*NUM_INPUTS-1:0] cross_increment = 1;
-output reg[24*NUM_INPUTS-1:0] auto_increment = 1;
-output reg[24*NUM_INPUTS-1:0] cross_len = 1;
-output reg[24*NUM_INPUTS-1:0] auto_len = 1;
+output reg[18*NUM_INPUTS-1:0] cross_start = 0;
+output reg[18*NUM_INPUTS-1:0] auto_start = 0;
+output reg[18*NUM_INPUTS-1:0] cross_increment = 1;
+output reg[18*NUM_INPUTS-1:0] auto_increment = 1;
+output reg[18*NUM_INPUTS-1:0] cross_len = 1023;
+output reg[18*NUM_INPUTS-1:0] auto_len = 1;
 output reg[3:0] baud_rate = 0;
 output reg[7:0] order = 0;
 output reg[7:0] current_line = 0;
@@ -70,6 +69,8 @@ always@(posedge clk) begin
 		external_clock <= cmd[5];
 		timestamp_reset <= cmd[6];
 		extra_commands <= cmd[7];
+		if(extra_commands) begin
+		end
 	end else if (cmd[3:0] == SET_LINE) begin
 		current_line[cmd[7:6]*2+:2] <= cmd[5:4];
 	end else if (cmd[3:0] == SET_LEDS && HAS_LEDS) begin
@@ -79,41 +80,39 @@ always@(posedge clk) begin
 			order[cmd[7:6]] <= cmd[5:4];
 		else
 			baud_rate <= cmd[7:4];
-	end else if ((cmd[3:0]&4'b1100) == SET_DELAY) begin
-		if(extra_commands) begin
-			case(test[current_line*8+6+:2])
-			0:
-				if (cmd[7])
-					auto_increment [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
-				else
-					cross_increment [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
-			1:
-				if (cmd[7])
-					auto_increment [current_line*24+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
-				else
-					cross_increment [current_line*24+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
-			2:
-				if (cmd[7]) 
-					auto_len [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
-				else
-					cross_len [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
-			3: 
-				if (cmd[7])
-					auto_len [current_line*24+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
-				else
-					cross_len [current_line*24+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
-			4:
-				if (cmd[7])
-					auto_start [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
-				else
-					cross_start [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
-			5:
-				if (cmd[7])
-					auto_start [current_line*24+12+(cmd[6]*2)+:2] <= cmd[5:4];
-				else
-					cross_start [current_line*24+12+(cmd[6]*2)+:2] <= cmd[5:4];
-			endcase
-		end
+	end else if (cmd[3:2] == 2) begin
+		case(test[current_line*8+6+:3])
+		0:
+			if (test[7])
+				auto_increment [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			else
+				cross_increment [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+		1:
+			if (test[7])
+				auto_increment [current_line*18+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			else
+				cross_increment [current_line*18+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+		2:
+			if (test[7]) 
+				auto_len [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			else
+				cross_len [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+		3: 
+			if (test[7])
+				auto_len [current_line*18+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			else
+				cross_len [current_line*18+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+		4:
+			if (test[7])
+				auto_start [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			else
+				cross_start [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+		5:
+			if (test[7])
+				auto_start [current_line*18+12+(cmd[1:0]*2)+:2] <= cmd[6:4];
+			else
+				cross_start [current_line*18+12+(cmd[1:0]*2)+:2] <= cmd[6:4];
+		endcase
 	end else if (cmd[3:0] == ENABLE_TEST) begin
 		test[current_line*8+4*extra_commands+:4] <= cmd[7:4];
 	end else if (cmd[3:0] == SET_VOLTAGE) begin
