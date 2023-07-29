@@ -28,10 +28,10 @@ parameter CLK_DIVISOR = 2;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
 parameter NUM_LINES = 8;
-parameter DELAY_SIZE = 0;
+parameter DELAY_SIZE = 4;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
-parameter RESOLUTION = 24;
+parameter RESOLUTION = 18;
 parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
@@ -86,24 +86,17 @@ wire external_clock;
 wire integrating;
 
 wire[NUM_INPUTS*WORD_WIDTH-1:0] pulse_in;
-reg[WORD_WIDTH-1:0] tmp_adc_data[0:NUM_INPUTS];
-reg[WORD_WIDTH-1:0] tmp_adc_data_auto_current[0:NUM_INPUTS];
-reg[WORD_WIDTH-1:0] tmp_adc_data_cross_current[0:NUM_INPUTS];
-reg[WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
-reg[WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a_auto;
-reg[WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a_cross;
+reg[WORD_WIDTH:0] tmp_adc_data[0:NUM_INPUTS];
+wire[WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
 wire[NUM_INPUTS-1:0] adc_done;
-
-reg [NUM_INPUTS-1:0]auto_smpclk_tmp;
-reg [NUM_INPUTS-1:0]cross_smpclk_tmp;
 
 wire [NUM_INPUTS-1:0]auto_smpclk;
 wire [NUM_INPUTS-1:0]cross_smpclk;
 wire [NUM_INPUTS-1:0]auto_smpclk_pulse;
 wire [NUM_INPUTS-1:0]cross_smpclk_pulse;
 
-localparam QUADRANT_OR_SINGLE = (DELAY_SIZE < 5);
-localparam QUADRANT = (DELAY_SIZE == 4);
+localparam SHANNON_OR_SINGLE = (DELAY_SIZE < 5);
+localparam SHANNON = (DELAY_SIZE == 4);
 
 reg comm_clk;
 
@@ -121,12 +114,9 @@ wire [PAYLOAD_SIZE-1:0] pulses;
 reg[NUM_INPUTS-1:0] signal_in;
 
 reg capture_start;
-reg old_in_capture;
 
 reg[7:0] mux_line = 0;
 
-wire[(LAG_SIZE_AUTO)*WORD_WIDTH-1:0] auto_delays[0:NUM_INPUTS];
-wire[(LAG_SIZE_CROSS)*WORD_WIDTH-1:0] cross_delays[0:NUM_INPUTS];
 wire integrate;
 wire in_capture;
 reg enable_tx;
@@ -139,14 +129,14 @@ wire[8:0] voltage_pwm[0:NUM_INPUTS];
 wire[8*NUM_INPUTS-1:0] leds_a;
 wire[8*NUM_INPUTS-1:0] test_a;
 wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
-wire[24*NUM_INPUTS-1:0] cross_current_a;
-wire[24*NUM_INPUTS-1:0] cross_start_a;
-wire[24*NUM_INPUTS-1:0] auto_current_a;
-wire[24*NUM_INPUTS-1:0] auto_start_a;
-wire[24*NUM_INPUTS-1:0] cross_increment_a;
-wire[24*NUM_INPUTS-1:0] auto_increment_a;
-wire[24*NUM_INPUTS-1:0] cross_len_a;
-wire[24*NUM_INPUTS-1:0] auto_len_a;
+wire[18*NUM_INPUTS-1:0] cross_current_a;
+wire[18*NUM_INPUTS-1:0] cross_start_a;
+wire[18*NUM_INPUTS-1:0] auto_current_a;
+wire[18*NUM_INPUTS-1:0] auto_start_a;
+wire[18*NUM_INPUTS-1:0] cross_increment_a;
+wire[18*NUM_INPUTS-1:0] auto_increment_a;
+wire[18*NUM_INPUTS-1:0] cross_len_a;
+wire[18*NUM_INPUTS-1:0] auto_len_a;
 wire[63:0] timestamp;
 wire extra_commands;
 wire timestamp_reset;
@@ -218,16 +208,6 @@ end else begin
 	assign TXIF = spi_done;
 end
 
-always@(posedge sysclk) begin
-	if(TXIF != comm_clk) begin
-		comm_clk <= TXIF;
-		if(old_in_capture != in_capture) begin
-			old_in_capture <= in_capture;
-			if(old_in_capture) capture_start <= 1;
-		end
-	end
-end
-
 TX_WORD #(.BINARY(BINARY), .RESOLUTION(PACKET_SIZE)) packet_generator(
 	TXREG,
 	TXIF,
@@ -284,7 +264,7 @@ CORRELATOR #(
 	pulses[CORRELATIONS_SIZE*RESOLUTION*2+:SPECTRA_SIZE*RESOLUTION*2],
 	pllclk,
 	auto_current_a,
-	adc_data_a_auto,
+	adc_data_a,
 	auto_smpclk,
 	leds_a,
 	0,
@@ -307,7 +287,7 @@ CORRELATOR #(
 	pulses[0+:CORRELATIONS_SIZE*RESOLUTION*2],
 	pllclk,
 	cross_current_a,
-	adc_data_a_cross,
+	adc_data_a,
 	cross_smpclk,
 	leds_a,
 	order,
@@ -355,10 +335,6 @@ generate
 	genvar x;
 
 	for (a=0; a<NUM_INPUTS; a=a+1) begin : lines_block
-		reg auto_smpclk_tmp;
-		reg cross_smpclk_tmp;
-		reg tmp_adc_data_auto_current;
-		reg tmp_adc_data_cross_current;
 		reg[23:0] cross_current;
 		reg[23:0] auto_current;
 		wire[7:0] leds;
@@ -373,89 +349,65 @@ generate
 		assign leds = leds_a[a*8+:8];
 		assign test = test_a[a*8+:8];
 		assign voltage_pwm[a][7:0] = voltage_pwm_a[a*8+:8];
-		assign auto_current_a[a*24+:24] = auto_current;
-		assign cross_current_a[a*24+:24] = cross_current;
-		assign cross_start = cross_start_a[a*24+:24];
-		assign auto_start = auto_start_a[a*24+:24];
-		assign cross_increment = cross_increment_a[a*24+:24];
-		assign auto_increment = auto_increment_a[a*24+:24];
-		assign cross_len = cross_len_a[a*24+:24];
-		assign auto_len = auto_increment_a[a*24+:24];
+		assign auto_current_a[a*18+:18] = auto_current;
+		assign cross_current_a[a*18+:18] = cross_current;
+		assign cross_start = cross_start_a[a*18+:18];
+		assign auto_start = auto_start_a[a*18+:18];
+		assign cross_increment = cross_increment_a[a*18+:18];
+		assign auto_increment = auto_increment_a[a*18+:18];
+		assign cross_len = cross_len_a[a*18+:18];
+		assign auto_len = auto_len_a[a*18+:18];
+		assign adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] = tmp_adc_data[a];
 
 		always@(negedge intclk) begin
-			if (!QUADRANT_OR_SINGLE) begin
-				if(!test[1] || !in_capture || capture_start) begin
-					auto_current[12+:4] <= auto_start[12+:4];
+			if (!SHANNON_OR_SINGLE) begin
+				if(!test[1] || !in_capture) begin
+					auto_current[12+:12] <= auto_start[12+:12];
 					auto_current[0+:12] <= auto_start[0+:12];
 				end else begin
-					if(auto_current[0+:12] >= DELAY_SIZE  && auto_current[12+:4] < auto_start[12+:4] + auto_len[12+:4] + auto_len[12+:4]) begin
+					if(auto_current[0+:12] >= DELAY_SIZE) begin
 						auto_current[0+:12] <= auto_current[0+:12]-(DELAY_SIZE>>1);
-						auto_current[12+:4] <= auto_current[12+:4]+(1+auto_increment/(2*DELAY_SIZE));
+						auto_current[12+:12] <= auto_current[12+:12]+(1+auto_increment/(2*DELAY_SIZE));
 					end else if(auto_current[0+:12] < auto_start[0+:12]+auto_len[0+:12]) begin
 						auto_current[0+:12] <= auto_current[0+:12]+auto_increment;
 					end
 				end
 			end else begin
-				if(!test[1] || !in_capture  || capture_start) begin
+				if(!test[1] || !in_capture) begin
 					auto_current <= auto_start;
-				end else if (auto_current < auto_start + auto_len) begin
+				end else if (auto_current < auto_start + auto_len)
 					auto_current <= auto_current+auto_increment;
-				end
 			end
 
-			if (!QUADRANT_OR_SINGLE) begin
-				if(!test[2] || !in_capture || capture_start) begin
-					cross_current[12+:4] <= cross_start[12+:4];
+			if (!SHANNON_OR_SINGLE) begin
+				if(!test[2] || !in_capture) begin
+					cross_current[12+:12] <= cross_start[12+:12];
 					cross_current[0+:12] <= cross_start[0+:12];
 				end else begin
-					if(cross_current[0+:12] >= DELAY_SIZE  && cross_current[12+:4] < cross_start[12+:4] + cross_len[12+:4] + cross_len[12+:4]) begin
+					if(cross_current[0+:12] >= DELAY_SIZE) begin
 						cross_current[0+:12] <= cross_current[0+:12]-(DELAY_SIZE>>1);
-						cross_current[12+:4] <= cross_current[12+:4]+(1+cross_increment/(2*DELAY_SIZE));
+						cross_current[12+:12] <= cross_current[12+:12]+(1+cross_increment/(2*DELAY_SIZE));
 					end else if(cross_current[0+:12] < cross_start[0+:12]+cross_len[0+:12]) begin
 						cross_current[0+:12] <= cross_current[0+:12]+cross_increment;
 					end
 				end
 			end else begin
-				if(!test[2] || !in_capture  || capture_start) begin
+				if(!test[1] || !in_capture) begin
 					cross_current <= cross_start;
-				end else if (cross_current < cross_start + cross_len) begin
+				end else if (cross_current < cross_start + cross_len)
 					cross_current <= cross_current+cross_increment;
-				end
 			end
+
 		end
 
 		always @ (negedge pllclk) begin
 			if(~leds[3]) begin
-				if(tmp_adc_data[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
+				if(tmp_adc_data[a] != pulse_in[a*WORD_WIDTH+:WORD_WIDTH])
 					tmp_adc_data[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-					adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= tmp_adc_data[a];
-				end else
-					adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
-				if(auto_smpclk_tmp != auto_smpclk[a]) begin
-					auto_smpclk_tmp <= auto_smpclk[a];
-					if(auto_smpclk[a]) begin
-						if(tmp_adc_data_auto_current != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
-							tmp_adc_data_auto_current <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-							adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= tmp_adc_data_auto_current;
-						end else
-							adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
-					end
-				end
-				if(cross_smpclk_tmp != cross_smpclk[a]) begin
-					cross_smpclk_tmp <= cross_smpclk[a];
-					if(cross_smpclk[a]) begin
-						if(tmp_adc_data_cross_current != pulse_in[a*WORD_WIDTH+:WORD_WIDTH]) begin
-							tmp_adc_data_cross_current <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-							adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= tmp_adc_data_cross_current;
-						end else
-							adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= 0;
-					end
-				end
-			end else begin
-				adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-				adc_data_a_auto[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-				adc_data_a_cross[a*WORD_WIDTH+:WORD_WIDTH] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
-			end
+				else
+					tmp_adc_data[a] <= 0;
+			end else
+				tmp_adc_data[a] <= pulse_in[a*WORD_WIDTH+:WORD_WIDTH];
 		end
 
 		assign pulse_in[a] = (leds[2]?~signal_in[a*WORD_WIDTH+:WORD_WIDTH] : signal_in[a*WORD_WIDTH+:WORD_WIDTH]);
@@ -468,7 +420,7 @@ generate
 		end
 		
 		CLK_GEN auto_sampling_clock_block(
-			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES * auto_current[12+:4] : TICK_CYCLES * auto_current,
+			(!SHANNON_OR_SINGLE) ? TICK_CYCLES * auto_current_a[a*18+12+:12] : TICK_CYCLES * auto_current_a[a*18+:18],
 			auto_smpclk[a],
 			pllclk,
 			auto_smpclk_pulse[a],
@@ -476,7 +428,7 @@ generate
 		);
 
 		CLK_GEN cross_sampling_clock_block(
-			(!QUADRANT_OR_SINGLE) ? TICK_CYCLES * cross_current[12+:4] : TICK_CYCLES * cross_current,
+			(!SHANNON_OR_SINGLE) ? TICK_CYCLES * cross_current_a[a*18+12+:12] : TICK_CYCLES * cross_current_a[a*18+:18],
 			cross_smpclk[a],
 			pllclk,
 			cross_smpclk_pulse[a],

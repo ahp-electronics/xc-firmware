@@ -17,7 +17,7 @@ parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
 parameter NUM_LINES = 4;
-parameter DELAY_SIZE = 0;
+parameter DELAY_SIZE = 1024;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
 parameter RESOLUTION = 24;
@@ -69,32 +69,15 @@ assign jp1[14] = line_out[0];
 assign jp1[12] = line_out[1];
 assign jp1[10] = line_out[2];
 assign jp1[8] = line_out[3];
-assign jp1[6] = line_out[24];
-assign jp1[4] = line_out[25];
-assign jp1[2] = line_out[26];
-assign jp1[0] = line_out[27];
-assign jp1[7] = line_out[16];
-assign jp1[5] = line_out[17];
-assign jp1[3] = line_out[18];
-assign jp1[1] = line_out[19];
+assign jp1[6] = line_out[8];
+assign jp1[4] = line_out[9];
+assign jp1[2] = line_out[10];
+assign jp1[0] = line_out[11];
+assign jp1[7] = line_out[12];
+assign jp1[5] = line_out[13];
+assign jp1[3] = line_out[14];
+assign jp1[1] = line_out[15];
  
-assign line_in[4] = jp2[15];
-assign line_in[5] = jp2[13];
-assign line_in[6] = jp2[11];
-assign line_in[7] = jp2[9];
-assign jp2[14] = line_out[4];
-assign jp2[12] = line_out[5];
-assign jp2[10] = line_out[6];
-assign jp2[8] = line_out[7];
-assign jp2[6] = line_out[28];
-assign jp2[4] = line_out[29];
-assign jp2[2] = line_out[30];
-assign jp2[0] = line_out[31];
-assign jp2[7] = line_out[20];
-assign jp2[5] = line_out[21];
-assign jp2[3] = line_out[22];
-assign jp2[1] = line_out[23];
-
 main #(
 .CLK_FREQUENCY(CLK_FREQUENCY),
 .SIN_FREQUENCY(SIN_FREQUENCY),
