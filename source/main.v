@@ -31,7 +31,7 @@ parameter NUM_LINES = 8;
 parameter DELAY_SIZE = 4;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
-parameter RESOLUTION = 18;
+parameter RESOLUTION = 24;
 parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
@@ -49,7 +49,7 @@ localparam TICK_CYCLES = CLK_DIVISOR*MUX_LINES;
 localparam TICK_FREQUENCY = PLL_FREQUENCY/TICK_CYCLES;
 localparam NUM_INPUTS = NUM_LINES*MUX_LINES;
 localparam[39:0] TICK = 40'd1000000000000/TICK_FREQUENCY;
-localparam NUM_BASELINES = NUM_INPUTS*(NUM_INPUTS-1)/2;
+localparam NUM_BASELINES = (NUM_INPUTS*(NUM_INPUTS-1))/2;
 localparam SPECTRA_SIZE = NUM_INPUTS*LAG_AUTO;
 localparam CORRELATIONS_HEAD_TAIL_SIZE = LAG_CROSS*2-1;
 localparam MAX_LAG = (LAG_AUTO > CORRELATIONS_HEAD_TAIL_SIZE) ? LAG_AUTO : CORRELATIONS_HEAD_TAIL_SIZE;
@@ -129,14 +129,14 @@ wire[8:0] voltage_pwm[0:NUM_INPUTS];
 wire[8*NUM_INPUTS-1:0] leds_a;
 wire[8*NUM_INPUTS-1:0] test_a;
 wire[8*NUM_INPUTS-1:0] voltage_pwm_a;
-wire[18*NUM_INPUTS-1:0] cross_current_a;
-wire[18*NUM_INPUTS-1:0] cross_start_a;
-wire[18*NUM_INPUTS-1:0] auto_current_a;
-wire[18*NUM_INPUTS-1:0] auto_start_a;
-wire[18*NUM_INPUTS-1:0] cross_increment_a;
-wire[18*NUM_INPUTS-1:0] auto_increment_a;
-wire[18*NUM_INPUTS-1:0] cross_len_a;
-wire[18*NUM_INPUTS-1:0] auto_len_a;
+wire[24*NUM_INPUTS-1:0] cross_current_a;
+wire[24*NUM_INPUTS-1:0] cross_start_a;
+wire[24*NUM_INPUTS-1:0] auto_current_a;
+wire[24*NUM_INPUTS-1:0] auto_start_a;
+wire[24*NUM_INPUTS-1:0] cross_increment_a;
+wire[24*NUM_INPUTS-1:0] auto_increment_a;
+wire[24*NUM_INPUTS-1:0] cross_len_a;
+wire[24*NUM_INPUTS-1:0] auto_len_a;
 wire[63:0] timestamp;
 wire extra_commands;
 wire timestamp_reset;
@@ -254,8 +254,6 @@ CORRELATOR #(
 	.NUM_INPUTS(NUM_INPUTS),
 	.DELAY_SIZE(DELAY_SIZE),
 	.NUM_BASELINES(NUM_INPUTS),
-	.TAIL_SIZE(LAG_AUTO),
-	.HEAD_SIZE(1),
 	.RESOLUTION(RESOLUTION),
 	.WORD_WIDTH(WORD_WIDTH),
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
@@ -349,14 +347,14 @@ generate
 		assign leds = leds_a[a*8+:8];
 		assign test = test_a[a*8+:8];
 		assign voltage_pwm[a][7:0] = voltage_pwm_a[a*8+:8];
-		assign auto_current_a[a*18+:18] = auto_current;
-		assign cross_current_a[a*18+:18] = cross_current;
-		assign cross_start = cross_start_a[a*18+:18];
-		assign auto_start = auto_start_a[a*18+:18];
-		assign cross_increment = cross_increment_a[a*18+:18];
-		assign auto_increment = auto_increment_a[a*18+:18];
-		assign cross_len = cross_len_a[a*18+:18];
-		assign auto_len = auto_len_a[a*18+:18];
+		assign auto_current_a[a*24+:24] = auto_current;
+		assign cross_current_a[a*24+:24] = cross_current;
+		assign cross_start = cross_start_a[a*24+:24];
+		assign auto_start = auto_start_a[a*24+:24];
+		assign cross_increment = cross_increment_a[a*24+:24];
+		assign auto_increment = auto_increment_a[a*24+:24];
+		assign cross_len = cross_len_a[a*24+:24];
+		assign auto_len = auto_len_a[a*24+:24];
 		assign adc_data_a[a*WORD_WIDTH+:WORD_WIDTH] = tmp_adc_data[a];
 
 		always@(negedge intclk) begin
@@ -420,7 +418,7 @@ generate
 		end
 		
 		CLK_GEN auto_sampling_clock_block(
-			(!SHANNON_OR_SINGLE) ? TICK_CYCLES * auto_current_a[a*18+12+:12] : TICK_CYCLES * auto_current_a[a*18+:18],
+			(!SHANNON_OR_SINGLE) ? TICK_CYCLES * auto_current_a[a*24+12+:12] : TICK_CYCLES * auto_current_a[a*24+:24],
 			auto_smpclk[a],
 			pllclk,
 			auto_smpclk_pulse[a],
@@ -428,7 +426,7 @@ generate
 		);
 
 		CLK_GEN cross_sampling_clock_block(
-			(!SHANNON_OR_SINGLE) ? TICK_CYCLES * cross_current_a[a*18+12+:12] : TICK_CYCLES * cross_current_a[a*18+:18],
+			(!SHANNON_OR_SINGLE) ? TICK_CYCLES * cross_current_a[a*24+12+:12] : TICK_CYCLES * cross_current_a[a*24+:24],
 			cross_smpclk[a],
 			pllclk,
 			cross_smpclk_pulse[a],
