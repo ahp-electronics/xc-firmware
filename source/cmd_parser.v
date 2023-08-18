@@ -46,12 +46,12 @@ input wire [7:0] cmd;
 output reg[8*NUM_INPUTS-1:0] voltage_pwm = 0;
 output reg[8*NUM_INPUTS-1:0] test = 0;
 output reg[8*NUM_INPUTS-1:0] leds = 0;
-output reg[18*NUM_INPUTS-1:0] cross_start = 0;
-output reg[18*NUM_INPUTS-1:0] auto_start = 0;
-output reg[18*NUM_INPUTS-1:0] cross_increment = 1;
-output reg[18*NUM_INPUTS-1:0] auto_increment = 1;
-output reg[18*NUM_INPUTS-1:0] cross_len = 1023;
-output reg[18*NUM_INPUTS-1:0] auto_len = 1;
+output reg[24*NUM_INPUTS-1:0] cross_start = 0;
+output reg[24*NUM_INPUTS-1:0] auto_start = 0;
+output reg[24*NUM_INPUTS-1:0] cross_increment = 1;
+output reg[24*NUM_INPUTS-1:0] auto_increment = 1;
+output reg[24*NUM_INPUTS-1:0] cross_len = 1023;
+output reg[24*NUM_INPUTS-1:0] auto_len = 1;
 output reg[3:0] baud_rate = 0;
 output reg[7:0] order = 0;
 output reg[7:0] current_line = 0;
@@ -62,8 +62,8 @@ output reg extra_commands = 0;
 
 always@(posedge clk) begin
 	if (cmd[3:0] == CLEAR) begin
-		cross_start[current_line*12+:12] <= 0;
-		auto_start[current_line*12+:12] <= 0;
+		cross_start[current_line*24+:12] <= 0;
+		auto_start[current_line*24+:12] <= 0;
 	end else if (cmd[3:0] == ENABLE_CAPTURE) begin
 		integrating <= cmd[4];
 		external_clock <= cmd[5];
@@ -81,37 +81,37 @@ always@(posedge clk) begin
 		else
 			baud_rate <= cmd[7:4];
 	end else if (cmd[3:2] == 2) begin
-		case(test[current_line*8+6+:3])
+		case(test[current_line*8+4+:3])
 		0:
-			if (test[7])
-				auto_increment [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			if(extra_commands)
+				auto_increment [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			else
-				cross_increment [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				cross_increment [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
 		1:
-			if (test[7])
-				auto_increment [current_line*18+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			if(extra_commands)
+				auto_increment [current_line*24+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			else
-				cross_increment [current_line*18+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				cross_increment [current_line*24+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
 		2:
-			if (test[7]) 
-				auto_len [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			if(extra_commands) 
+				auto_len [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			else
-				cross_len [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				cross_len [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
 		3: 
-			if (test[7])
-				auto_len [current_line*18+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			if(extra_commands)
+				auto_len [current_line*24+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			else
-				cross_len [current_line*18+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				cross_len [current_line*24+12+(cmd[1:0]*3)+:3] <= cmd[6:4];
 		4:
-			if (test[7])
-				auto_start [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+			if(extra_commands)
+				auto_start [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			else
-				cross_start [current_line*18+(cmd[1:0]*3)+:3] <= cmd[6:4];
+				cross_start [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
 		5:
-			if (test[7])
-				auto_start [current_line*18+12+(cmd[1:0]*2)+:2] <= cmd[6:4];
+			if(extra_commands)
+				auto_start [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
 			else
-				cross_start [current_line*18+12+(cmd[1:0]*2)+:2] <= cmd[6:4];
+				cross_start [current_line*24+(cmd[1:0]*3)+:3] <= cmd[6:4];
 		endcase
 	end else if (cmd[3:0] == ENABLE_TEST) begin
 		test[current_line*8+4*extra_commands+:4] <= cmd[7:4];
