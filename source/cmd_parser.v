@@ -62,8 +62,8 @@ output reg extra_commands = 0;
 
 always@(posedge clk) begin
 	if (cmd[3:0] == CLEAR) begin
-		cross_start[current_line*12+:12] <= 0;
-		auto_start[current_line*12+:12] <= 0;
+		cross_start[current_line*24+:12] <= 0;
+		auto_start[current_line*24+:12] <= 0;
 	end else if (cmd[3:0] == ENABLE_CAPTURE) begin
 		integrating <= cmd[4];
 		external_clock <= cmd[5];

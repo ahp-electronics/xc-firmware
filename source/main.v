@@ -265,7 +265,7 @@ CORRELATOR #(
 	adc_data_a,
 	auto_smpclk,
 	leds_a,
-	0,
+	8'd0,
 	reset_delayed,
 	enable
 );
@@ -288,7 +288,7 @@ CORRELATOR #(
 	adc_data_a,
 	cross_smpclk,
 	leds_a,
-	order,
+	order+1,
 	reset_delayed,
 	enable
 );
