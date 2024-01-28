@@ -9,7 +9,7 @@
 module top_module (
 	sysclk,
 	jp1,
-	jp2 
+	jp2
 	);
 
 parameter PLL_FREQUENCY = 400000000;
@@ -25,7 +25,7 @@ parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
 parameter HAS_CUMULATIVE_ONLY = 0;
-parameter BAUD_RATE = 57600;
+parameter BAUD_RATE = 2000000;
 parameter WORD_WIDTH = 1;
 parameter USE_UART = 1;
 parameter BINARY = 0;
@@ -33,8 +33,8 @@ parameter USE_SOFT_CLOCK = 1;
 parameter MAX_ORDER = MUX_LINES*NUM_LINES;
 
 input wire sysclk;
-inout wire[19:0] jp1;
 inout wire[19:0] jp2;
+inout wire[19:0] jp1;
  
 wire TX;
 wire RX;
@@ -46,22 +46,22 @@ wire smpclk;
 wire strobe;
 
 assign smpclk = intclk;
-assign extclk = jp1[16];
-assign jp1[17] = intclk;
-assign strobe = jp1[18];
-assign jp1[19] = smpclk;
+assign extclk = jp2[16];
+assign jp2[17] = intclk;
+assign strobe = jp2[18];
+assign jp2[19] = smpclk;
 
-assign jp2[16] = refclk;
-assign jp2[17] = 1'd0;
-assign jp2[18] = TX;
-assign RX = jp2[19];
+assign jp1[16] = refclk;
+assign jp1[17] = 1'd0;
+assign jp1[18] = TX;
+assign RX = jp1[19];
 
 wire[NUM_LINES-1:0] line_in;
 wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 
-assign line_in[15:0] = jp1[15:0];
-assign line_in[31:16] = jp2[15:0];
+assign line_in[15:0] = jp2[15:0];
+assign line_in[31:16] = jp1[15:0];
 
 main #(
 .CLK_FREQUENCY(CLK_FREQUENCY),

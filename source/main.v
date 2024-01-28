@@ -61,7 +61,7 @@ localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+FOOTER_SIZE;
 
 localparam LAG_SIZE_AUTO = DELAY_SIZE+LAG_AUTO+1;
 localparam LAG_SIZE_CROSS = DELAY_SIZE+LAG_CROSS+1;
-localparam BAUD_CYCLES = ((CLK_FREQUENCY>>SHIFT)/BAUD_RATE);
+localparam BAUD_CYCLES = ((PLL_FREQUENCY>>SHIFT)/BAUD_RATE);
 
 localparam MAX_COUNT=(1<<RESOLUTION)-1;
 localparam TOTAL_NIBBLES=(PACKET_SIZE)/4;
@@ -174,7 +174,7 @@ if(USE_UART) begin
 	CLK_GEN uart_clock_block(
 		BAUD_CYCLES>>baud_rate,
 		uart_clk,
-		sysclk,
+		pllclk,
 		,
 		enable
 	);
@@ -280,7 +280,7 @@ CORRELATOR #(
 	.RESOLUTION(RESOLUTION),
 	.WORD_WIDTH(WORD_WIDTH),
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
-	.MAX_ORDER(NUM_INPUTS)
+	.MAX_ORDER(MAX_ORDER)
 	) crosscorrelator (
 	pulses[0+:CORRELATIONS_SIZE*RESOLUTION*2],
 	pllclk,
