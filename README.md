@@ -58,10 +58,10 @@ Each packet starts with a header with payload length indication, it is possible 
 header
 
     bytes 0-1: hexadecimal sample size value
-    bytes 2-3: hexadecimal inputs quantity
-    bytes 4-6: hexadecimal delay channels quantity
-    bytes 7-10: hexadecimal live delay channels quantity
-    bytes 11: hexadecimal flags [bits: 0=live autocorrelator, 1=live crosscorrelator, 2=leds available, 3=cross-correlator]
+    bytes 2-7: hexadecimal inputs quantity
+    byte 8: hexadecimal delay channels quantity
+    byte 9: hexadecimal live delay channels quantity
+    bytes 10-11: hexadecimal flags [bits: 0=live autocorrelator, 1=live crosscorrelator, 2=leds available, 3=cross-correlator]
     bytes 12-15: hexadecimal value of the clock tau in picoseconds
 
 payload

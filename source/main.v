@@ -61,7 +61,7 @@ localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+FOOTER_SIZE;
 
 localparam LAG_SIZE_AUTO = DELAY_SIZE+LAG_AUTO+1;
 localparam LAG_SIZE_CROSS = DELAY_SIZE+LAG_CROSS+1;
-localparam BAUD_CYCLES = ((CLK_FREQUENCY>>SHIFT)/BAUD_RATE);
+localparam BAUD_CYCLES = ((PLL_FREQUENCY>>SHIFT)/BAUD_RATE);
 
 localparam MAX_COUNT=(1<<RESOLUTION)-1;
 localparam TOTAL_NIBBLES=(PACKET_SIZE)/4;
@@ -115,15 +115,15 @@ reg[NUM_INPUTS-1:0] signal_in;
 
 reg capture_start;
 
-reg[7:0] mux_line = 0;
+reg[$clog2(MUX_LINES):0] mux_line = 0;
 
 wire integrate;
 wire in_capture;
 reg enable_tx;
 
-wire[7:0] current_line;
+wire[$clog2(NUM_INPUTS):0] current_line;
 wire[3:0] baud_rate;
-wire[7:0] order;
+wire[$clog2(NUM_INPUTS):0] order;
 
 wire[8:0] voltage_pwm[0:NUM_INPUTS];
 wire[8*NUM_INPUTS-1:0] leds_a;
@@ -143,7 +143,7 @@ wire timestamp_reset;
 wire timestamp_overflow;
 
 wire spi_done;
-wire RXIF;
+wire RXIF; 
 wire[7:0] RXREG;
 wire TXIF;
 wire[7:0] TXREG;
@@ -174,7 +174,7 @@ if(USE_UART) begin
 	CLK_GEN uart_clock_block(
 		BAUD_CYCLES>>baud_rate,
 		uart_clk,
-		sysclk,
+		pllclk,
 		,
 		enable
 	);
@@ -237,10 +237,7 @@ CMD_PARSER #(.NUM_INPUTS(NUM_INPUTS), .HAS_LEDS(HAS_LEDS)) parser (
 	RXIF
 );
 
-COUNTER #(
-	.RESOLUTION(RESOLUTION),
-	.NUM_INPUTS(NUM_INPUTS),
-	.WORD_WIDTH(WORD_WIDTH)) counter (
+COUNTER #(.RESOLUTION(RESOLUTION), .NUM_INPUTS(NUM_INPUTS), .WORD_WIDTH(WORD_WIDTH)) counter (
 	pulses[CORRELATIONS_SIZE*RESOLUTION*2+SPECTRA_SIZE*RESOLUTION*2+:NUM_INPUTS*RESOLUTION],
 	pllclk,
 	adc_data_a,
@@ -265,7 +262,7 @@ CORRELATOR #(
 	adc_data_a,
 	auto_smpclk,
 	leds_a,
-	8'd0,
+	0,
 	reset_delayed,
 	enable
 );
@@ -280,7 +277,7 @@ CORRELATOR #(
 	.RESOLUTION(RESOLUTION),
 	.WORD_WIDTH(WORD_WIDTH),
 	.USE_SOFT_CLOCK(USE_SOFT_CLOCK),
-	.MAX_ORDER(NUM_INPUTS)
+	.MAX_ORDER(MAX_ORDER)
 	) crosscorrelator (
 	pulses[0+:CORRELATIONS_SIZE*RESOLUTION*2],
 	pllclk,
@@ -319,12 +316,12 @@ always@(posedge intclk) begin
 	tx_data[0+:FOOTER_SIZE] <= timestamp;
 	tx_data[FOOTER_SIZE+:PAYLOAD_SIZE] <= pulses;
 	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:16] <= TICK;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+:8] <= LAG_CROSS-1;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+:8] <= LAG_AUTO-1;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+:12] <= DELAY_SIZE;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+:8] <= NUM_INPUTS-1;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:8] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+8+:4] <= LAG_CROSS-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+8+4+:4] <= LAG_AUTO-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+8+4+4+:4] <= DELAY_SIZE;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+8+4+4+4+:24] <= NUM_INPUTS-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+8+4+4+4+24+:8] <= RESOLUTION;
 end
 
 generate
