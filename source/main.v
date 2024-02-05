@@ -121,9 +121,9 @@ wire integrate;
 wire in_capture;
 reg enable_tx;
 
-wire[$clog2(NUM_LINES):0] current_line;
+wire[$clog2(NUM_INPUTS):0] current_line;
 wire[3:0] baud_rate;
-wire[$clog2(NUM_LINES):0] order;
+wire[$clog2(NUM_INPUTS):0] order;
 
 wire[8:0] voltage_pwm[0:NUM_INPUTS];
 wire[8*NUM_INPUTS-1:0] leds_a;
@@ -143,7 +143,7 @@ wire timestamp_reset;
 wire timestamp_overflow;
 
 wire spi_done;
-wire RXIF;
+wire RXIF; 
 wire[7:0] RXREG;
 wire TXIF;
 wire[7:0] TXREG;
@@ -262,7 +262,7 @@ CORRELATOR #(
 	adc_data_a,
 	auto_smpclk,
 	leds_a,
-	8'd0,
+	0,
 	reset_delayed,
 	enable
 );
@@ -316,12 +316,12 @@ always@(posedge intclk) begin
 	tx_data[0+:FOOTER_SIZE] <= timestamp;
 	tx_data[FOOTER_SIZE+:PAYLOAD_SIZE] <= pulses;
 	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+:16] <= TICK;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:4] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+:4] <= LAG_CROSS-1;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+4+:4] <= LAG_AUTO-1;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+4+4+:4] <= DELAY_SIZE;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+4+4+4+:24] <= NUM_INPUTS-1;
-	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+4+8+8+12+8+:8] <= RESOLUTION;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+:8] <= (HAS_CROSSCORRELATOR)|(HAS_LEDS<<1)|(HAS_PSU << 2)|(HAS_CUMULATIVE_ONLY << 3);
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+8+:4] <= LAG_CROSS-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+8+4+:4] <= LAG_AUTO-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+8+4+4+:4] <= DELAY_SIZE;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+8+4+4+4+:24] <= NUM_INPUTS-1;
+	tx_data[FOOTER_SIZE+PAYLOAD_SIZE+16+8+4+4+4+24+:8] <= RESOLUTION;
 end
 
 generate
