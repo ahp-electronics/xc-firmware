@@ -15,7 +15,7 @@ module top_module (
 parameter PLL_FREQUENCY = 400000000;
 parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
-parameter MUX_LINES = 4;
+parameter MUX_LINES = 8;
 parameter NUM_LINES = 16;
 parameter DELAY_SIZE = 0;
 parameter LAG_CROSS = 1;
