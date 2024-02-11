@@ -63,10 +63,10 @@ localparam LAG_SIZE_AUTO = DELAY_SIZE+LAG_AUTO+1;
 localparam LAG_SIZE_CROSS = DELAY_SIZE+LAG_CROSS+1;
 localparam BAUD_CYCLES = ((PLL_FREQUENCY>>SHIFT)/BAUD_RATE);
 
-localparam LAG_CROSS_LEN = $clog2(LAG_CROSS)+1;
-localparam LAG_AUTO_LEN = $clog2(LAG_AUTO)+1;
-localparam RESOLUTION_LEN = $clog2(RESOLUTION)+1;
-localparam NUM_INPUTS_LEN = $clog2(NUM_INPUTS)+1;
+localparam LAG_CROSS_LEN = (($clog2(LAG_CROSS)>>2)+1)<<2;
+localparam LAG_AUTO_LEN = (($clog2(LAG_AUTO)>>2)+1)<<2;
+localparam RESOLUTION_LEN = (($clog2(RESOLUTION)>>2)+1)<<2;
+localparam NUM_INPUTS_LEN = (($clog2(NUM_INPUTS)>>2)+1)<<2;
 
 localparam MAX_COUNT=(1<<RESOLUTION)-1;
 localparam TOTAL_NIBBLES=(PACKET_SIZE)/4;
