@@ -34,7 +34,7 @@ module CORRELATOR (
 	localparam NEGATIVE_SHIFT=((WORD_WIDTH-1)*MAX_ORDER);
 	localparam MAX_COUNTS=(((1<<RESOLUTION)-1)-((1<<WORD_WIDTH)-1));
 	localparam FIFO_SIZE=(DELAY_SIZE < 5 ? 4 : DELAY_SIZE);
-	localparam QUADRANT=(DELAY_SIZE == 4);
+	localparam NYQUIST=(DELAY_SIZE == 4);
 	localparam SINGLE=(DELAY_SIZE == 0);
 
 	output reg signed [NUM_BASELINES*RESOLUTION*2-1:0] pulses;
@@ -73,7 +73,7 @@ module CORRELATOR (
 			end
 			fifo #(.USE_SOFT_CLOCK(USE_SOFT_CLOCK), .WORD_WIDTH(WORD_WIDTH), .DELAY_SIZE(FIFO_SIZE)) delay_line(clk, tmp_clk, tmp_data[line*WORD_WIDTH+:WORD_WIDTH], delay_lines[line]);
 			assign leds[line]=led_lines[line*8+:8];
-			assign delay[line]=(QUADRANT ? delay_arr[line*24+:24] : delay_arr[line*24+:12]);
+			assign delay[line]=(NYQUIST ? delay_arr[line*24+:24] : delay_arr[line*24+:12]);
 		end
 		
 		for (_a=0; _a < NUM_BASELINES; _a=_a+512) begin
@@ -93,7 +93,7 @@ module CORRELATOR (
 					for (d=0; d<MAX_ORDER; d=d+1) begin : correlator_order_block
 						if(d<=order) begin 
 							if(d == 0) begin
-								if(QUADRANT) begin
+								if(NYQUIST) begin
 									if(multiply[order]) begin
 										tmp_i[d] <= {1'd0 << (NEGATIVE_SHIFT-WORD_WIDTH), delay_lines[a % NUM_INPUTS][1+:WORD_WIDTH]} * {1'd0 << (NEGATIVE_SHIFT-WORD_WIDTH), delay_lines[a % NUM_INPUTS][2*WORD_WIDTH+:WORD_WIDTH]};
 										tmp_q[d] <= {1'd0 << (NEGATIVE_SHIFT-WORD_WIDTH), delay_lines[a % NUM_INPUTS][1+:WORD_WIDTH]} * {1'd0 << (NEGATIVE_SHIFT-WORD_WIDTH), delay_lines[a % NUM_INPUTS][3*WORD_WIDTH+:WORD_WIDTH]};
@@ -119,7 +119,7 @@ module CORRELATOR (
 									end
 								end
 							end else begin
-								if(QUADRANT) begin
+								if(NYQUIST) begin
 									if(multiply[order]) begin
 										tmp_i[d] <= tmp_i[d-1] * ({1'd0 << (NEGATIVE_SHIFT-WORD_WIDTH), delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][1+:WORD_WIDTH]} * {1'd0 << (NEGATIVE_SHIFT-WORD_WIDTH), delay_lines[(((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS))][2*WORD_WIDTH+:WORD_WIDTH]});
 										tmp_q[d] <= tmp_q[d-1] * ({1'd0 << (NEGATIVE_SHIFT-WORD_WIDTH), delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][1+:WORD_WIDTH]} * {1'd0 << (NEGATIVE_SHIFT-WORD_WIDTH), delay_lines[(((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS))][3*WORD_WIDTH+:WORD_WIDTH]});
