@@ -56,24 +56,24 @@ Each packet starts with a header with payload length indication, it is possible 
 
 header
 
-    chars 0-1: Nibble length of input lines hex digits [n0]
+    char 0: Nibble length of input lines hex digits [n0]
     chars +n0: hexadecimal inputs quantity
-    chars +2: Nibble length of sample size value hex digits [n1]
+    char +1: Nibble length of sample size value hex digits [n1]
     chars +n1: hexadecimal sample size value
-    chars +2: Nibble length of delay channels hex digits [n2]
+    char +1: Nibble length of delay channels hex digits [n2]
     chars +n2: hexadecimal delay channels
-    chars +2: Nibble length of live autocorrelator delay channels hex digits [n3]
+    char +1: Nibble length of live autocorrelator delay channels hex digits [n3]
     chars +n3: hexadecimal live autocorrelator delay channels
-    chars +2: Nibble length of live crosscorrelator delay channels hex digits [n4]
+    char +1: Nibble length of live crosscorrelator delay channels hex digits [n4]
     chars +n4: hexadecimal live crosscorrelator delay channels
     chars +2 hexadecimal flags [bits: 0=live autocorrelator, 1=live crosscorrelator, 2=leds available, 3=cross-correlator, 4=Nyquist sampling, 5=Shannon sampling]
     chars +4: hexadecimal value of the clock tau in picoseconds
 
 payload
 
-    chars +lines#: pulses count of each line within the integration time
-    chars +lines#: autocorrelations real/imaginary count of each line within the packet time
-    chars +baselines#: crosscorrelations real/imaginary count of pulses of each line with others ones within the packet time
+    chars +lines*(sample size)#: pulses count of each line within the integration time
+    chars +lines*2*(sample size)#: autocorrelations real/imaginary count of each line within the packet time
+    chars +baselines*2*(sample size/4)#: crosscorrelations real/imaginary count of pulses of each line with others ones within the packet time
     chars +16: 8-byte timestamp of current packet
 
 checksum

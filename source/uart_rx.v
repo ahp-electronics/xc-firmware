@@ -20,7 +20,6 @@ input wire rx;
 output reg [7:0] dout;
 output reg rx_done;
 input wire clk;
-reg [7+STOP_BITS:0] RXREG;
 reg stop_bits;
 
 wire[3:0] current_bit;
