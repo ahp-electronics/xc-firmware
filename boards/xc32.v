@@ -16,7 +16,7 @@ parameter PLL_FREQUENCY = 400000000;
 parameter CLK_FREQUENCY = 10000000;
 parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
-parameter NUM_LINES = 64;
+parameter NUM_LINES = 32;
 parameter DELAY_SIZE = 0;
 parameter LAG_CROSS = 1;
 parameter LAG_AUTO = 1;
@@ -30,7 +30,7 @@ parameter WORD_WIDTH = 1;
 parameter USE_UART = 1;
 parameter BINARY = 0;
 parameter USE_SOFT_CLOCK = 1;
-parameter MAX_ORDER = MUX_LINES*NUM_LINES;
+parameter MAX_ORDER = 2;
 
 input wire sysclk;
 inout wire[19:0] jp2;

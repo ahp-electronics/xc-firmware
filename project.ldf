@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6MG285C" default_implementation="xc">
+<BaliProject version="3.2" title="xc-firmware" device="LFE5U-45F-6BG256C" default_implementation="xc">
     <Options/>
     <Implementation title="xc" dir="build/xc" description="xc" synthesis="synplify" default_strategy="AHP XC">
-        <Options def_top="top_module"/>
+        <Options/>
         <Source name="boards/pc03.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
