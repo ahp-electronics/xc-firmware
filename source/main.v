@@ -68,8 +68,8 @@ localparam NUM_INPUTS_LEN = (($clog2(NUM_INPUTS) & ~3) + 4);
 localparam HEADER_SIZE = 16+8+LAG_CROSS_LEN+8+LAG_AUTO_LEN+8+DELAY_SIZE_LEN+8+RESOLUTION_LEN+8+NUM_INPUTS_LEN+8;
 localparam FOOTER_SIZE = 64;
 localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+FOOTER_SIZE;
-
-localparam BAUD_CYCLES = ((PLL_FREQUENCY>>SHIFT)/BAUD_RATE);
+localparam HIGH_RATE = (BAUD_RATE == 2000000);
+localparam BAUD_CYCLES = (((HIGH_RATE ? PLL_FREQUENCY : CLK_FREQUENCY)>>SHIFT)/BAUD_RATE);
 
 localparam MAX_COUNT=(1<<RESOLUTION)-1;
 localparam TOTAL_NIBBLES=(PACKET_SIZE)/4;
@@ -175,7 +175,7 @@ if(USE_UART) begin
 	CLK_GEN uart_clock_block(
 		BAUD_CYCLES>>baud_rate,
 		uart_clk,
-		pllclk,
+		HIGH_RATE ? pllclk : sysclk,
 		,
 		enable
 	);
@@ -374,7 +374,7 @@ generate
 			end else begin
 				if(!test[1] || !in_capture) begin
 					auto_current <= auto_start;
-				end else if (auto_current < auto_start + auto_len)
+				end else if (auto_current < auto_start + auto_len && auto_len > auto_increment)
 					auto_current <= auto_current+auto_increment;
 			end
 
@@ -391,9 +391,9 @@ generate
 					end
 				end
 			end else begin
-				if(!test[1] || !in_capture) begin
+				if(!test[2] || !in_capture) begin
 					cross_current <= cross_start;
-				end else if (cross_current < cross_start + cross_len)
+				end else if (cross_current < cross_start + cross_len && cross_len > cross_increment)
 					cross_current <= cross_current+cross_increment;
 			end
 
