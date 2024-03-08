@@ -73,22 +73,37 @@ reg[7:0] word_len = 0;
 
 always@(posedge clk) begin
 	if (cmd[3:0] == CLEAR) begin
-		voltage_pwm <= 0;
-		test <= 0;
-		leds <= 0;
-		cross_start <= 0;
-		auto_start <= 0;
-		cross_increment <= 1;
-		auto_increment <= 1;
-		cross_len <= 1023;
-		auto_len <= 1;
-		baud_rate <= 0;
-		order <= 0;
-		current_line <= 0;
-		integrating <= 0;
-		external_clock <= 0;
-		timestamp_reset <= 1;
-		extra_commands <= 0;
+		case (cmd[7:4])
+			SET_LINE:
+				current_line <= 0;
+			SET_LEDS:
+				leds <= 0;
+			SET_BAUD_RATE:
+				if(extra_commands)
+					order <= 0;
+				else
+					baud_rate <= 0;
+			SET_VOLTAGE: 
+				voltage_pwm <= 0;
+			SET_DELAY: begin
+				cross_start <= 0;
+				auto_start <= 0;
+				cross_increment <= 1;
+				auto_increment <= 1;
+				cross_len <= 1;
+				auto_len <= 1;
+			end
+			ENABLE_TEST:
+				test <= 0;
+			ENABLE_CAPTURE: begin
+				integrating <= 0;
+				external_clock <= 0;
+				timestamp_reset <= 1;
+				extra_commands <= 0;
+			end
+		endcase
+		word_idx <= 0;
+		word_len <= 0;
 	end else if (cmd[3:0] == ENABLE_CAPTURE) begin
 		integrating <= cmd[4];
 		external_clock <= cmd[5];
@@ -98,34 +113,32 @@ always@(posedge clk) begin
 		end
 	end else if (cmd[3:0] == SET_LINE) begin
 		if(word_len < 1) begin
-			word_len <= word_len;
+			word_len <= cmd[7:4];
 			word_idx <= 0;
 			current_line <= 0;
-		end else begin
-			if(word_idx < word_len) begin
-				current_line[word_idx*4+:4] <= cmd[7:4];
-				word_idx <= word_idx+1;
-			end
-		end
+		end else if(word_idx < word_len) begin
+			current_line[word_idx*4+:4] <= cmd[7:4];
+			word_idx <= word_idx+1;
+		end else
+			word_len <= 0;
 	end else if (cmd[3:0] == SET_LEDS && HAS_LEDS) begin
 		leds[current_line*8+4*extra_commands+:4] <= cmd[7:4];
 	end else if (cmd[3:0] == SET_BAUD_RATE) begin
 		if (extra_commands)
 			if(word_len < 1) begin
-				word_len[word_len*4+:4] <= cmd[7:4];
+				word_len <= cmd[7:4];
 				word_idx <= 0;
 				order <= 0;
-			end else begin
-				if(word_idx < word_len) begin
-					order[word_idx*4+:4] <= cmd[7:4];
-					word_idx <= word_idx+1;
-				end
-			end
+			end else if(word_idx < word_len) begin
+				order[word_idx*4+:4] <= cmd[7:4];
+				word_idx <= word_idx+1;
+			end else
+				word_len <= 0;
 		else
 			baud_rate <= cmd[7:4];
-	end else if (cmd[3:2] == 2) begin
-		if(word_len < 1) begin
-			word_len <= word_len;
+	end else if (cmd[3:0] == SET_DELAY) begin
+		if(word_len < 1) begin 
+			word_len <= cmd[7:4];
 			word_idx <= 0;
 				case(test[current_line*8+4+:2])
 			0:
@@ -144,28 +157,27 @@ always@(posedge clk) begin
 				else
 					cross_start <= 0;
 			endcase
-		end else begin
-			if(word_idx < word_len) begin
-				case(test[current_line*8+4+:2])
-				0:
-					if(extra_commands)
-						auto_increment [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
-					else
-						cross_increment [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
-				1:
-					if(extra_commands) 
-						auto_len [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
-					else
-						cross_len [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
-				2:
-					if(extra_commands)
-						auto_start [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
-					else
-						cross_start [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
-				endcase
+		end else if(word_idx < word_len) begin
+			case(test[current_line*8+4+:2])
+			0:
+				if(extra_commands)
+					auto_increment [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
+				else
+					cross_increment [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
+			1:
+				if(extra_commands) 
+					auto_len [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
+				else
+					cross_len [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
+			2:
+				if(extra_commands)
+					auto_start [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
+				else
+					cross_start [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
+			endcase
 				word_idx <= word_idx+1;
-			end
-		end
+		end else
+			word_len <= 0;
 	end else if (cmd[3:0] == ENABLE_TEST) begin
 		test[current_line*8+4*extra_commands+:4] <= cmd[7:4];
 	end else if (cmd[3:0] == SET_VOLTAGE) begin
