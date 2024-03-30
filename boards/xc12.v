@@ -60,8 +60,39 @@ wire[NUM_LINES-1:0] line_in;
 wire[NUM_LINES*4-1:0] line_out;
 wire[MUX_LINES-1:0] mux_out;
 
-assign line_in[15:0] = jp2[15:0];
-assign line_in[31:16] = jp1[15:0];
+assign line_in[4] = jp1[0];
+assign line_in[7] = jp1[1];
+assign line_in[12] = jp1[2];
+assign line_in[15] = jp1[3];
+assign line_in[20] = jp1[4];
+assign line_in[23] = jp1[5];
+assign line_in[28] = jp1[6];
+assign line_in[31] = jp1[7];
+assign line_in[5] = jp1[8];
+assign line_in[6] = jp1[9];
+assign line_in[13] = jp1[10];
+assign line_in[14] = jp1[11];
+assign line_in[21] = jp1[12];
+assign line_in[22] = jp1[13];
+assign line_in[29] = jp1[14];
+assign line_in[30] = jp1[15];
+
+assign line_in[0] = jp2[0];
+assign line_in[3] = jp2[1];
+assign line_in[8] = jp2[2];
+assign line_in[11] = jp2[3];
+assign line_in[16] = jp2[4];
+assign line_in[19] = jp2[5];
+assign line_in[24] = jp2[6];
+assign line_in[27] = jp2[7];
+assign line_in[1] = jp2[8];
+assign line_in[2] = jp2[9];
+assign line_in[9] = jp2[10];
+assign line_in[10] = jp2[11];
+assign line_in[17] = jp2[12];
+assign line_in[18] = jp2[13];
+assign line_in[25] = jp2[14];
+assign line_in[26] = jp2[15];
 
 main #(
 .CLK_FREQUENCY(CLK_FREQUENCY),
