@@ -69,7 +69,7 @@ localparam HEADER_SIZE = 16+8+LAG_CROSS_LEN+8+LAG_AUTO_LEN+8+DELAY_SIZE_LEN+8+RE
 localparam FOOTER_SIZE = 64;
 localparam PACKET_SIZE = HEADER_SIZE+PAYLOAD_SIZE+FOOTER_SIZE;
 localparam HIGH_RATE = (BAUD_RATE == 2000000);
-localparam BAUD_CYCLES = (((HIGH_RATE ? PLL_FREQUENCY : CLK_FREQUENCY)>>SHIFT)/BAUD_RATE);
+localparam BAUD_CYCLES = ((PLL_FREQUENCY>>SHIFT)/BAUD_RATE);
 
 localparam MAX_COUNT=(1<<RESOLUTION)-1;
 localparam TOTAL_NIBBLES=(PACKET_SIZE)/4;
@@ -175,7 +175,7 @@ if(USE_UART) begin
 	CLK_GEN uart_clock_block(
 		BAUD_CYCLES>>baud_rate,
 		uart_clk,
-		HIGH_RATE ? pllclk : sysclk,
+		pllclk,
 		,
 		enable
 	);
