@@ -131,7 +131,7 @@ generate() {
         mkdir -p "${PWD}/output/${implementation}"
 	_svf="${PWD}/output/${implementation}/flash.svf"
 	rm -f "${_svf}"
-	echo "" > "${_svf}"
+	cat "${PWD}/boards/preload.svf" > "${_svf}"
 	for t in $targets; do
 		svf $t
 		cat "${PWD}/output/${implementation}/${t}.svf" >> "${_svf}"
