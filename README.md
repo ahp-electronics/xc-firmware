@@ -23,7 +23,7 @@ parameter HAS_LEDS = 1;			//Has this device output lines? (power switches or ind
 parameter HAS_CROSSCORRELATOR = 1;	//Has this device crosscorrelation capability?
 parameter HAS_PSU = 0;			//Has this device a software PSU?
 parameter HAS_CUMULATIVE_ONLY = 0;	//Has this device not on-edge counting?
-parameter BAUD_RATE = 57600;		//Communication port baud rate
+parameter BAUD_RATE = 2000000;		//Communication port baud rate
 parameter WORD_WIDTH = 1;		//Word width (greater than 1 when using ADC - must be in sync with the ADC ramp gener
 parameter BINARY = 0;		//use binary packet transmission instead of ASCII
 parameter USE_UART = 1;			//Use UART or SPI communication?
@@ -38,7 +38,7 @@ The cross-platform driver library: https://github.com/ahp-electronics/libahp-xc
 
 To use the correlator try the GUI: https://github.com/ahp-electronics/xc-gui
 
-The project runs at 10MHz and uses 57600 baud/second UART communication with the host initially
+The project runs at 10MHz and uses 2 Mbaud/second UART communication with the host initially
 
 Here below is defined the communication protocol:
 
