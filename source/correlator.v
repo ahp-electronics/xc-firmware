@@ -96,8 +96,6 @@ module CORRELATOR (
 						end
 					end
 					for (d=0; d<MAX_ORDER; d=d+1) begin : correlator_order_block
-						reg[NUM_INPUTS_LEN:0] idx;
-						idx <= ((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS);
 						if(d<=order) begin 
 							if(d == 0) begin
 								if(SHANNON) begin
@@ -128,27 +126,27 @@ module CORRELATOR (
 							end else begin
 								if(SHANNON) begin
 									if(multiply[order]) begin
-										tmp_i[d] <= tmp_i[d-1] * ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, delay_lines[(idx)][1*WORD_WIDTH+:WORD_WIDTH]});
-										tmp_q[d] <= tmp_q[d-1] * ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, delay_lines[(idx)][3*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_i[d] <= tmp_i[d-1] * ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, delay_lines[(((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS))][1*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_q[d] <= tmp_q[d-1] * ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, delay_lines[(((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS))][3*WORD_WIDTH+:WORD_WIDTH]});
 									end else begin
-										tmp_i[d] <= tmp_i[d-1] - ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, delay_lines[(idx)][1*WORD_WIDTH+:WORD_WIDTH]});
-										tmp_q[d] <= tmp_q[d-1] - ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, delay_lines[(idx)][3*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_i[d] <= tmp_i[d-1] - ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, delay_lines[(((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS))][1*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_q[d] <= tmp_q[d-1] - ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, delay_lines[(((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS))][3*WORD_WIDTH+:WORD_WIDTH]});
 									end
 								end else if(SINGLE) begin
 									if(multiply[order]) begin
-										tmp_i[d] <= tmp_i[d-1] * ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, ~delay_lines[(idx)][1*WORD_WIDTH+:WORD_WIDTH]});
-										tmp_q[d] <= tmp_q[d-1] * ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, delay_lines[(idx)][1*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_i[d] <= tmp_i[d-1] * ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, ~delay_lines[(((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS))][1*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_q[d] <= tmp_q[d-1] * ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, delay_lines[(((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS))][1*WORD_WIDTH+:WORD_WIDTH]});
 									end else begin
-										tmp_i[d] <= tmp_i[d-1] - ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, ~delay_lines[(idx)][1*WORD_WIDTH+:WORD_WIDTH]});
-										tmp_q[d] <= tmp_q[d-1] - ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, delay_lines[(idx)][1*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_i[d] <= tmp_i[d-1] - ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, ~delay_lines[(((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS))][1*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_q[d] <= tmp_q[d-1] - ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, delay_lines[(((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS))][1*WORD_WIDTH+:WORD_WIDTH]});
 									end
 								end else begin
 									if(multiply[order]) begin
-										tmp_i[d] <= tmp_i[d-1] * ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, delay_lines[idx][((delay[idx])>>1)*WORD_WIDTH+:WORD_WIDTH]});
-										tmp_q[d] <= tmp_q[d-1] * ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, delay_lines[idx][(delay[idx])*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_i[d] <= tmp_i[d-1] * ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][((delay[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)])>>1)*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_q[d] <= tmp_q[d-1] * ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} * {1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(delay[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)])*WORD_WIDTH+:WORD_WIDTH]});
 									end else begin
-										tmp_i[d] <= tmp_i[d-1] - ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, delay_lines[idx][((delay[idx])>>1)*WORD_WIDTH+:WORD_WIDTH]});
-										tmp_q[d] <= tmp_q[d-1] - ({1'd0, delay_lines[idx][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, delay_lines[idx][(delay[idx])*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_i[d] <= tmp_i[d-1] - ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][((delay[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)])>>1)*WORD_WIDTH+:WORD_WIDTH]});
+										tmp_q[d] <= tmp_q[d-1] - ({1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][0*WORD_WIDTH+:WORD_WIDTH]} - {1'd0, delay_lines[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)][(delay[((a + d * ((a / NUM_INPUTS) + 1)) % NUM_INPUTS)])*WORD_WIDTH+:WORD_WIDTH]});
 									end
 								end 
 							end
