@@ -63,7 +63,7 @@ program() {
 synthesize() {
 rm -rf build/${implementation}
 mkdir -p build/${implementation}
-if [ -e ${PWD}/output/${implementation}.v ]; then
+if [ ! -e ${PWD}/output/${implementation}.v ]; then
  cp ${PWD}/boards/${implementation}.v ${PWD}/output/
 fi
 	echo "set_option -technology ${technology}
@@ -175,14 +175,15 @@ prepare() {
         read USE_SOFT_CLOCK
 
         source="${PWD}/boards/template.v"
-        tmpfile="${PWD}/output/${implementation}.v"
+        export implementation=xc${NUM_LINES}-${MUX_LINES}-${LAG_CROSS}-${LAG_AUTO}-${HAS_CROSSCORRELATOR}-${RESOLUTION}
+	tmpfile="${PWD}/boards/${implementation}.v"
 
-	est_size=$(( ((((${NUM_LINES}*(${NUM_LINES}-1)*${LAG_CROSS}*${HAS_CROSSCORRELATOR}/2+${NUM_LINES}*${LAG_AUTO})*2+${NUM_LINES})^${RESOLUTION}/4+32+${DELAY_SIZE}*${NUM_LINES})/200) ))
+	est_size=$(( ((((${NUM_LINES}*${MUX_LINES}*(${NUM_LINES}*${MUX_LINES}-1)*${LAG_CROSS}*${HAS_CROSSCORRELATOR}/2+${NUM_LINES}*${MUX_LINES}*${LAG_AUTO})*2+${NUM_LINES}*${MUX_LINES})^${RESOLUTION}/4+32+${DELAY_SIZE}*${NUM_LINES}*${MUX_LINES})/200) ))
 	echo "design size: ${est_size}"
 	sleep 5;
 	if (( ${est_size} > 40 )); then echo "design too large, aborting"; sleep 5; exit; fi
 
-        sed -e "s:_MUX_LINES:${MUX_LINES}:g" ${source} | \
+        cat ${source} | sed -e "s:_MUX_LINES:${MUX_LINES}:g" | \
         sed -e "s:_NUM_LINES:${NUM_LINES}:g" | \
         sed -e "s:_DELAY_SIZE:${DELAY_SIZE}:g" | \
         sed -e "s:_LAG_CROSS:${LAG_CROSS}:g" | \
@@ -193,9 +194,9 @@ prepare() {
         sed -e "s:_HAS_PSU:${HAS_PSU}:g" | \
         sed -e "s:_HAS_CUMULATIVE_ONLY:${HAS_CUMULATIVE_ONLY}:g" | \
         sed -e "s:_WORD_WIDTH:${WORD_WIDTH}:g" | \
-        sed -e "s:_USE_UART:${USE_UART}:g" \
-        sed -e "s:_BINARY:${BINARY}:g" \
-        sed -e "s:_USE_SOFT_CLOCK:${USE_SOFT_CLOCK}:g" \
+        sed -e "s:_USE_UART:${USE_UART}:g" | \
+        sed -e "s:_BINARY:${BINARY}:g" | \
+        sed -e "s:_USE_SOFT_CLOCK:${USE_SOFT_CLOCK}:g" | \
         sed -e "s:_MAX_ORDER:${MAX_ORDER}:g" \
          > ${tmpfile}
 }
