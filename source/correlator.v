@@ -22,10 +22,7 @@ module CORRELATOR (
 	
 	parameter NUM_INPUTS=8;
 	parameter DELAY_SIZE=4;
-	parameter TAIL_SIZE=1;
-	parameter HEAD_SIZE=0;
 	parameter NUM_BASELINES=8;
-	parameter DELAY_LAG=1;
 	parameter RESOLUTION=24;
 	parameter WORD_WIDTH=1;
 	parameter USE_SOFT_CLOCK=0;
