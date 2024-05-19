@@ -67,6 +67,7 @@ if [ ! -e ${PWD}/output/${implementation}.v ]; then
  cp ${PWD}/boards/${implementation}.v ${PWD}/output/
 fi
 	echo "set_option -technology ${technology}
+
 set_option -part ${part}_${size}
 set_option -package BG256C
 set_option -speed_grade -6
@@ -143,6 +144,7 @@ generate() {
 }
 
 prepare() {
+	[ "$1" != "" ] && { echo $1 | tail -c+3 | tr -s '-' '\n' | prepare; return 0; }
 	echo "enter muliplexer lines #:"
         read MUX_LINES
 	echo "enter lines per mux #:"
@@ -151,10 +153,6 @@ prepare() {
         read DELAY_SIZE
 	echo "enter the maximum correlation order:"
         read MAX_ORDER
-	echo "enter single-shot baseline channels #:"
-        read LAG_CROSS
-	echo "enter single-shot line channels #:"
-        read LAG_AUTO
 	echo "enter packet bits per sample:"
         read RESOLUTION
 	echo "has led lines on each channel?"
@@ -175,13 +173,15 @@ prepare() {
         read USE_SOFT_CLOCK
 
         source="${PWD}/boards/template.v"
-        export implementation=xc${NUM_LINES}-${MUX_LINES}-${LAG_CROSS}-${LAG_AUTO}-${HAS_CROSSCORRELATOR}-${RESOLUTION}
+
+        export implementation=xc$MUX_LINES-$NUM_LINES-$DELAY_SIZE-$MAX_ORDER-$RESOLUTION-$HAS_LEDS-$HAS_CROSSCORRELATOR-$HAS_PSU-$HAS_CUMULATIVE_ONLY-$WORD_WIDTH-$USE_UART-$BINARY-$USE_SOFT_CLOCK
 	tmpfile="${PWD}/boards/${implementation}.v"
+	echo $tmpfile
 
 	est_size=$(( ((((${NUM_LINES}*${MUX_LINES}*(${NUM_LINES}*${MUX_LINES}-1)*${LAG_CROSS}*${HAS_CROSSCORRELATOR}/2+${NUM_LINES}*${MUX_LINES}*${LAG_AUTO})*2+${NUM_LINES}*${MUX_LINES})^${RESOLUTION}/4+32+${DELAY_SIZE}*${NUM_LINES}*${MUX_LINES})/200) ))
 	echo "design size: ${est_size}"
 	sleep 5;
-	if (( ${est_size} > 40 )); then echo "design too large, aborting"; sleep 5; exit; fi
+	(( ${est_size} > 40 )) && { echo "design too large, aborting"; sleep 5; exit; }
 
         cat ${source} | sed -e "s:_MUX_LINES:${MUX_LINES}:g" | \
         sed -e "s:_NUM_LINES:${NUM_LINES}:g" | \
@@ -216,7 +216,7 @@ echo "Initializing target ${target}..."
 if sleep 5; then
 	mkdir -p output/
 	[ -e ${PWD}/boards/${implementation}.v ] && cp -f ${PWD}/boards/${implementation}.v ${PWD}/output/
-	[ -e ${PWD}/output/${implementation}.v ] || prepare
+	[ -e ${PWD}/output/${implementation}.v ] || prepare ${implementation}
 	rm -rf output/flash.svf
 $target
 fi
