@@ -44,12 +44,12 @@ wire smpclk;
 wire strobe;
 
 assign smpclk = intclk;
-assign extclk = jp2[16];
 assign jp2[17] = intclk;
 assign strobe = jp2[18];
 assign jp2[19] = smpclk;
 
-assign jp1[16] = refclk;
+assign extclk = jp1[15];
+assign jp1[7] = refclk;
 assign jp1[17] = 1'd0;
 assign jp1[18] = TX;
 assign RX = jp1[19];
@@ -65,7 +65,6 @@ assign line_in[15] = jp1[3];
 assign line_in[20] = jp1[4];
 assign line_in[23] = jp1[5];
 assign line_in[28] = jp1[6];
-assign line_in[31] = jp1[7];
 assign line_in[5] = jp1[8];
 assign line_in[6] = jp1[9];
 assign line_in[13] = jp1[10];
@@ -73,7 +72,6 @@ assign line_in[14] = jp1[11];
 assign line_in[21] = jp1[12];
 assign line_in[22] = jp1[13];
 assign line_in[29] = jp1[14];
-assign line_in[30] = jp1[15];
 
 assign line_in[0] = jp2[0];
 assign line_in[3] = jp2[1];
