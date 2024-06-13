@@ -18,7 +18,7 @@ parameter SIN_FREQUENCY = 50;
 parameter MUX_LINES = 1;
 parameter NUM_LINES = 8;
 parameter DELAY_SIZE = 4;
-parameter RESOLUTION = 16;
+parameter RESOLUTION = 24;
 parameter HAS_LEDS = 1;
 parameter HAS_CROSSCORRELATOR = 1;
 parameter HAS_PSU = 0;
@@ -40,15 +40,14 @@ wire refclk;
 wire enable;
 wire extclk;
 wire intclk;
-wire smpclk;
+wire[NUM_LINES-1:0] auto_smpclk;
+wire[NUM_LINES-1:0] cross_smpclk;
 wire pllclk;
 wire strobe;
 
-assign smpclk = intclk;
 assign extclk = jp2[16];
 assign jp2[17] = intclk;
 assign strobe = jp2[18];
-assign jp2[19] = smpclk;
 
 assign jp1[16] = refclk;
 assign jp1[17] = 1'd0;
@@ -122,6 +121,8 @@ main #(
        intclk,
        pllclk,
        ,
+       auto_smpclk,
+       cross_smpclk,
        strobe,
        1'd1
 );

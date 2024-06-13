@@ -40,13 +40,12 @@ wire refclk;
 wire enable;
 wire extclk;
 wire intclk;
-wire smpclk;
+wire[NUM_LINES-1:0] auto_smpclk;
+wire[NUM_LINES-1:0] cross_smpclk;
 wire strobe;
 
-assign smpclk = intclk;
 assign jp2[17] = intclk;
 assign strobe = jp2[18];
-assign jp2[19] = smpclk;
 
 assign extclk = jp1[15];
 assign jp1[7] = refclk;
@@ -118,6 +117,8 @@ main #(
        intclk,
        ,
        ,
+       auto_smpclk,
+       cross_smpclk,
        strobe,
        1'd1
 );

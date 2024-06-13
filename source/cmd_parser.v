@@ -58,14 +58,14 @@ output reg[DELAY_SIZE_LEN*NUM_INPUTS-1:0] cross_start = 0;
 output reg[DELAY_SIZE_LEN*NUM_INPUTS-1:0] auto_start = 0;
 output reg[DELAY_SIZE_LEN*NUM_INPUTS-1:0] cross_increment = 1;
 output reg[DELAY_SIZE_LEN*NUM_INPUTS-1:0] auto_increment = 1;
-output reg[DELAY_SIZE_LEN*NUM_INPUTS-1:0] cross_len = 1023;
+output reg[DELAY_SIZE_LEN*NUM_INPUTS-1:0] cross_len = 1;
 output reg[DELAY_SIZE_LEN*NUM_INPUTS-1:0] auto_len = 1;
 output reg[3:0] baud_rate = 0;
 output reg[NUM_INPUTS_LEN:0] order = 0;
 output reg[NUM_INPUTS_LEN:0] current_line = 0;
 output reg integrating = 0;
 output reg external_clock = 0;
-output reg timestamp_reset = 1;
+output reg timestamp_reset = 0;
 output reg extra_commands = 0;
 
 reg[7:0] word_idx = 0;

@@ -18,6 +18,8 @@ module main (
 	intclk,
 	pllclk,
 	spiclk,
+	auto_smpclk,
+	cross_smpclk,
 	strobe,
 	enable
 );
@@ -92,8 +94,8 @@ reg[WORD_WIDTH:0] tmp_adc_data[0:NUM_INPUTS];
 wire[WORD_WIDTH*NUM_INPUTS-1:0] adc_data_a;
 wire[NUM_INPUTS-1:0] adc_done;
 
-wire [NUM_INPUTS-1:0]auto_smpclk;
-wire [NUM_INPUTS-1:0]cross_smpclk;
+output wire [NUM_INPUTS-1:0]auto_smpclk;
+output wire [NUM_INPUTS-1:0]cross_smpclk;
 wire [NUM_INPUTS-1:0]auto_smpclk_pulse;
 wire [NUM_INPUTS-1:0]cross_smpclk_pulse;
 
@@ -162,7 +164,7 @@ DIFF_COUNTER #(.WORD_WIDTH(64)) timestamp_block(
 	64'd0,
 	1'd0,
 	refclk,
-	(timestamp_reset&~integrating)|timestamp_overflow
+	(timestamp_reset&~in_capture)|timestamp_overflow
 );
 
 if(USE_UART) begin
@@ -352,7 +354,7 @@ generate
 
 		always@(negedge intclk) begin
 			if (!SHANNON_OR_SINGLE) begin
-				if(!test[1] || !in_capture) begin
+				if(!test[1]) begin
 					auto_current[(DELAY_SIZE_LEN>>1)+:(DELAY_SIZE_LEN>>1)] <= auto_start[(DELAY_SIZE_LEN>>1)+:(DELAY_SIZE_LEN>>1)];
 					auto_current[0+:(DELAY_SIZE_LEN>>1)] <= auto_start[0+:(DELAY_SIZE_LEN>>1)];
 				end else begin
@@ -364,7 +366,7 @@ generate
 					end
 				end
 			end else begin
-				if(!test[1] || !in_capture) begin
+				if(!test[1]) begin
 					auto_current <= auto_start;
 				end else if (auto_current < auto_start + auto_len && auto_len > auto_increment)
 					auto_current <= auto_current+auto_increment;
