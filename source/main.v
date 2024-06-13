@@ -168,7 +168,7 @@ DIFF_COUNTER #(.WORD_WIDTH(64)) timestamp_block(
 );
 
 if(USE_UART) begin
-	CLK_GEN uart_clock_block(
+	CLK_GEN #(.RESOLUTION(64)) uart_clock_block(
 		BAUD_CYCLES>>baud_rate,
 		uart_clk,
 		(HIGH_RATE ? pllclk : sysclk),
@@ -354,7 +354,7 @@ generate
 
 		always@(negedge intclk) begin
 			if (!SHANNON_OR_SINGLE) begin
-				if(!test[1]) begin
+				if(!test[1] || !in_capture) begin
 					auto_current[(DELAY_SIZE_LEN>>1)+:(DELAY_SIZE_LEN>>1)] <= auto_start[(DELAY_SIZE_LEN>>1)+:(DELAY_SIZE_LEN>>1)];
 					auto_current[0+:(DELAY_SIZE_LEN>>1)] <= auto_start[0+:(DELAY_SIZE_LEN>>1)];
 				end else begin
@@ -366,10 +366,10 @@ generate
 					end
 				end
 			end else begin
-				if(!test[1]) begin
-					auto_current <= auto_start;
-				end else if (auto_current < auto_start + auto_len && auto_len > auto_increment)
+				if (test[1] && auto_current < (auto_start + auto_len) && auto_len > auto_increment)
 					auto_current <= auto_current+auto_increment;
+				else
+					auto_current <= auto_start;
 			end
 
 			if (!SHANNON_OR_SINGLE) begin
@@ -385,10 +385,10 @@ generate
 					end
 				end
 			end else begin
-				if(!test[2] || !in_capture) begin
-					cross_current <= cross_start;
-				end else if (cross_current < cross_start + cross_len && cross_len > cross_increment)
+				if (test[2] && cross_current < (cross_start + cross_len) && cross_len > cross_increment)
 					cross_current <= cross_current+cross_increment;
+				else
+					cross_current <= cross_start;
 			end
 
 		end
@@ -412,7 +412,7 @@ generate
 			assign lineout[NUM_INPUTS*3+a] = HAS_PSU ? voltage[a] : leds[1];
 		end
 		
-		CLK_GEN auto_sampling_clock_block(
+		CLK_GEN #(.RESOLUTION(DELAY_SIZE_LEN+1)) auto_sampling_clock_block(
 			(!SHANNON_OR_SINGLE) ? TICK_CYCLES * auto_current_a[a*DELAY_SIZE_LEN+(DELAY_SIZE_LEN>>1)+:(DELAY_SIZE_LEN>>1)] : TICK_CYCLES * auto_current_a[a*DELAY_SIZE_LEN+:DELAY_SIZE_LEN],
 			auto_smpclk[a],
 			pllclk,
@@ -420,7 +420,7 @@ generate
 			enable
 		);
 
-		CLK_GEN cross_sampling_clock_block(
+		CLK_GEN #(.RESOLUTION(DELAY_SIZE_LEN+1)) cross_sampling_clock_block(
 			(!SHANNON_OR_SINGLE) ? TICK_CYCLES * cross_current_a[a*DELAY_SIZE_LEN+(DELAY_SIZE_LEN>>1)+:(DELAY_SIZE_LEN>>1)] : TICK_CYCLES * cross_current_a[a*DELAY_SIZE_LEN+:DELAY_SIZE_LEN],
 			cross_smpclk[a],
 			pllclk,

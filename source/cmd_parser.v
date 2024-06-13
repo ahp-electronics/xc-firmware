@@ -68,8 +68,8 @@ output reg external_clock = 0;
 output reg timestamp_reset = 0;
 output reg extra_commands = 0;
 
-reg[7:0] word_idx = 0;
-reg[7:0] word_len = 0;
+reg[3:0] word_idx = 0;
+reg[3:0] word_len = 0;
 
 always@(posedge clk) begin
 	if (cmd[3:0] == CLEAR) begin
@@ -86,12 +86,15 @@ always@(posedge clk) begin
 			SET_VOLTAGE: 
 				voltage_pwm <= 0;
 			SET_DELAY: begin
-				cross_start <= 0;
-				auto_start <= 0;
-				cross_increment <= 1;
-				auto_increment <= 1;
-				cross_len <= 1;
-				auto_len <= 1;
+				if(extra_commands) begin
+					auto_start <= 0;
+					auto_increment <= 1;
+					auto_len <= 1;
+				end else begin
+					cross_start <= 0;
+					cross_increment <= 1;
+					cross_len <= 1;
+				end
 			end
 			ENABLE_TEST:
 				test <= 0;
@@ -143,39 +146,39 @@ always@(posedge clk) begin
 				case(test[current_line*8+4+:2])
 			0:
 				if(extra_commands)
-					auto_increment <= 0;
-				else
 					cross_increment <= 0;
+				else
+					auto_increment <= 0;
 			1:
 				if(extra_commands) 
-					auto_len <= 0;
-				else
 					cross_len <= 0;
+				else
+					auto_len <= 0;
 			2:
 				if(extra_commands)
-					auto_start <= 0;
-				else
 					cross_start <= 0;
+				else
+					auto_start <= 0;
 			endcase
 		end else if(word_idx < word_len) begin
 			case(test[current_line*8+4+:2])
 			0:
 				if(extra_commands)
-					auto_increment [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
-				else
 					cross_increment [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
+				else
+					auto_increment [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
 			1:
 				if(extra_commands) 
-					auto_len [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
-				else
 					cross_len [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
+				else
+					auto_len [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
 			2:
 				if(extra_commands)
-					auto_start [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
-				else
 					cross_start [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
+				else
+					auto_start [current_line*DELAY_SIZE_LEN+word_idx*4+:4] <= cmd[7:4];
 			endcase
-				word_idx <= word_idx+1;
+			word_idx <= word_idx+1;
 		end else
 			word_len <= 0;
 	end else if (cmd[3:0] == ENABLE_TEST) begin
